@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1220" />
+    <meta name="description" content="GitHub Pulse：实时追踪开源工程的活跃度、涨星趋势与榜单。" />
+    <title>GitHub Pulse · 工程看板</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div>
+            <div class="brand-name">GitHub <em>Pulse</em></div>
+            <div class="brand-caption">OPEN SOURCE RADAR</div>
+          </div>
+        </div>
+
+        <div class="workspace-switcher">
+          <div class="workspace-avatar">O</div>
+          <div class="workspace-copy">
+            <span class="eyebrow">当前工作区</span>
+            <strong>Open Source Watch</strong>
+          </div>
+          <button class="icon-button tiny" aria-label="切换工作区" title="切换工作区">⌄</button>
+        </div>
+
+        <nav class="nav-group">
+          <div class="nav-label">看板</div>
+          <a href="#overview" class="nav-item active" data-view="overview"><span class="nav-icon">⌁</span>总览<span class="nav-dot"></span></a>
+          <a href="#rising" class="nav-item" data-view="rising"><span class="nav-icon">↗</span>涨星趋势</a>
+          <a href="#rankings" class="nav-item" data-view="rankings"><span class="nav-icon">▤</span>排行榜</a>
+          <a href="#categories" class="nav-item" data-view="categories"><span class="nav-icon">◒</span>分类探索</a>
+        </nav>
+
+        <nav class="nav-group saved-group">
+          <div class="nav-label">我的关注 <button class="add-button" aria-label="添加关注">+</button></div>
+          <a href="#saved" class="nav-item"><span class="repo-dot orange"></span>ai-toolkit <span class="saved-count">12</span></a>
+          <a href="#saved" class="nav-item"><span class="repo-dot purple"></span>frontend-radar <span class="saved-count">8</span></a>
+          <a href="#saved" class="nav-item"><span class="repo-dot green"></span>rust-weekly <span class="saved-count">5</span></a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sync-card">
+            <span class="sync-pulse"></span>
+            <div><strong>数据自动更新中</strong><span>每 30 分钟同步一次</span></div>
+          </div>
+          <div class="sidebar-links"><a href="#settings">设置</a><span>·</span><a href="#docs">使用说明</a></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumb"><span>工作区</span><span class="slash">/</span><strong>总览</strong></div>
+          <div class="topbar-actions">
+            <label class="search-box" aria-label="搜索工程">
+              <span class="search-icon">⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索工程、语言或组织" autocomplete="off" />
+              <kbd>⌘ K</kbd>
+            </label>
+            <button class="icon-button theme-toggle" id="themeToggle" aria-label="切换主题" title="切换主题">☼</button>
+            <button class="user-button" aria-label="打开个人菜单"><span class="user-avatar">YC</span><span class="user-name">Yuchen</span><span class="chevron">⌄</span></button>
+          </div>
+        </header>
+
+        <div class="content-wrap">
+          <section class="hero-row" id="overview">
+            <div>
+              <div class="section-kicker"><span class="live-dot"></span> LIVE MONITORING <span class="kicker-time">· <span id="lastUpdated">刚刚</span>更新</span></div>
+              <h1>开源世界，<span>正在发生什么？</span></h1>
+              <p class="hero-subtitle">从每天的活跃变化，到一周和一个月的涨星榜，快速找到值得关注的工程。</p>
+            </div>
+            <div class="hero-actions">
+              <div class="range-control" role="group" aria-label="时间范围">
+                <button class="range-button active" data-range="today">今天</button>
+                <button class="range-button" data-range="week">本周</button>
+                <button class="range-button" data-range="month">本月</button>
+              </div>
+              <button class="refresh-button" id="refreshButton"><span class="refresh-icon">↻</span>立即更新</button>
+            </div>
+          </section>
+
+          <section class="metrics-grid" aria-label="关键指标">
+            <article class="metric-card metric-main">
+              <div class="metric-header"><span class="metric-label">追踪中的工程</span><span class="metric-period">全部分类</span></div>
+              <div class="metric-value-row"><strong id="trackedCount">1,284</strong><span class="metric-change positive">↗ 6.4%</span></div>
+              <div class="metric-foot"><div class="mini-stacked"><i style="width:39%"></i><i style="width:26%"></i><i style="width:20%"></i><i style="width:15%"></i></div><span>过去 30 天</span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-header"><span class="metric-label">今日新增</span><span class="metric-icon green">✦</span></div>
+              <div class="metric-value-row"><strong id="newToday">24</strong><span class="metric-change positive">↗ 18.2%</span></div>
+              <div class="metric-foot"><span class="muted-text">较昨日多 4 个</span><span class="sparkline green-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-header"><span class="metric-label">本周新增 Stars</span><span class="metric-icon orange">★</span></div>
+              <div class="metric-value-row"><strong id="weeklyStars">8.7k</strong><span class="metric-change positive">↗ 12.8%</span></div>
+              <div class="metric-foot"><span class="muted-text">环比上周</span><span class="sparkline orange-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+            </article>
+            <article class="metric-card health-card">
+              <div class="metric-header"><span class="metric-label">生态活跃指数</span><span class="metric-period">实时</span></div>
+              <div class="health-value"><strong>92</strong><span>/ 100</span></div>
+              <div class="health-meter"><span style="width:92%"></span></div>
+              <div class="metric-foot"><span class="status-text"><span class="status-dot"></span>状态良好</span><span class="muted-text">+3.1</span></div>
+            </article>
+          </section>
+
+          <section class="main-grid">
+            <article class="panel activity-panel" id="rising">
+              <div class="panel-heading">
+                <div><span class="panel-eyebrow">TODAY'S SIGNAL</span><h2>今天有什么新动向</h2></div>
+                <button class="text-button" data-action="view-all">查看全部 <span>→</span></button>
+              </div>
+              <div class="activity-list" id="activityList"></div>
+            </article>
+
+            <article class="panel trend-panel">
+              <div class="panel-heading">
+                <div><span class="panel-eyebrow">STAR VELOCITY</span><h2>近一周涨星最快</h2></div>
+                <button class="period-select" id="trendPeriod">过去 7 天 <span>⌄</span></button>
+              </div>
+              <div class="trend-chart-wrap">
+                <div class="y-axis"><span>+8k</span><span>+6k</span><span>+4k</span><span>+2k</span><span>0</span></div>
+                <div class="trend-chart" id="trendChart"><div class="chart-grid"><i></i><i></i><i></i><i></i><i></i></div><div class="chart-bars"></div></div>
+              </div>
+              <div class="chart-labels"><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>今天</span></div>
+              <div class="trend-callout"><span class="callout-dot"></span><div><strong>本周开源热度上升 <em>12.8%</em></strong><span>AI 工具和开发者基础设施是主要驱动力</span></div><span class="callout-arrow">↗</span></div>
+            </article>
+          </section>
+
+          <section class="panel category-panel" id="categories">
+            <div class="panel-heading category-heading">
+              <div><span class="panel-eyebrow">ECOSYSTEM MAP</span><h2>按领域探索</h2></div>
+              <div class="category-tabs" role="tablist"><button class="category-tab active" data-category="all">全部 <span>1,284</span></button><button class="category-tab" data-category="ai">AI / ML <span>248</span></button><button class="category-tab" data-category="frontend">前端 <span>192</span></button><button class="category-tab" data-category="infra">基础设施 <span>176</span></button><button class="category-tab" data-category="rust">Rust <span>86</span></button></div>
+            </div>
+            <div class="category-body">
+              <div class="category-visual" aria-label="工程分类占比">
+                <div class="donut"><div class="donut-center"><strong>1,284</strong><span>个工程</span></div></div>
+                <div class="legend"><div><i class="legend-dot ai"></i><span>AI / ML</span><strong>248</strong><em>19.3%</em></div><div><i class="legend-dot frontend"></i><span>前端生态</span><strong>192</strong><em>15.0%</em></div><div><i class="legend-dot infra"></i><span>基础设施</span><strong>176</strong><em>13.7%</em></div><div><i class="legend-dot data"></i><span>数据工具</span><strong>143</strong><em>11.1%</em></div></div>
+              </div>
+              <div class="spotlight" id="spotlightCard"><div class="spotlight-top"><span class="spotlight-label">CATEGORY SPOTLIGHT</span><span class="spotlight-badge">AI / ML</span></div><div class="spotlight-content"><div class="spotlight-icon">✦</div><div><h3>AI 工具正在加速</h3><p>过去 7 天，AI / ML 分类贡献了 <strong>41%</strong> 的新增 Stars。</p><div class="spotlight-meta"><span>248 个工程</span><span>·</span><span class="positive">+24.6% 周增长</span></div></div></div><div class="spotlight-bar"><span style="width:72%"></span></div></div>
+            </div>
+          </section>
+
+          <section class="rankings-grid" id="rankings">
+            <article class="panel ranking-panel">
+              <div class="panel-heading"><div><span class="panel-eyebrow">WEEKLY LEADERS</span><h2>Top 10 · 周榜</h2></div><button class="text-button" data-action="open-ranking">完整榜单 <span>→</span></button></div>
+              <div class="ranking-table" id="weeklyTable"></div>
+            </article>
+            <article class="panel ranking-panel month-ranking">
+              <div class="panel-heading"><div><span class="panel-eyebrow">MONTHLY LEADERS</span><h2>Top 30 · 月榜</h2></div><button class="text-button" data-action="open-ranking">完整榜单 <span>→</span></button></div>
+              <div class="month-summary"><strong>本月最值得关注的 30 个工程</strong><span><span class="status-dot"></span>实时计算中</span></div>
+              <div class="ranking-table" id="monthlyTable"></div>
+              <button class="load-more" id="loadMore">加载剩余 25 个工程 <span>↓</span></button>
+            </article>
+          </section>
+
+          <footer class="page-footer"><span>数据源：GitHub public events &amp; search API</span><span>最后完整同步 <strong id="footerUpdated">今天 14:32</strong></span><span class="footer-status"><span class="status-dot"></span>系统运行正常</span></footer>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"><span class="toast-icon">✓</span><span id="toastMessage">数据已更新</span></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
