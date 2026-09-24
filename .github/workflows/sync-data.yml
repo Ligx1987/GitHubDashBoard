@@ -3,7 +3,7 @@ name: sync-github-data
 # Refresh seed stats (stars/forks/open issues) from GitHub once a day and
 # commit the result. Only runs on the default branch; use "Run workflow" for
 # a manual sync. GITHUB_TOKEN is auto-provisioned (5000 API requests/hour,
-# plenty for the 215 seeded repos).
+# plenty for the 1551 seeded repos).
 on:
   schedule:
     - cron: "42 16 * * *" # 00:42 Beijing time, off the busy :00 mark

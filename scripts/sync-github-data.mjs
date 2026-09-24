@@ -37,11 +37,14 @@ const TOKEN = resolveToken();
 if (!TOKEN) console.log('note: no GITHUB_TOKEN, unauthenticated budget is ~60 repos/hour');
 
 // --- parse the seeds block by evaluating the array literal (same values the module sees)
+// Windows checkouts (core.autocrlf) give CRLF; keep the file's own EOL so the
+// regenerated block stays byte-uniform and the drift check compares cleanly.
 const source = readFileSync(DATA_FILE, 'utf8');
+const EOL = source.includes('\r\n') ? '\r\n' : '\n';
 const start = source.indexOf('const PROJECT_SEEDS = [');
 if (start < 0) throw new Error('PROJECT_SEEDS not found');
 const open = source.indexOf('[', start);
-const close = source.indexOf('\n];', open);
+const close = source.indexOf(EOL + '];', open);
 if (open < 0 || close < 0) throw new Error('PROJECT_SEEDS boundaries not found');
 const blockText = source.slice(open, close);
 const seeds = Function(`'use strict'; return (${blockText}\n]);`)();
@@ -123,7 +126,7 @@ for (let index = 0; index < targets.length; index += 1) {
 // --- regenerate the block byte-identically for untouched lines (abort on drift)
 const jsString = (value) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\x00-\x1f]/g, ' ')}'`;
 const emitSeed = (seed) => `  [${jsString(seed[0])}, ${jsString(seed[1])}, ${jsString(seed[2])}, '${seed[3]}', ${jsString(seed[4])}, ${seed[5]}, ${seed[6]}, ${seed[7]}, ${seed[8]}, ${seed[9]}, ${seed[10]}, ${jsString(seed[11])}, [${seed[12].map(jsString).join(', ')}], ${jsString(seed[13])}],`;
-const originalLines = blockText.split('\n');
+const originalLines = blockText.split(EOL);
 const nextLines = [];
 let cursor = 0;
 for (const line of originalLines) {
@@ -144,7 +147,7 @@ let next = '';
 if (DRY) {
   console.log(`\n[--dry] ${modified.size} repos would be re-baselined, ${changes.length} with changed stats:`);
 } else {
-  next = source.slice(0, open) + nextLines.join('\n') + source.slice(close);
+  next = source.slice(0, open) + nextLines.join(EOL) + source.slice(close);
   next = next.replace(/(真实数据快照 )\d{4}-\d{2}-\d{2}/, `$1${today}`);
   const tmp = `${DATA_FILE}.tmp`;
   writeFileSync(tmp, next);
