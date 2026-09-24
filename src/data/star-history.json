@@ -1,39 +1,39 @@
 {
   "openai/whisper": {
-    "2026-09-24": 109529
+    "2026-09-24": 109531
   },
   "ollama/ollama": {
-    "2026-09-24": 181552
+    "2026-09-24": 181555
   },
   "huggingface/transformers": {
-    "2026-09-24": 166574
+    "2026-09-24": 166577
   },
   "langchain-ai/langchain": {
-    "2026-09-24": 146957
+    "2026-09-24": 146958
   },
   "microsoft/semantic-kernel": {
-    "2026-09-24": 28593
+    "2026-09-24": 28594
   },
   "microsoft/vscode": {
     "2026-09-24": 192830
   },
   "neovim/neovim": {
-    "2026-09-24": 102541
+    "2026-09-24": 102544
   },
   "astral-sh/uv": {
-    "2026-09-24": 90117
+    "2026-09-24": 90122
   },
   "zed-industries/zed": {
-    "2026-09-24": 90792
+    "2026-09-24": 90791
   },
   "denoland/deno": {
     "2026-09-24": 108486
   },
   "facebook/react": {
-    "2026-09-24": 250673
+    "2026-09-24": 250675
   },
   "vercel/next.js": {
-    "2026-09-24": 142413
+    "2026-09-24": 142414
   },
   "sveltejs/svelte": {
     "2026-09-24": 88172
@@ -60,19 +60,19 @@
     "2026-09-24": 76876
   },
   "prometheus/prometheus": {
-    "2026-09-24": 66196
+    "2026-09-24": 66195
   },
   "apache/airflow": {
-    "2026-09-24": 46957
+    "2026-09-24": 46958
   },
   "dbt-labs/dbt-core": {
     "2026-09-24": 13915
   },
   "pandas-dev/pandas": {
-    "2026-09-24": 49787
+    "2026-09-24": 49788
   },
   "duckdb/duckdb": {
-    "2026-09-24": 41674
+    "2026-09-24": 41676
   },
   "apache/spark": {
     "2026-09-24": 44033
@@ -81,7 +81,7 @@
     "2026-09-24": 126703
   },
   "flutter/flutter": {
-    "2026-09-24": 179060
+    "2026-09-24": 179059
   },
   "expo/expo": {
     "2026-09-24": 52403
@@ -102,31 +102,31 @@
     "2026-09-24": 38048
   },
   "gitleaks/gitleaks": {
-    "2026-09-24": 29456
+    "2026-09-24": 29457
   },
   "microsoft/PowerToys": {
     "2026-09-24": 138953
   },
   "jesseduffield/lazygit": {
-    "2026-09-24": 82627
+    "2026-09-24": 82626
   },
   "junegunn/fzf": {
-    "2026-09-24": 83223
+    "2026-09-24": 83226
   },
   "ggml-org/llama.cpp": {
-    "2026-09-24": 129358
+    "2026-09-24": 129367
   },
   "AUTOMATIC1111/stable-diffusion-webui": {
-    "2026-09-24": 165091
+    "2026-09-24": 165092
   },
   "comfyanonymous/ComfyUI": {
-    "2026-09-24": 134750
+    "2026-09-24": 134755
   },
   "tokio-rs/tokio": {
     "2026-09-24": 33216
   },
   "rust-lang/rust-analyzer": {
-    "2026-09-24": 16868
+    "2026-09-24": 16869
   },
   "BurntSushi/ripgrep": {
     "2026-09-24": 68555
@@ -144,22 +144,22 @@
     "2026-09-24": 91141
   },
   "withastro/astro": {
-    "2026-09-24": 62776
+    "2026-09-24": 62777
   },
   "argoproj/argo-cd": {
-    "2026-09-24": 24226
+    "2026-09-24": 24227
   },
   "istio/istio": {
-    "2026-09-24": 38404
+    "2026-09-24": 38405
   },
   "helm/helm": {
     "2026-09-24": 30273
   },
   "pola-rs/polars": {
-    "2026-09-24": 39851
+    "2026-09-24": 39852
   },
   "ClickHouse/ClickHouse": {
-    "2026-09-24": 50043
+    "2026-09-24": 50045
   },
   "sigstore/cosign": {
     "2026-09-24": 6322
@@ -171,10 +171,10 @@
     "2026-09-24": 73478
   },
   "starship/starship": {
-    "2026-09-24": 60023
+    "2026-09-24": 60026
   },
   "DavidHDev/react-bits": {
-    "2026-09-24": 47961
+    "2026-09-24": 47965
   },
   "charmbracelet/crush": {
     "2026-09-24": 28277
@@ -186,16 +186,16 @@
     "2026-09-24": 2630
   },
   "openai/openai-agents-python": {
-    "2026-09-24": 29667
+    "2026-09-24": 29669
   },
   "google-gemini/gemini-cli": {
-    "2026-09-24": 107141
+    "2026-09-24": 107139
   },
   "volcengine/verl": {
     "2026-09-24": 23591
   },
   "microsoft/agent-framework": {
-    "2026-09-24": 13763
+    "2026-09-24": 13765
   },
   "nuejs/nue": {
     "2026-09-24": 8822
@@ -204,46 +204,46 @@
     "2026-09-24": 6416
   },
   "huggingface/smolagents": {
-    "2026-09-24": 29463
+    "2026-09-24": 29464
   },
   "deepseek-ai/DeepSeek-R1": {
-    "2026-09-24": 91973
+    "2026-09-24": 91969
   },
   "tensorzero/tensorzero": {
-    "2026-09-24": 11720
+    "2026-09-24": 11719
   },
   "daytonaio/daytona": {
-    "2026-09-24": 71725
+    "2026-09-24": 71723
   },
   "QwenLM/Qwen3": {
-    "2026-09-24": 27656
+    "2026-09-24": 27658
   },
   "openai/codex": {
-    "2026-09-24": 126212
+    "2026-09-24": 126221
   },
   "bytedance/UI-TARS": {
-    "2026-09-24": 11518
+    "2026-09-24": 11519
   },
   "sst/opencode": {
-    "2026-09-24": 209700
+    "2026-09-24": 209713
   },
   "voideditor/void": {
-    "2026-09-24": 28795
+    "2026-09-24": 28794
   },
   "Yonom/assistant-ui": {
-    "2026-09-24": 12282
+    "2026-09-24": 12284
   },
   "janhq/jan": {
-    "2026-09-24": 44628
+    "2026-09-24": 44630
   },
   "vllm-project/aibrix": {
-    "2026-09-24": 5107
+    "2026-09-24": 5108
   },
   "kgateway-dev/kgateway": {
     "2026-09-24": 5691
   },
   "promptfoo/promptfoo": {
-    "2026-09-24": 25411
+    "2026-09-24": 25410
   },
   "dlt-hub/dlt": {
     "2026-09-24": 5887
@@ -258,7 +258,7 @@
     "2026-09-24": 52234
   },
   "microsoft/PyRIT": {
-    "2026-09-24": 4534
+    "2026-09-24": 4535
   },
   "grafana/alloy": {
     "2026-09-24": 3553
@@ -267,22 +267,22 @@
     "2026-09-24": 3539
   },
   "openbao/openbao": {
-    "2026-09-24": 7471
+    "2026-09-24": 7472
   },
   "lancedb/lancedb": {
     "2026-09-24": 11513
   },
   "mendableai/firecrawl": {
-    "2026-09-24": 183920
+    "2026-09-24": 183945
   },
   "livekit/livekit": {
-    "2026-09-24": 21078
+    "2026-09-24": 21079
   },
   "Significant-Gravitas/Auto-GPT": {
-    "2026-09-24": 187516
+    "2026-09-24": 187514
   },
   "continuedev/continue": {
-    "2026-09-24": 36008
+    "2026-09-24": 36009
   },
   "paradedb/paradedb": {
     "2026-09-24": 9301
@@ -294,10 +294,10 @@
     "2026-09-24": 13789
   },
   "opencost/opencost": {
-    "2026-09-24": 6755
+    "2026-09-24": 6756
   },
   "usememos/memos": {
-    "2026-09-24": 63295
+    "2026-09-24": 63297
   },
   "lynx-family/lynx": {
     "2026-09-24": 15128
@@ -306,112 +306,112 @@
     "2026-09-24": 38660
   },
   "affaan-m/ECC": {
-    "2026-09-24": 266242
+    "2026-09-24": 266290
   },
   "DietrichGebert/ponytail": {
-    "2026-09-24": 145081
+    "2026-09-24": 145112
   },
   "Graphify-Labs/graphify": {
-    "2026-09-24": 120955
+    "2026-09-24": 120975
   },
   "JuliusBrussee/caveman": {
-    "2026-09-24": 107580
+    "2026-09-24": 107591
   },
   "nexu-io/open-design": {
-    "2026-09-24": 97852
+    "2026-09-24": 97861
   },
   "karpathy/autoresearch": {
-    "2026-09-24": 96689
+    "2026-09-24": 96694
   },
   "Leonxlnx/taste-skill": {
-    "2026-09-24": 89635
+    "2026-09-24": 89651
   },
   "koala73/worldmonitor": {
-    "2026-09-24": 87293
+    "2026-09-24": 87296
   },
   "Panniantong/Agent-Reach": {
-    "2026-09-24": 85126
+    "2026-09-24": 85133
   },
   "Egonex-AI/Understand-Anything": {
-    "2026-09-24": 83925
+    "2026-09-24": 83949
   },
   "rtk-ai/rtk": {
-    "2026-09-24": 81595
+    "2026-09-24": 81602
   },
   "stablyai/orca": {
-    "2026-09-24": 76702
+    "2026-09-24": 76769
   },
   "headroomlabs-ai/headroom": {
-    "2026-09-24": 73660
+    "2026-09-24": 73664
   },
   "career-ops-hq/career-ops": {
-    "2026-09-24": 72541
+    "2026-09-24": 72551
   },
   "tt-a1i/archify": {
-    "2026-09-24": 70709
+    "2026-09-24": 70751
   },
   "diegosouzapw/OmniRoute": {
-    "2026-09-24": 69643
+    "2026-09-24": 69668
   },
   "ZhuLinsen/daily_stock_analysis": {
-    "2026-09-24": 65543
+    "2026-09-24": 65547
   },
   "mvanhorn/last30days-skill": {
-    "2026-09-24": 62726
+    "2026-09-24": 62730
   },
   "calesthio/OpenMontage": {
-    "2026-09-24": 61067
+    "2026-09-24": 61075
   },
   "MemPalace/mempalace": {
-    "2026-09-24": 59255
+    "2026-09-24": 59257
   },
   "rohitg00/ai-engineering-from-scratch": {
-    "2026-09-24": 55795
+    "2026-09-24": 55805
   },
   "jamiepine/voicebox": {
-    "2026-09-24": 55542
+    "2026-09-24": 55544
   },
   "VoltAgent/awesome-openclaw-skills": {
-    "2026-09-24": 52757
+    "2026-09-24": 52760
   },
   "heygen-com/hyperframes": {
-    "2026-09-24": 52697
+    "2026-09-24": 52711
   },
   "blader/humanizer": {
-    "2026-09-24": 51692
+    "2026-09-24": 51704
   },
   "multica-ai/multica": {
-    "2026-09-24": 51242
+    "2026-09-24": 51250
   },
   "ayghri/i-have-adhd": {
-    "2026-09-24": 50737
+    "2026-09-24": 50756
   },
   "HKUDS/CLI-Anything": {
-    "2026-09-24": 49998
+    "2026-09-24": 50017
   },
   "Imbad0202/academic-research-skills": {
-    "2026-09-24": 49315
+    "2026-09-24": 49318
   },
   "kepano/obsidian-skills": {
-    "2026-09-24": 48816
+    "2026-09-24": 48822
   },
   "VoltAgent/awesome-design-md": {
-    "2026-09-24": 117561
+    "2026-09-24": 117574
   },
   "openai/symphony": {
-    "2026-09-24": 27382
+    "2026-09-24": 27383
   },
   "browser-use/video-use": {
-    "2026-09-24": 26566
+    "2026-09-24": 26601
   },
   "edwardkim/rhwp": {
     "2026-09-24": 3848
   },
   "NVlabs/cuda-oxide": {
-    "2026-09-24": 3577
+    "2026-09-24": 3578
   },
   "getopenscreen/openscreen": {
-    "2026-09-24": 3188
+    "2026-09-24": 3189
   },
   "Sidenai/sidex": {
     "2026-09-24": 3003
@@ -420,13 +420,13 @@
     "2026-09-24": 2249
   },
   "kunchenguid/treehouse": {
-    "2026-09-24": 1767
+    "2026-09-24": 1768
   },
   "ivov/lisette": {
     "2026-09-24": 1499
   },
   "devframes/devframe": {
-    "2026-09-24": 574
+    "2026-09-24": 575
   },
   "netz888/zhong-wechat-wmpf-debugger": {
     "2026-09-24": 112
@@ -435,64 +435,64 @@
     "2026-09-24": 94
   },
   "zhishile/codex-auth-helper": {
-    "2026-09-24": 16543
+    "2026-09-24": 16556
   },
   "lnkiai/m3e-canvas": {
-    "2026-09-24": 8098
+    "2026-09-24": 8104
   },
   "joeseesun/qiaomu-anything-to-notebooklm": {
     "2026-09-24": 6148
   },
   "MengTo/threeui": {
-    "2026-09-24": 6134
+    "2026-09-24": 6136
   },
   "srizzon/git-city": {
     "2026-09-24": 5787
   },
   "asciimoo/hister": {
-    "2026-09-24": 5631
+    "2026-09-24": 5632
   },
   "Achilng/floral-notepaper": {
     "2026-09-24": 5280
   },
   "DavidHDev/canvas-ui": {
-    "2026-09-24": 4677
+    "2026-09-24": 4678
   },
   "guokaigdg/animal-island-ui": {
-    "2026-09-24": 4661
+    "2026-09-24": 4662
   },
   "crafter-station/petdex": {
-    "2026-09-24": 4154
+    "2026-09-24": 4156
   },
   "Hypostasis-Cat/HypoMux": {
-    "2026-09-24": 3632
+    "2026-09-24": 3633
   },
   "cpaczek/skylight": {
     "2026-09-24": 3296
   },
   "zenbu-labs/terminal-browser": {
-    "2026-09-24": 3222
+    "2026-09-24": 3223
   },
   "gkurt/tegaki": {
     "2026-09-24": 3098
   },
   "jimuzhe/tiez-clipboard": {
-    "2026-09-24": 2862
+    "2026-09-24": 2863
   },
   "floci-io/floci": {
-    "2026-09-24": 25406
+    "2026-09-24": 25415
   },
   "caamer20/Telegram-Drive": {
-    "2026-09-24": 5188
+    "2026-09-24": 5189
   },
   "CJackHwang/ds2api": {
-    "2026-09-24": 4742
+    "2026-09-24": 4741
   },
   "ministackorg/ministack": {
     "2026-09-24": 4678
   },
   "nklmilojevic/sofka": {
-    "2026-09-24": 1438
+    "2026-09-24": 1439
   },
   "rohitg00/k8sgames": {
     "2026-09-24": 1369
@@ -510,10 +510,10 @@
     "2026-09-24": 1196
   },
   "bilawalsidhu/gods-eye-view": {
-    "2026-09-24": 41975
+    "2026-09-24": 42008
   },
   "hello245m/free-stockdb": {
-    "2026-09-24": 2689
+    "2026-09-24": 2690
   },
   "talivia-group/talivia": {
     "2026-09-24": 2393
@@ -525,7 +525,7 @@
     "2026-09-24": 1538
   },
   "DuarteSantos8/openGym": {
-    "2026-09-24": 1302
+    "2026-09-24": 1311
   },
   "ModernRelay/omnigraph": {
     "2026-09-24": 1197
@@ -537,37 +537,37 @@
     "2026-09-24": 624
   },
   "OpenLabs-so/openanalytics": {
-    "2026-09-24": 561
+    "2026-09-24": 562
   },
   "RavelloH/InsightFlare": {
-    "2026-09-24": 501
+    "2026-09-24": 503
   },
   "SouravRoy-ETL/slothdb": {
     "2026-09-24": 413
   },
   "hasaneyldrm/exercises-dataset": {
-    "2026-09-24": 22246
+    "2026-09-24": 22250
   },
   "vorssaint/vorssaint-utils": {
-    "2026-09-24": 21103
+    "2026-09-24": 21108
   },
   "rorkai/App-Store-Connect-CLI": {
-    "2026-09-24": 7336
+    "2026-09-24": 7337
   },
   "tiajinsha/JKVideo": {
     "2026-09-24": 4995
   },
   "PerryTS/perry": {
-    "2026-09-24": 4888
+    "2026-09-24": 4889
   },
   "mayukh4/linux-android": {
     "2026-09-24": 3560
   },
   "software-mansion/argent": {
-    "2026-09-24": 2884
+    "2026-09-24": 2885
   },
   "Shrey113/Android-Dex": {
-    "2026-09-24": 2657
+    "2026-09-24": 2659
   },
   "yjeanrenaud/yj_nearbyglasses": {
     "2026-09-24": 2374
@@ -576,13 +576,13 @@
     "2026-09-24": 2217
   },
   "pass-with-high-score/blockads-android": {
-    "2026-09-24": 2064
+    "2026-09-24": 2065
   },
   "kitsumed/ShizuCallRecorder": {
     "2026-09-24": 1587
   },
   "anthropics/defending-code-reference-harness": {
-    "2026-09-24": 7515
+    "2026-09-24": 7516
   },
   "AdventDevInc/kudu": {
     "2026-09-24": 3569
@@ -603,36 +603,4044 @@
     "2026-09-24": 1465
   },
   "anonvector/SlipNet": {
-    "2026-09-24": 1433
+    "2026-09-24": 1432
   },
   "anywhere-labs/dsh-desktop": {
-    "2026-09-24": 28734
+    "2026-09-24": 28755
   },
   "jarrodwatts/claude-hud": {
-    "2026-09-24": 28140
+    "2026-09-24": 28142
   },
   "refactoringhq/tolaria": {
-    "2026-09-24": 19876
+    "2026-09-24": 19878
   },
   "Kuberwastaken/claurst": {
     "2026-09-24": 10306
   },
   "modem-dev/hunk": {
-    "2026-09-24": 9371
+    "2026-09-24": 9372
   },
   "TomBadash/Mouser": {
     "2026-09-24": 5261
   },
   "Tianyu199509/DeskBox": {
-    "2026-09-24": 5099
+    "2026-09-24": 5105
   },
   "fallow-rs/fallow": {
-    "2026-09-24": 4844
+    "2026-09-24": 4845
   },
   "Jia-Ethan/codex-keysmith": {
-    "2026-09-24": 4586
+    "2026-09-24": 4585
   },
   "crmne/spotifast": {
-    "2026-09-24": 4562
+    "2026-09-24": 4564
+  },
+  "HKUDS/nanobot": {
+    "2026-09-24": 48523
+  },
+  "sickn33/agentic-awesome-skills": {
+    "2026-09-24": 46846
+  },
+  "DeusData/codebase-memory-mcp": {
+    "2026-09-24": 44667
+  },
+  "MadsLorentzen/ai-job-search": {
+    "2026-09-24": 43766
+  },
+  "vercel-labs/agent-browser": {
+    "2026-09-24": 43131
+  },
+  "cathrynlavery/diagram-design": {
+    "2026-09-24": 42228
+  },
+  "Hmbown/Codewhale": {
+    "2026-09-24": 41034
+  },
+  "herdrdev/herdr": {
+    "2026-09-24": 40477
+  },
+  "tinyhumansai/openhuman": {
+    "2026-09-24": 40079
+  },
+  "Yeachan-Heo/oh-my-claudecode": {
+    "2026-09-24": 39326
+  },
+  "THU-MAIC/OpenMAIC": {
+    "2026-09-24": 38819
+  },
+  "volcengine/OpenViking": {
+    "2026-09-24": 38570
+  },
+  "JustVugg/colibri": {
+    "2026-09-24": 37381
+  },
+  "AlexsJones/llmfit": {
+    "2026-09-24": 37097
+  },
+  "zhaoxuya520/reverse-skill": {
+    "2026-09-24": 37036
+  },
+  "esengine/DeepSeek-Reasonix": {
+    "2026-09-24": 35703
+  },
+  "agentscope-ai/QwenPaw": {
+    "2026-09-24": 35249
+  },
+  "debpalash/VoiceStudio": {
+    "2026-09-24": 34982
+  },
+  "JCodesMore/ai-website-cloner-template": {
+    "2026-09-24": 34860
+  },
+  "Leey21/awesome-ai-research-writing": {
+    "2026-09-24": 34326
+  },
+  "HKUDS/Vibe-Trading": {
+    "2026-09-24": 33914
+  },
+  "Gitlawb/openclaude": {
+    "2026-09-24": 33508
+  },
+  "freestylefly/awesome-gpt-image-2": {
+    "2026-09-24": 33430
+  },
+  "mukul975/Anthropic-Cybersecurity-Skills": {
+    "2026-09-24": 33291
+  },
+  "zeroclaw-labs/zeroclaw": {
+    "2026-09-24": 32875
+  },
+  "vercel-labs/skills": {
+    "2026-09-24": 32360
+  },
+  "virgiliojr94/book-to-skill": {
+    "2026-09-24": 32187
+  },
+  "tirth8205/code-review-graph": {
+    "2026-09-24": 31749
+  },
+  "CloakHQ/CloakBrowser": {
+    "2026-09-24": 31660
+  },
+  "iOfficeAI/OfficeCLI": {
+    "2026-09-24": 31151
+  },
+  "googleworkspace/cli": {
+    "2026-09-24": 31133
+  },
+  "zarazhangrui/frontend-slides": {
+    "2026-09-24": 29762
+  },
+  "decolua/9router": {
+    "2026-09-24": 29702
+  },
+  "jackwener/OpenCLI": {
+    "2026-09-24": 29586
+  },
+  "Nutlope/hallmark": {
+    "2026-09-24": 29097
+  },
+  "rohitg00/agentmemory": {
+    "2026-09-24": 28779
+  },
+  "h4ckf0r0day/obscura": {
+    "2026-09-24": 27785
+  },
+  "manaflow-ai/cmux": {
+    "2026-09-24": 27376
+  },
+  "TencentCloud/TencentDB-Agent-Memory": {
+    "2026-09-24": 27218
+  },
+  "OthmanAdi/planning-with-files": {
+    "2026-09-24": 27096
+  },
+  "op7418/guizang-ppt-skill": {
+    "2026-09-24": 26870
+  },
+  "Donchitos/Claude-Code-Game-Studios": {
+    "2026-09-24": 25394
+  },
+  "mksglu/context-mode": {
+    "2026-09-24": 24001
+  },
+  "guillaumemeyer/watermarks-remover": {
+    "2026-09-24": 22695
+  },
+  "jundot/omlx": {
+    "2026-09-24": 22158
+  },
+  "snarktank/ralph": {
+    "2026-09-24": 21849
+  },
+  "cloudflare/security-audit-skill": {
+    "2026-09-24": 20985
+  },
+  "KKKKhazix/khazix-skills": {
+    "2026-09-24": 20911
+  },
+  "jnMetaCode/agency-agents-zh": {
+    "2026-09-24": 20913
+  },
+  "NandhaKishorM/laya": {
+    "2026-09-24": 21092
+  },
+  "every-app/open-seo": {
+    "2026-09-24": 20615
+  },
+  "t8y2/dbx": {
+    "2026-09-24": 20574
+  },
+  "google/skills": {
+    "2026-09-24": 20326
+  },
+  "1jehuang/jcode": {
+    "2026-09-24": 20068
+  },
+  "teng-lin/notebooklm-py": {
+    "2026-09-24": 19441
+  },
+  "jlcodes99/cockpit-tools": {
+    "2026-09-24": 18313
+  },
+  "op7418/Humanizer-zh": {
+    "2026-09-24": 18255
+  },
+  "RightNow-AI/openfang": {
+    "2026-09-24": 18211
+  },
+  "NVIDIA/SkillSpector": {
+    "2026-09-24": 18188
+  },
+  "browser-use/browser-harness": {
+    "2026-09-24": 18071
+  },
+  "AgriciDaniel/claude-seo": {
+    "2026-09-24": 17561
+  },
+  "hardikpandya/stop-slop": {
+    "2026-09-24": 17536
+  },
+  "EvoLinkAI/awesome-gpt-image-2-API-and-Prompts": {
+    "2026-09-24": 17238
+  },
+  "cft0808/edict": {
+    "2026-09-24": 16907
+  },
+  "img2threejs/img2threejs": {
+    "2026-09-24": 16666
+  },
+  "composio-community/awesome-codex-skills": {
+    "2026-09-24": 16627
+  },
+  "wanshuiyin/Auto-claude-code-research-in-sleep": {
+    "2026-09-24": 16581
+  },
+  "xbtlin/ai-berkshire": {
+    "2026-09-24": 16509
+  },
+  "earthtojake/text-to-cad": {
+    "2026-09-24": 16332
+  },
+  "lidge-jun/opencodex": {
+    "2026-09-24": 16132
+  },
+  "HBAI-Ltd/Toonflow-app": {
+    "2026-09-24": 15965
+  },
+  "walkinglabs/learn-harness-engineering": {
+    "2026-09-24": 15885
+  },
+  "ifixai-ai/iFixAi": {
+    "2026-09-24": 15712
+  },
+  "chenhg5/cc-connect": {
+    "2026-09-24": 15651
+  },
+  "hypit-ai/hypit": {
+    "2026-09-24": 15631
+  },
+  "chatfire-AI/huobao-drama": {
+    "2026-09-24": 15488
+  },
+  "yc-software/qm": {
+    "2026-09-24": 15225
+  },
+  "AgriciDaniel/claude-obsidian": {
+    "2026-09-24": 15183
+  },
+  "millionco/react-doctor": {
+    "2026-09-24": 14914
+  },
+  "kyegomez/OpenMythos": {
+    "2026-09-24": 14905
+  },
+  "mindfold-ai/Trellis": {
+    "2026-09-24": 14793
+  },
+  "NanmiCoder/cc-haha": {
+    "2026-09-24": 14695
+  },
+  "palmier-io/palmier-pro": {
+    "2026-09-24": 14453
+  },
+  "fathah/hermes-desktop": {
+    "2026-09-24": 14292
+  },
+  "nidhinjs/prompt-master": {
+    "2026-09-24": 13586
+  },
+  "XiaomiMiMo/MiMo-Code": {
+    "2026-09-24": 13454
+  },
+  "TencentCloud/CubeSandbox": {
+    "2026-09-24": 12692
+  },
+  "nearai/ironclaw": {
+    "2026-09-24": 12630
+  },
+  "oblien/openship": {
+    "2026-09-24": 12437
+  },
+  "cactus-compute/needle": {
+    "2026-09-24": 12443
+  },
+  "calesthio/Crucix": {
+    "2026-09-24": 11991
+  },
+  "yizhiyanhua-ai/fireworks-tech-graph": {
+    "2026-09-24": 11538
+  },
+  "holaboss-ai/holaOS": {
+    "2026-09-24": 11373
+  },
+  "cobusgreyling/loop-engineering": {
+    "2026-09-24": 11293
+  },
+  "getagentseal/codeburn": {
+    "2026-09-24": 11196
+  },
+  "EKKOLearnAI/ekko-studio": {
+    "2026-09-24": 11185
+  },
+  "miuuyy/codex-chatgpt-web": {
+    "2026-09-24": 10950
+  },
+  "openai/codex-security": {
+    "2026-09-24": 10838
+  },
+  "rocketride-org/rocketride-server": {
+    "2026-09-24": 10551
+  },
+  "astrid-runtime/astrid": {
+    "2026-09-24": 10281
+  },
+  "omnigent-ai/omnigent": {
+    "2026-09-24": 10197
+  },
+  "StarTrail-org/PixelRAG": {
+    "2026-09-24": 10089
+  },
+  "Narcooo/inkos": {
+    "2026-09-24": 10027
+  },
+  "deeplethe/utopia": {
+    "2026-09-24": 9878
+  },
+  "Agents365-ai/drawio-skill": {
+    "2026-09-24": 9646
+  },
+  "google/artemis": {
+    "2026-09-24": 9595
+  },
+  "AgriciDaniel/claude-ads": {
+    "2026-09-24": 9513
+  },
+  "Thysrael/Horizon": {
+    "2026-09-24": 9446
+  },
+  "crynta/terax-ai": {
+    "2026-09-24": 9237
+  },
+  "trailhq/Graft": {
+    "2026-09-24": 9129
+  },
+  "EvoMap/evolver": {
+    "2026-09-24": 9116
+  },
+  "dataelement/dsh-desktop": {
+    "2026-09-24": 8870
+  },
+  "Nasiko-Labs/nasiko": {
+    "2026-09-24": 8766
+  },
+  "open-pencil/open-pencil": {
+    "2026-09-24": 8586
+  },
+  "FareedKhan-dev/kimi-k3-in-c": {
+    "2026-09-24": 8464
+  },
+  "mnfst/awesome-free-llm-apis": {
+    "2026-09-24": 8215
+  },
+  "jnMetaCode/superpowers-zh": {
+    "2026-09-24": 8203
+  },
+  "nullclaw/nullclaw": {
+    "2026-09-24": 8101
+  },
+  "chaitanyagiri/munder-difflin": {
+    "2026-09-24": 7884
+  },
+  "open-slide/open-slide": {
+    "2026-09-24": 7647
+  },
+  "ValueCell-ai/ClawX": {
+    "2026-09-24": 7609
+  },
+  "genspark-ai/genoffice": {
+    "2026-09-24": 7616
+  },
+  "zai-org/GLM-5": {
+    "2026-09-24": 7231
+  },
+  "Gentleman-Programming/gentle-ai": {
+    "2026-09-24": 7206
+  },
+  "WenyuChiou/awesome-agentic-ai-zh": {
+    "2026-09-24": 7164
+  },
+  "MakazhanAlpamys/Soup": {
+    "2026-09-24": 7069
+  },
+  "TokenRhythm/opensquilla": {
+    "2026-09-24": 7055
+  },
+  "arcboxlabs/arcbox": {
+    "2026-09-24": 7138
+  },
+  "repowise-dev/repowise": {
+    "2026-09-24": 6993
+  },
+  "open-multi-agent/open-multi-agent": {
+    "2026-09-24": 6953
+  },
+  "drumih/turbo-fieldfare": {
+    "2026-09-24": 6816
+  },
+  "Osmantic/ODS": {
+    "2026-09-24": 6775
+  },
+  "tech-leads-club/agent-skills": {
+    "2026-09-24": 6722
+  },
+  "outsourc-e/hermes-workspace": {
+    "2026-09-24": 6662
+  },
+  "BlockRunAI/ClawRouter": {
+    "2026-09-24": 6612
+  },
+  "BuilderIO/agent-native": {
+    "2026-09-24": 6629
+  },
+  "XiaoDuoYa/codex-with-chatgpt": {
+    "2026-09-24": 6558
+  },
+  "Forget-C/Jellyfish": {
+    "2026-09-24": 6485
+  },
+  "op7418/CodePilot": {
+    "2026-09-24": 6471
+  },
+  "dramaclaw/dramaclaw": {
+    "2026-09-24": 6450
+  },
+  "Arthur-Ficial/apfel": {
+    "2026-09-24": 6440
+  },
+  "uditgoenka/autoresearch": {
+    "2026-09-24": 6395
+  },
+  "microsoft/agent-governance-toolkit": {
+    "2026-09-24": 6325
+  },
+  "KunAgent/Kun": {
+    "2026-09-24": 6323
+  },
+  "builderz-labs/mission-control": {
+    "2026-09-24": 6262
+  },
+  "elder-plinius/T3MP3ST": {
+    "2026-09-24": 6236
+  },
+  "MinishLab/semble": {
+    "2026-09-24": 6136
+  },
+  "pacifio/atlas": {
+    "2026-09-24": 6119
+  },
+  "Q00/ouroboros": {
+    "2026-09-24": 6082
+  },
+  "netease-youdao/LobsterAI": {
+    "2026-09-24": 6066
+  },
+  "Dicklesworthstone/destructive_command_guard": {
+    "2026-09-24": 6047
+  },
+  "FlorianBruniaux/claude-code-ultimate-guide": {
+    "2026-09-24": 6021
+  },
+  "ZSeven-W/openpencil": {
+    "2026-09-24": 6016
+  },
+  "google/agents-cli": {
+    "2026-09-24": 5987
+  },
+  "tw93/Kaku": {
+    "2026-09-24": 5979
+  },
+  "truefoundry/trueforge": {
+    "2026-09-24": 5942
+  },
+  "fengshao1227/ccg-workflow": {
+    "2026-09-24": 5913
+  },
+  "oomol-lab/open-connector": {
+    "2026-09-24": 5882
+  },
+  "memovai/mimiclaw": {
+    "2026-09-24": 5766
+  },
+  "0xNyk/awesome-hermes-agent": {
+    "2026-09-24": 5736
+  },
+  "epoko77-ai/im-not-ai": {
+    "2026-09-24": 5692
+  },
+  "wiltodelta/remove-ai-watermarks": {
+    "2026-09-24": 5653
+  },
+  "apache/maka": {
+    "2026-09-24": 5638
+  },
+  "Galaxy-Dawn/claude-scholar": {
+    "2026-09-24": 5616
+  },
+  "wuyoscar/GPT-Image2-Skill": {
+    "2026-09-24": 5539
+  },
+  "BIT-DataLab/Edit-Banana": {
+    "2026-09-24": 5494
+  },
+  "CopilotKit/OpenBot": {
+    "2026-09-24": 5476
+  },
+  "spinabot/brigade": {
+    "2026-09-24": 5403
+  },
+  "KnockOutEZ/wigolo": {
+    "2026-09-24": 5397
+  },
+  "jev-chat/jev-chat-jarvis": {
+    "2026-09-24": 5403
+  },
+  "SenteLabsAI/OpenExecutive": {
+    "2026-09-24": 5243
+  },
+  "bojieli/ai-infra-book": {
+    "2026-09-24": 5167
+  },
+  "FailproofAI/failproofai": {
+    "2026-09-24": 5140
+  },
+  "malisper/pgrust": {
+    "2026-09-24": 5121
+  },
+  "entireio/cli": {
+    "2026-09-24": 5113
+  },
+  "PeonPing/peon-ping": {
+    "2026-09-24": 5050
+  },
+  "TabularisDB/tabularis": {
+    "2026-09-24": 5046
+  },
+  "fspecii/ace-step-ui": {
+    "2026-09-24": 4964
+  },
+  "shy3130/tick-stock-panel": {
+    "2026-09-24": 4940
+  },
+  "aipoch/open-science": {
+    "2026-09-24": 4914
+  },
+  "didilili/ai-agents-from-zero": {
+    "2026-09-24": 4871
+  },
+  "alvinreal/awesome-opensource-ai": {
+    "2026-09-24": 4774
+  },
+  "TencentCloud/Octop": {
+    "2026-09-24": 4789
+  },
+  "callstack/agent-device": {
+    "2026-09-24": 4754
+  },
+  "benjitaylor/agentation": {
+    "2026-09-24": 4753
+  },
+  "mvanhorn/cli-printing-press": {
+    "2026-09-24": 4739
+  },
+  "conorbronsdon/avoid-ai-writing": {
+    "2026-09-24": 4701
+  },
+  "NateBJones-Projects/OB1": {
+    "2026-09-24": 4640
+  },
+  "VectifyAI/OpenKB": {
+    "2026-09-24": 4555
+  },
+  "FlowElement-xinliuyuansu/m_flow": {
+    "2026-09-24": 4509
+  },
+  "ai-boost/awesome-harness-engineering": {
+    "2026-09-24": 4493
+  },
+  "AlexAnys/awesome-openclaw-usecases-zh": {
+    "2026-09-24": 4446
+  },
+  "walkinglabs/hands-on-modern-rl": {
+    "2026-09-24": 4444
+  },
+  "Anakin-Inc/anakin": {
+    "2026-09-24": 4403
+  },
+  "Human-Agent-Society/reef": {
+    "2026-09-24": 4394
+  },
+  "Dimillian/CodexMonitor": {
+    "2026-09-24": 4336
+  },
+  "inkeep/open-knowledge": {
+    "2026-09-24": 4305
+  },
+  "UditAkhourii/adhd": {
+    "2026-09-24": 4273
+  },
+  "lintsinghua/claude-code-book": {
+    "2026-09-24": 4273
+  },
+  "nolabs-ai/nono": {
+    "2026-09-24": 4199
+  },
+  "dataelement/Clawith": {
+    "2026-09-24": 4158
+  },
+  "walkinglabs/awesome-harness-engineering": {
+    "2026-09-24": 4143
+  },
+  "Manavarya09/design-extract": {
+    "2026-09-24": 4141
+  },
+  "OpenMOSS/MOSS-TTS": {
+    "2026-09-24": 4137
+  },
+  "kirodotdev/KiroCrew": {
+    "2026-09-24": 4119
+  },
+  "EverMind-AI/Raven": {
+    "2026-09-24": 4053
+  },
+  "yifanfeng97/Hyper-Extract": {
+    "2026-09-24": 3993
+  },
+  "mergisi/awesome-openclaw-agents": {
+    "2026-09-24": 3984
+  },
+  "totec448-spec/chat-on-steroids": {
+    "2026-09-24": 3985
+  },
+  "matt1398/claude-devtools": {
+    "2026-09-24": 3947
+  },
+  "get-bb/bb": {
+    "2026-09-24": 3882
+  },
+  "echo-loop/Echo-Loop": {
+    "2026-09-24": 3885
+  },
+  "nowork-studio/notfair-plugin": {
+    "2026-09-24": 3852
+  },
+  "golutra/golutra": {
+    "2026-09-24": 3847
+  },
+  "yvgude/lean-ctx": {
+    "2026-09-24": 3830
+  },
+  "raullenchai/Rapid-MLX": {
+    "2026-09-24": 3827
+  },
+  "1186258278/OpenClawChineseTranslation": {
+    "2026-09-24": 3800
+  },
+  "tutti-os/tutti": {
+    "2026-09-24": 3781
+  },
+  "aiming-lab/SimpleMem": {
+    "2026-09-24": 3788
+  },
+  "CookSleep/gpt_image_playground": {
+    "2026-09-24": 3773
+  },
+  "zvec-ai/zvec-grep": {
+    "2026-09-24": 3748
+  },
+  "HiThink-Tech/Financial-API": {
+    "2026-09-24": 3747
+  },
+  "yaojingang/GEOFlow": {
+    "2026-09-24": 3691
+  },
+  "butterbase-ai/butterbase": {
+    "2026-09-24": 3690
+  },
+  "geekjourneyx/md2wechat-skill": {
+    "2026-09-24": 3670
+  },
+  "Windy3f3f3f3f/how-claude-code-works": {
+    "2026-09-24": 3668
+  },
+  "synthetic-sciences/openscience": {
+    "2026-09-24": 3636
+  },
+  "Open-Less/openless": {
+    "2026-09-24": 3626
+  },
+  "melgarafael/DeskcommCRM": {
+    "2026-09-24": 3633
+  },
+  "code-yeongyu/lazycodex": {
+    "2026-09-24": 3618
+  },
+  "graykode/abtop": {
+    "2026-09-24": 3618
+  },
+  "nextlevelbuilder/goclaw": {
+    "2026-09-24": 3614
+  },
+  "simonlin1212/TradingAgents-astock": {
+    "2026-09-24": 3537
+  },
+  "Leonxlnx/unlazy": {
+    "2026-09-24": 3528
+  },
+  "onecli/onecli": {
+    "2026-09-24": 3512
+  },
+  "jordan-gibbs/hyperresearch": {
+    "2026-09-24": 3511
+  },
+  "aiming-lab/MetaClaw": {
+    "2026-09-24": 3493
+  },
+  "google-antigravity/antigravity-sdk-python": {
+    "2026-09-24": 3494
+  },
+  "skyhook-io/radar": {
+    "2026-09-24": 3458
+  },
+  "Mesh-LLM/mesh-llm": {
+    "2026-09-24": 3446
+  },
+  "FireRedTeam/FireRed-OpenStoryline": {
+    "2026-09-24": 3434
+  },
+  "Netw0rkNoob/VulnClaw": {
+    "2026-09-24": 3417
+  },
+  "TestSprite/testsprite-cli": {
+    "2026-09-24": 3400
+  },
+  "dimthink/PriceAI": {
+    "2026-09-24": 3369
+  },
+  "fuxicodex/Fuxi": {
+    "2026-09-24": 3365
+  },
+  "ljagiello/ctf-skills": {
+    "2026-09-24": 3337
+  },
+  "Observal/Observal": {
+    "2026-09-24": 3352
+  },
+  "samber/cc-skills-golang": {
+    "2026-09-24": 3322
+  },
+  "giancarloerra/SocratiCode": {
+    "2026-09-24": 3318
+  },
+  "lxf746/any-auto-register": {
+    "2026-09-24": 3310
+  },
+  "sentrux/sentrux": {
+    "2026-09-24": 3285
+  },
+  "agent-of-empires/agent-of-empires": {
+    "2026-09-24": 3285
+  },
+  "mnemosyne-oss/mnemosyne": {
+    "2026-09-24": 3250
+  },
+  "bradygaster/squad": {
+    "2026-09-24": 3231
+  },
+  "open-webui/open-terminal": {
+    "2026-09-24": 3221
+  },
+  "Jakubantalik/thinking-orbs": {
+    "2026-09-24": 3213
+  },
+  "agavra/tuicr": {
+    "2026-09-24": 3200
+  },
+  "amitshekhariitbhu/ai-engineering-interview-questions": {
+    "2026-09-24": 3175
+  },
+  "ccch1mneyyy/dsh-TUI": {
+    "2026-09-24": 3170
+  },
+  "off-grid-ai/OGAM": {
+    "2026-09-24": 3156
+  },
+  "yilewang/llm-for-zotero": {
+    "2026-09-24": 3134
+  },
+  "viperrcrypto/Siftly": {
+    "2026-09-24": 3050
+  },
+  "microsoft/skills": {
+    "2026-09-24": 3049
+  },
+  "Tiger3807861189/J-Space-Cognition-Suite": {
+    "2026-09-24": 3009
+  },
+  "vercel-labs/opensrc": {
+    "2026-09-24": 3002
+  },
+  "open-gitagent/opengap": {
+    "2026-09-24": 2955
+  },
+  "collabs-inc/collab-public": {
+    "2026-09-24": 2946
+  },
+  "qingchencloud/clawpanel": {
+    "2026-09-24": 2934
+  },
+  "bergside/awesome-design-skills": {
+    "2026-09-24": 2905
+  },
+  "deeplethe/forkd": {
+    "2026-09-24": 2902
+  },
+  "rohitg00/pro-workflow": {
+    "2026-09-24": 2876
+  },
+  "moltis-org/moltis": {
+    "2026-09-24": 2869
+  },
+  "CyberStrikeus/CyberStrike": {
+    "2026-09-24": 2855
+  },
+  "makecindy/cindy": {
+    "2026-09-24": 2809
+  },
+  "superdesigndev/treg": {
+    "2026-09-24": 2813
+  },
+  "sheeki03/tirith": {
+    "2026-09-24": 2735
+  },
+  "glincker/thesvg": {
+    "2026-09-24": 2723
+  },
+  "cocoindex-io/cocoindex-code": {
+    "2026-09-24": 2716
+  },
+  "jgravelle/jcodemunch-mcp": {
+    "2026-09-24": 2712
+  },
+  "shadcn-ui/lint": {
+    "2026-09-24": 2712
+  },
+  "runkids/skillshare": {
+    "2026-09-24": 2689
+  },
+  "openlake-project/openlake": {
+    "2026-09-24": 2662
+  },
+  "codedogQBY/ReadAny": {
+    "2026-09-24": 2652
+  },
+  "Helvesec/rmux": {
+    "2026-09-24": 2644
+  },
+  "org2AI/ORG2": {
+    "2026-09-24": 2631
+  },
+  "hi-godot/godot-ai": {
+    "2026-09-24": 2574
+  },
+  "CoderLuii/HolyClaude": {
+    "2026-09-24": 2571
+  },
+  "simonlin1212/Vibe-Research": {
+    "2026-09-24": 2556
+  },
+  "cisco-ai-defense/skill-scanner": {
+    "2026-09-24": 2548
+  },
+  "AtomicBot-ai/atomic-agent": {
+    "2026-09-24": 2546
+  },
+  "nitrocloudofficial/nitrostack": {
+    "2026-09-24": 2485
+  },
+  "zerobootdev/zeroboot": {
+    "2026-09-24": 2452
+  },
+  "knowsuchagency/mcp2cli": {
+    "2026-09-24": 2406
+  },
+  "Prism-Shadow/penguin-harness": {
+    "2026-09-24": 2370
+  },
+  "0xMassi/webclaw": {
+    "2026-09-24": 2360
+  },
+  "cytostack/openwolf": {
+    "2026-09-24": 2358
+  },
+  "Astro-Han/karpathy-llm-wiki": {
+    "2026-09-24": 2350
+  },
+  "DenisSergeevitch/agents-best-practices": {
+    "2026-09-24": 2348
+  },
+  "redhat-et/ripwire": {
+    "2026-09-24": 2332
+  },
+  "lexmount/moli": {
+    "2026-09-24": 2308
+  },
+  "agentrhq/webcmd": {
+    "2026-09-24": 2294
+  },
+  "oh-my-mermaid/oh-my-mermaid": {
+    "2026-09-24": 2269
+  },
+  "Infisical/agent-vault": {
+    "2026-09-24": 2256
+  },
+  "vasu-devs/JustHireMe": {
+    "2026-09-24": 2252
+  },
+  "antoinezambelli/forge": {
+    "2026-09-24": 2251
+  },
+  "proma-ai/Proma": {
+    "2026-09-24": 2205
+  },
+  "zeronsh/zeron": {
+    "2026-09-24": 2196
+  },
+  "Kuddev/pebrel": {
+    "2026-09-24": 2198
+  },
+  "HUANGCHIHHUNGLeo/claude-real-video": {
+    "2026-09-24": 2179
+  },
+  "v-modal/vmodal_sdk_flutter": {
+    "2026-09-24": 2142
+  },
+  "Pinvou/pinvou-agent": {
+    "2026-09-24": 2113
+  },
+  "atomicstrata/llm-wiki-compiler": {
+    "2026-09-24": 2106
+  },
+  "eugene1g/agent-safehouse": {
+    "2026-09-24": 2079
+  },
+  "tddworks/baguette": {
+    "2026-09-24": 2074
+  },
+  "LetsFG/LetsFG": {
+    "2026-09-24": 2059
+  },
+  "voocel/ainovel-cli": {
+    "2026-09-24": 2048
+  },
+  "can4hou6joeng4/boss-agent-cli": {
+    "2026-09-24": 2031
+  },
+  "afar1/fieldtheory-cli": {
+    "2026-09-24": 2028
+  },
+  "microsoft/intelligent-terminal": {
+    "2026-09-24": 2024
+  },
+  "yb2460/harness-anything": {
+    "2026-09-24": 2023
+  },
+  "Vincentwei1021/anything2explainer": {
+    "2026-09-24": 2019
+  },
+  "omnimind-ai/OmniBot": {
+    "2026-09-24": 2010
+  },
+  "MemTensor/memmy-agent": {
+    "2026-09-24": 1978
+  },
+  "bergside/typeui": {
+    "2026-09-24": 1974
+  },
+  "bohyy/academic-ai-prompt": {
+    "2026-09-24": 1963
+  },
+  "xu-xiang/everything-claude-code-zh": {
+    "2026-09-24": 1961
+  },
+  "Shpigford/chops": {
+    "2026-09-24": 1921
+  },
+  "skalesapp/skales": {
+    "2026-09-24": 1921
+  },
+  "valqore/valqore": {
+    "2026-09-24": 1911
+  },
+  "Syngnat/GoNavi": {
+    "2026-09-24": 1906
+  },
+  "MG1937/ASC": {
+    "2026-09-24": 1909
+  },
+  "Yuan-lab-LLM/ClawManager": {
+    "2026-09-24": 1897
+  },
+  "yoanbernabeu/grepai": {
+    "2026-09-24": 1884
+  },
+  "zhu1090093659/deepseek-pp": {
+    "2026-09-24": 1874
+  },
+  "Core-Mate/OpenGUI": {
+    "2026-09-24": 1804
+  },
+  "wm94i/Work-Review": {
+    "2026-09-24": 1792
+  },
+  "yyjeqhc/webcodex": {
+    "2026-09-24": 1797
+  },
+  "delibae/claude-prism": {
+    "2026-09-24": 1784
+  },
+  "Dicklesworthstone/pi_agent_rust": {
+    "2026-09-24": 1775
+  },
+  "he-yufeng/CoreCoder": {
+    "2026-09-24": 1774
+  },
+  "AidanPark/openclaw-android": {
+    "2026-09-24": 1762
+  },
+  "DSH-EAC/DSH-Desktop-EAC": {
+    "2026-09-24": 1762
+  },
+  "mithun50/openclaw-termux": {
+    "2026-09-24": 1719
+  },
+  "Eynzof/Hermes-CN-Desktop": {
+    "2026-09-24": 1717
+  },
+  "xiufengsun/TokenTracker": {
+    "2026-09-24": 1710
+  },
+  "google/mantis": {
+    "2026-09-24": 1704
+  },
+  "qufei1993/skills-hub": {
+    "2026-09-24": 1696
+  },
+  "0xSteph/pentest-ai": {
+    "2026-09-24": 1694
+  },
+  "gi-dellav/zerostack": {
+    "2026-09-24": 1687
+  },
+  "Gitlawb/zero": {
+    "2026-09-24": 1684
+  },
+  "lorryjovens-hub/claude-code-rust": {
+    "2026-09-24": 1662
+  },
+  "qingjian-team/qingjian": {
+    "2026-09-24": 1664
+  },
+  "lucasastorian/llmwiki": {
+    "2026-09-24": 1643
+  },
+  "OpenOSINT/OpenOSINT": {
+    "2026-09-24": 1631
+  },
+  "AMAP-ML/LongHorizon-Harness": {
+    "2026-09-24": 1622
+  },
+  "lahfir/agent-desktop": {
+    "2026-09-24": 1606
+  },
+  "Kaelio/ktx": {
+    "2026-09-24": 1601
+  },
+  "DeadWaveWave/opencove": {
+    "2026-09-24": 1598
+  },
+  "Augani/dory": {
+    "2026-09-24": 1593
+  },
+  "openilink/openilink-hub": {
+    "2026-09-24": 1583
+  },
+  "AnalyseDeCircuit/oxideterm": {
+    "2026-09-24": 1585
+  },
+  "mukul975/cve-mcp-server": {
+    "2026-09-24": 1582
+  },
+  "CopilotKit/OpenGenerativeUI": {
+    "2026-09-24": 1566
+  },
+  "cookiy-ai/user-research-skill": {
+    "2026-09-24": 1555
+  },
+  "scadastrangelove/awesome-ai-security-tools": {
+    "2026-09-24": 1533
+  },
+  "egoist/waku": {
+    "2026-09-24": 1529
+  },
+  "Stonewuu/ai-fusion-video": {
+    "2026-09-24": 1524
+  },
+  "vanloctech/youwee": {
+    "2026-09-24": 1510
+  },
+  "six2dez/burp-ai-agent": {
+    "2026-09-24": 1508
+  },
+  "silverstein/minutes": {
+    "2026-09-24": 1498
+  },
+  "rzru/nightingale": {
+    "2026-09-24": 1475
+  },
+  "najmuzzaman-mohammad/gawkbot": {
+    "2026-09-24": 1460
+  },
+  "superloglabs/superlog": {
+    "2026-09-24": 1452
+  },
+  "plugin87/ux-ui-agent-skills": {
+    "2026-09-24": 1453
+  },
+  "agentconnect-md/agentconnect": {
+    "2026-09-24": 1425
+  },
+  "ashishps1/awesome-engineering-articles": {
+    "2026-09-24": 1417
+  },
+  "larlarua/AutoCVE": {
+    "2026-09-24": 1416
+  },
+  "mohitagw15856/pm-claude-skills": {
+    "2026-09-24": 1395
+  },
+  "justrach/codedb": {
+    "2026-09-24": 1383
+  },
+  "GreenSheep01201/claw-empire": {
+    "2026-09-24": 1382
+  },
+  "RongleCat/grok-app": {
+    "2026-09-24": 1380
+  },
+  "cccyd2003-qwq/pinkbin": {
+    "2026-09-24": 1376
+  },
+  "OpenRaiser/NanoResearch": {
+    "2026-09-24": 1369
+  },
+  "pgrundev/pgbot": {
+    "2026-09-24": 1330
+  },
+  "elvisun/newsjack": {
+    "2026-09-24": 1329
+  },
+  "Asymptote-Labs/agent-beacon": {
+    "2026-09-24": 1356
+  },
+  "slothflowlabs/duckle": {
+    "2026-09-24": 1324
+  },
+  "adtexterry-lgtm/unigit-ecosystem": {
+    "2026-09-24": 1320
+  },
+  "piomin/claude-ai-spring-boot": {
+    "2026-09-24": 1299
+  },
+  "greyhaven-ai/autocontext": {
+    "2026-09-24": 1299
+  },
+  "Muesli-HQ/muesli": {
+    "2026-09-24": 1298
+  },
+  "mozilla-ai/cq": {
+    "2026-09-24": 1275
+  },
+  "MiniMax-AI/OpenRoom": {
+    "2026-09-24": 1267
+  },
+  "Runfusion/Fusion": {
+    "2026-09-24": 1245
+  },
+  "BitMiracle-AI/Dormice": {
+    "2026-09-24": 1243
+  },
+  "thClaws/thClaws": {
+    "2026-09-24": 1227
+  },
+  "techjarves/Uncensored-Local-AI-Multiplatform": {
+    "2026-09-24": 1227
+  },
+  "jieyefriic/rp-engine": {
+    "2026-09-24": 1221
+  },
+  "affaan-m/agentshield": {
+    "2026-09-24": 1215
+  },
+  "Mininglamp-OSS/octo-web": {
+    "2026-09-24": 1180
+  },
+  "rasbt/mini-coding-agent": {
+    "2026-09-24": 1175
+  },
+  "fy-agent/fyagent": {
+    "2026-09-24": 1173
+  },
+  "anywhere-labs/Agents-Anywhere": {
+    "2026-09-24": 1170
+  },
+  "ctxrs/ctx": {
+    "2026-09-24": 1132
+  },
+  "agentrq/agentrq": {
+    "2026-09-24": 1130
+  },
+  "XiaoLuoLYG/GOD": {
+    "2026-09-24": 1130
+  },
+  "xalgorix/xalgorix": {
+    "2026-09-24": 1119
+  },
+  "erha19/ping-island": {
+    "2026-09-24": 1114
+  },
+  "BagelHole/DevOps-Security-Agent-Skills": {
+    "2026-09-24": 1112
+  },
+  "zhitongblog/solomd": {
+    "2026-09-24": 1113
+  },
+  "fancyboi999/ai-engineering-from-scratch-zh": {
+    "2026-09-24": 1096
+  },
+  "unstablebuild/rune": {
+    "2026-09-24": 1088
+  },
+  "agentlas-ai/Agentlas-OS": {
+    "2026-09-24": 1086
+  },
+  "RUC-NLPIR/Arbor": {
+    "2026-09-24": 1086
+  },
+  "vigolium/vigolium": {
+    "2026-09-24": 1082
+  },
+  "tophant-ai/ClawVault": {
+    "2026-09-24": 1078
+  },
+  "ongridio/ongrid": {
+    "2026-09-24": 1078
+  },
+  "tophant-ai/aibeat": {
+    "2026-09-24": 1080
+  },
+  "yashab-cyber/opendroid": {
+    "2026-09-24": 1068
+  },
+  "officecli/officedex": {
+    "2026-09-24": 1063
+  },
+  "jonwiggins/optio": {
+    "2026-09-24": 1055
+  },
+  "binance/binance-skills-hub": {
+    "2026-09-24": 1040
+  },
+  "comarkdown/comark": {
+    "2026-09-24": 1038
+  },
+  "FuJacob/cotabby": {
+    "2026-09-24": 1034
+  },
+  "melandlabs/openloomi": {
+    "2026-09-24": 1032
+  },
+  "ZhangJinHaHaHa/AgentLens": {
+    "2026-09-24": 1029
+  },
+  "Sec-Link/Argus-Agentic-SOC-Platform": {
+    "2026-09-24": 1023
+  },
+  "vercel-labs/knowledge-agent-template": {
+    "2026-09-24": 1016
+  },
+  "ximeiorg/Xime": {
+    "2026-09-24": 1020
+  },
+  "hoangsonww/Claude-Code-Agent-Monitor": {
+    "2026-09-24": 1014
+  },
+  "jipraks/yt-short-clipper": {
+    "2026-09-24": 1006
+  },
+  "EvoLinkAI/awesome-openclaw-usecases-moltbook": {
+    "2026-09-24": 1000
+  },
+  "LeanBitLab/LeanType": {
+    "2026-09-24": 990
+  },
+  "agent-sh/agentsys": {
+    "2026-09-24": 988
+  },
+  "guanyang/open-agent-hub": {
+    "2026-09-24": 973
+  },
+  "H-mmer/pentest-agents": {
+    "2026-09-24": 965
+  },
+  "beltromatti/get-it": {
+    "2026-09-24": 963
+  },
+  "bitjaru/styleseed": {
+    "2026-09-24": 962
+  },
+  "ayuayue/PiDeck": {
+    "2026-09-24": 958
+  },
+  "RyanAlberts/best-of-Agent-Harnesses": {
+    "2026-09-24": 955
+  },
+  "russelleNVy/three-man-team": {
+    "2026-09-24": 951
+  },
+  "tastyeffectco/sandboxd": {
+    "2026-09-24": 951
+  },
+  "qinshihu/itops-agent-platform": {
+    "2026-09-24": 939
+  },
+  "luongnv89/asm": {
+    "2026-09-24": 940
+  },
+  "data-goblin/power-bi-agentic-development": {
+    "2026-09-24": 934
+  },
+  "freestylefly/wesight": {
+    "2026-09-24": 928
+  },
+  "Sushegaad/Claude-Skills-Governance-Risk-and-Compliance": {
+    "2026-09-24": 916
+  },
+  "awslabs/agent-plugins": {
+    "2026-09-24": 902
+  },
+  "luckyPipewrench/pipelock": {
+    "2026-09-24": 901
+  },
+  "Robinson-AI-Lab/FridayOS1.0": {
+    "2026-09-24": 900
+  },
+  "hAcKlyc/MyAgents": {
+    "2026-09-24": 898
+  },
+  "markrahq/markra": {
+    "2026-09-24": 894
+  },
+  "wangxijie001/yoji": {
+    "2026-09-24": 887
+  },
+  "limingrui679-design/high-stakes-analytics-decision-lab": {
+    "2026-09-24": 891
+  },
+  "pocketpaw/pocketpaw": {
+    "2026-09-24": 886
+  },
+  "ciddwd/overlay-translator": {
+    "2026-09-24": 885
+  },
+  "dondai1234/master-fetch": {
+    "2026-09-24": 879
+  },
+  "tianchong-zerotemp/dianxing": {
+    "2026-09-24": 872
+  },
+  "cocojojo5213/Dev-Janitor": {
+    "2026-09-24": 867
+  },
+  "itq5/OpenClaw-Admin": {
+    "2026-09-24": 861
+  },
+  "MartinDelophy/ai-video-editor": {
+    "2026-09-24": 859
+  },
+  "jegly/Box": {
+    "2026-09-24": 855
+  },
+  "asamassekou10/ship-safe": {
+    "2026-09-24": 848
+  },
+  "santifer/cv-santiago": {
+    "2026-09-24": 846
+  },
+  "datadrivenconstruction/OpenConstructionERP": {
+    "2026-09-24": 843
+  },
+  "sangrokjung/claude-forge": {
+    "2026-09-24": 844
+  },
+  "KylinMountain/TradingAgents-AShare": {
+    "2026-09-24": 841
+  },
+  "thesongzhu/Friday": {
+    "2026-09-24": 840
+  },
+  "es617/claude-replay": {
+    "2026-09-24": 837
+  },
+  "BradGroux/veritas-kanban": {
+    "2026-09-24": 834
+  },
+  "coreyhaines31/makerskills": {
+    "2026-09-24": 824
+  },
+  "AIScientists-Dev/WorldSeed": {
+    "2026-09-24": 822
+  },
+  "momozi1996/awesome-ai-persona-skills": {
+    "2026-09-24": 817
+  },
+  "A-EVO-Lab/a-evolve": {
+    "2026-09-24": 803
+  },
+  "w8123/EnterpriseAgentFramework": {
+    "2026-09-24": 804
+  },
+  "Vrun-design/openflowkit": {
+    "2026-09-24": 798
+  },
+  "Purewhiter/mobilegym": {
+    "2026-09-24": 798
+  },
+  "regent-vcs/re_gent": {
+    "2026-09-24": 795
+  },
+  "FuzzingLabs/mcp-security-hub": {
+    "2026-09-24": 792
+  },
+  "redwoodjs/local-ci": {
+    "2026-09-24": 791
+  },
+  "meitarbe/cognetivy": {
+    "2026-09-24": 782
+  },
+  "William-Lu-stack/Flawless": {
+    "2026-09-24": 780
+  },
+  "unbrowse-ai/unbrowse": {
+    "2026-09-24": 763
+  },
+  "kitfunso/hippo-memory": {
+    "2026-09-24": 756
+  },
+  "sgasser/pasteguard": {
+    "2026-09-24": 754
+  },
+  "mikehasa/agentacct": {
+    "2026-09-24": 755
+  },
+  "raiyanyahya/recall": {
+    "2026-09-24": 753
+  },
+  "Marve10s/Better-Fullstack": {
+    "2026-09-24": 749
+  },
+  "KatrielMoses/voidaccess": {
+    "2026-09-24": 736
+  },
+  "mensfeld/code-on-incus": {
+    "2026-09-24": 728
+  },
+  "grft-dev/graftcode": {
+    "2026-09-24": 724
+  },
+  "afshinm/zerobox": {
+    "2026-09-24": 720
+  },
+  "liyupi/yupi-hot-monitor": {
+    "2026-09-24": 718
+  },
+  "RareSense/Nova3D": {
+    "2026-09-24": 718
+  },
+  "zhinkgit/embeddedskills": {
+    "2026-09-24": 713
+  },
+  "tugcantopaloglu/openclaw-dashboard": {
+    "2026-09-24": 702
+  },
+  "kulkarnirohit123/cra-agent": {
+    "2026-09-24": 692
+  },
+  "maxrave-dev/kotlin-footguns": {
+    "2026-09-24": 695
+  },
+  "qf-studio/pilot": {
+    "2026-09-24": 687
+  },
+  "myYangyunfan/dsh_desktop": {
+    "2026-09-24": 678
+  },
+  "Aisland-SJL/dsh-worktable": {
+    "2026-09-24": 670
+  },
+  "lencx/Minke": {
+    "2026-09-24": 666
+  },
+  "hashgraph-online/hol-guard": {
+    "2026-09-24": 663
+  },
+  "sandbaseai/sandbase-harness": {
+    "2026-09-24": 662
+  },
+  "h5i-dev/h5i": {
+    "2026-09-24": 653
+  },
+  "Musheer360/SwiftSlate": {
+    "2026-09-24": 646
+  },
+  "nicepkg/ctxport": {
+    "2026-09-24": 640
+  },
+  "rajudandigam/agent-inspect": {
+    "2026-09-24": 639
+  },
+  "samvallad33/vestige": {
+    "2026-09-24": 632
+  },
+  "runvendo/vendo": {
+    "2026-09-24": 623
+  },
+  "emiliaprotocol/emilia-protocol": {
+    "2026-09-24": 617
+  },
+  "provos/ironcurtain": {
+    "2026-09-24": 610
+  },
+  "berabuddies/Semia": {
+    "2026-09-24": 609
+  },
+  "matrixorigin/memoria": {
+    "2026-09-24": 604
+  },
+  "DSH-APP/DSHA": {
+    "2026-09-24": 604
+  },
+  "skillhub-club/skillhub-desktop": {
+    "2026-09-24": 600
+  },
+  "Arindam200/cc-lens": {
+    "2026-09-24": 600
+  },
+  "paperboytm/spool": {
+    "2026-09-24": 592
+  },
+  "decionis/agent-safe-pipeline": {
+    "2026-09-24": 589
+  },
+  "aldefy/compose-skill": {
+    "2026-09-24": 589
+  },
+  "Helldez/BigMoeOnEdge": {
+    "2026-09-24": 588
+  },
+  "f/agentlytics": {
+    "2026-09-24": 581
+  },
+  "HoangNguyen0403/agent-skills-standard": {
+    "2026-09-24": 570
+  },
+  "tover0314-w/opentypeless": {
+    "2026-09-24": 560
+  },
+  "Meliwat/awesome-ios-design-md": {
+    "2026-09-24": 555
+  },
+  "Radiant303/SpringNote": {
+    "2026-09-24": 549
+  },
+  "tzachbon/smart-ralph": {
+    "2026-09-24": 550
+  },
+  "MioMioOS/MioIsland": {
+    "2026-09-24": 543
+  },
+  "ys-ll/uniterm": {
+    "2026-09-24": 536
+  },
+  "vibeeval/vibecosystem": {
+    "2026-09-24": 535
+  },
+  "shinthink/blitzstrike": {
+    "2026-09-24": 533
+  },
+  "kesslernity/awesome-microsoft-copilot-prompts": {
+    "2026-09-24": 532
+  },
+  "kklt92/awesome-ai-extensions": {
+    "2026-09-24": 530
+  },
+  "termio-sh/termio": {
+    "2026-09-24": 527
+  },
+  "karanb192/claude-code-hooks": {
+    "2026-09-24": 525
+  },
+  "ganeshmshetty/openclip": {
+    "2026-09-24": 517
+  },
+  "adshao/flounder": {
+    "2026-09-24": 514
+  },
+  "codexstar69/bug-hunter": {
+    "2026-09-24": 514
+  },
+  "kOlapsis/maintenant": {
+    "2026-09-24": 511
+  },
+  "skydoves/compose-performance-skills": {
+    "2026-09-24": 509
+  },
+  "SilentCoderHere/aihub": {
+    "2026-09-24": 507
+  },
+  "deonmenezes/mantishack": {
+    "2026-09-24": 504
+  },
+  "NeptuneHub/AudioMuse-AI-NV-plugin": {
+    "2026-09-24": 503
+  },
+  "EdgeTypE/better-deepseek": {
+    "2026-09-24": 496
+  },
+  "Vasco0x4/AIDA": {
+    "2026-09-24": 489
+  },
+  "greenfield-inc/Pane": {
+    "2026-09-24": 483
+  },
+  "davekilleen/Dex": {
+    "2026-09-24": 482
+  },
+  "ZhixiangLuo/10xProductivity": {
+    "2026-09-24": 476
+  },
+  "builderz-labs/marketing-dashboard": {
+    "2026-09-24": 470
+  },
+  "Wing900/ManimCat": {
+    "2026-09-24": 462
+  },
+  "silentchainai/SILENTCHAIN": {
+    "2026-09-24": 461
+  },
+  "alfonso0512/research-writing-skill": {
+    "2026-09-24": 463
+  },
+  "coco-research/coco": {
+    "2026-09-24": 463
+  },
+  "chrisblattman/claudeblattman": {
+    "2026-09-24": 460
+  },
+  "badchars/darknet-mcp-server": {
+    "2026-09-24": 459
+  },
+  "CoWork-OS/CoWork-OS": {
+    "2026-09-24": 459
+  },
+  "SHAdd0WTAka/Zen-Ai-Pentest": {
+    "2026-09-24": 458
+  },
+  "paradigmxyz/evmbench": {
+    "2026-09-24": 456
+  },
+  "jayminwest/warren": {
+    "2026-09-24": 455
+  },
+  "LifetimeLabsDev/PrivacyNotes.app": {
+    "2026-09-24": 455
+  },
+  "NightMean/OlliteRT": {
+    "2026-09-24": 456
+  },
+  "cnfjlhj/ai-collab-playbook": {
+    "2026-09-24": 450
+  },
+  "zeraix/zeraix": {
+    "2026-09-24": 445
+  },
+  "Unclecheng-li/DeepSec": {
+    "2026-09-24": 443
+  },
+  "BakeLens/crust": {
+    "2026-09-24": 438
+  },
+  "text2future/flowix": {
+    "2026-09-24": 430
+  },
+  "NVIDIA/aicr": {
+    "2026-09-24": 424
+  },
+  "tabtin-ai/TabTin": {
+    "2026-09-24": 423
+  },
+  "agent-sh/agnix": {
+    "2026-09-24": 423
+  },
+  "Arvo-AI/aurora": {
+    "2026-09-24": 422
+  },
+  "Laxcorp-Research/project-raven": {
+    "2026-09-24": 421
+  },
+  "openhackai/OpenHack": {
+    "2026-09-24": 417
+  },
+  "LeonGaoHaining/opencowork": {
+    "2026-09-24": 417
+  },
+  "matrixmapai/openabcode": {
+    "2026-09-24": 419
+  },
+  "fecarrico/A11Y.md": {
+    "2026-09-24": 410
+  },
+  "ghostsecurity/skills": {
+    "2026-09-24": 407
+  },
+  "waynesutton/convexskills": {
+    "2026-09-24": 404
+  },
+  "AmrDab/clawdcursor": {
+    "2026-09-24": 403
+  },
+  "stubbi/openclaw-operator": {
+    "2026-09-24": 402
+  },
+  "jacobaraujo7/remote_pi": {
+    "2026-09-24": 400
+  },
+  "nudgebee/nudgebee": {
+    "2026-09-24": 397
+  },
+  "zhuyansen/agent-skills-hub": {
+    "2026-09-24": 394
+  },
+  "atilladeniz/Kubeli": {
+    "2026-09-24": 383
+  },
+  "PM-Shawn/Abu-Cowork": {
+    "2026-09-24": 382
+  },
+  "mrwogu/promptscript": {
+    "2026-09-24": 382
+  },
+  "gwitko/Conduit": {
+    "2026-09-24": 382
+  },
+  "ai-dashboad/flutter-skill": {
+    "2026-09-24": 378
+  },
+  "getagentseal/agentseal": {
+    "2026-09-24": 374
+  },
+  "Meridiona/meridian": {
+    "2026-09-24": 373
+  },
+  "PrismorSec/prismor": {
+    "2026-09-24": 369
+  },
+  "bam-bam-2/solo-skills": {
+    "2026-09-24": 368
+  },
+  "ntd4996/agentpet": {
+    "2026-09-24": 367
+  },
+  "agamm/claude-code-owasp": {
+    "2026-09-24": 365
+  },
+  "daymonio/daymon": {
+    "2026-09-24": 365
+  },
+  "Oh-Sheet-Team/oh-sheet": {
+    "2026-09-24": 363
+  },
+  "msfirebird/claw-lens": {
+    "2026-09-24": 362
+  },
+  "starling-build/starling": {
+    "2026-09-24": 358
+  },
+  "miragecoa/AI-Cubby": {
+    "2026-09-24": 358
+  },
+  "kerlenton/mcpsnoop": {
+    "2026-09-24": 356
+  },
+  "PatrikFehrenbach/h1-brain": {
+    "2026-09-24": 355
+  },
+  "matrixhub-ai/matrixhub": {
+    "2026-09-24": 353
+  },
+  "warp-context/rightStage": {
+    "2026-09-24": 349
+  },
+  "KitionAI/kition": {
+    "2026-09-24": 345
+  },
+  "wilfredinni/noodle": {
+    "2026-09-24": 345
+  },
+  "qingchencloud/cftunnel": {
+    "2026-09-24": 343
+  },
+  "agentgg-dev/agentgg": {
+    "2026-09-24": 342
+  },
+  "AndrewDryga/emisar": {
+    "2026-09-24": 336
+  },
+  "kelos-dev/kelos": {
+    "2026-09-24": 334
+  },
+  "miracodeai/mira": {
+    "2026-09-24": 333
+  },
+  "beany-vu/michi-vz-mono": {
+    "2026-09-24": 325
+  },
+  "aaron-for-value/VeriRun": {
+    "2026-09-24": 324
+  },
+  "Get-Concord-AI/concord-mcp": {
+    "2026-09-24": 323
+  },
+  "rusty4444/hermes-android": {
+    "2026-09-24": 321
+  },
+  "no-human-ai/no_human": {
+    "2026-09-24": 320
+  },
+  "vicoa-ai/vicoa": {
+    "2026-09-24": 314
+  },
+  "myICOR/myPKA": {
+    "2026-09-24": 303
+  },
+  "10xChengTu/input0": {
+    "2026-09-24": 303
+  },
+  "modu-ai/moai-cowork": {
+    "2026-09-24": 302
+  },
+  "duncatzat/vigils": {
+    "2026-09-24": 302
+  },
+  "AIDevGTM/gtm-cofounder": {
+    "2026-09-24": 301
+  },
+  "cyx2333hhh/talk-type": {
+    "2026-09-24": 294
+  },
+  "spinningfactory/kloak": {
+    "2026-09-24": 293
+  },
+  "kbanc85/claudia": {
+    "2026-09-24": 293
+  },
+  "EvovexAI/EvoFlow": {
+    "2026-09-24": 295
+  },
+  "dorylab/dory": {
+    "2026-09-24": 288
+  },
+  "nomifun/nomifun-desktop": {
+    "2026-09-24": 288
+  },
+  "chokwinlee/deepseek-harness-desktop": {
+    "2026-09-24": 286
+  },
+  "DexZane/awesome-web-prompts": {
+    "2026-09-24": 282
+  },
+  "hongyuan007/tapword-translator": {
+    "2026-09-24": 270
+  },
+  "sachitrafa/YourMemory": {
+    "2026-09-24": 269
+  },
+  "DinobaseHQ/dinobase": {
+    "2026-09-24": 264
+  },
+  "mattrobinsonsre/terrapod": {
+    "2026-09-24": 259
+  },
+  "shep-ai/shep": {
+    "2026-09-24": 256
+  },
+  "lotsoftick/openclaw_client": {
+    "2026-09-24": 255
+  },
+  "HduSy/tokenscope": {
+    "2026-09-24": 249
+  },
+  "runtypelabs/persona": {
+    "2026-09-24": 246
+  },
+  "gluk-w/claworc": {
+    "2026-09-24": 242
+  },
+  "h4dex/opc-nexus": {
+    "2026-09-24": 239
+  },
+  "scitix/siclaw": {
+    "2026-09-24": 235
+  },
+  "agynio/platform": {
+    "2026-09-24": 235
+  },
+  "busabase/busabase": {
+    "2026-09-24": 231
+  },
+  "noemica-io/open-claude-in-chrome": {
+    "2026-09-24": 231
+  },
+  "JudyaiLab/ai-night-shift": {
+    "2026-09-24": 224
+  },
+  "See-Sol-Lab/DeepSeekGUI": {
+    "2026-09-24": 224
+  },
+  "BinaryDeliverer/CodexDesk": {
+    "2026-09-24": 222
+  },
+  "dotnet/maui-labs": {
+    "2026-09-24": 222
+  },
+  "AvenueSnowStep/ClaudePanel": {
+    "2026-09-24": 221
+  },
+  "softdaddy-o/soft-ue-cli": {
+    "2026-09-24": 214
+  },
+  "liorwn/claudetop": {
+    "2026-09-24": 212
+  },
+  "JayCRL/MobileVC": {
+    "2026-09-24": 211
+  },
+  "AashishH15/Lexicon": {
+    "2026-09-24": 207
+  },
+  "achiya-automation/safari-mcp": {
+    "2026-09-24": 205
+  },
+  "MkThingsHQ/mkagent": {
+    "2026-09-24": 204
+  },
+  "IRISX-AI/IRIS-AI": {
+    "2026-09-24": 203
+  },
+  "ThisTakou/UserAgent-list": {
+    "2026-09-24": 204
+  },
+  "NodeDB-Lab/nodedb": {
+    "2026-09-24": 198
+  },
+  "madebyaris/native-cli-ai": {
+    "2026-09-24": 197
+  },
+  "ImGoodBai/goodable": {
+    "2026-09-24": 196
+  },
+  "arcships/aimux": {
+    "2026-09-24": 192
+  },
+  "ob-labs/agentseek": {
+    "2026-09-24": 187
+  },
+  "srelens/srelens": {
+    "2026-09-24": 181
+  },
+  "cortex-tms/cortex-tms": {
+    "2026-09-24": 181
+  },
+  "modelplaneai/modelplane": {
+    "2026-09-24": 180
+  },
+  "datawhalechina/easy-data-x-ai": {
+    "2026-09-24": 177
+  },
+  "YoKONCy/TriviumDB": {
+    "2026-09-24": 176
+  },
+  "f3rb123/beetle": {
+    "2026-09-24": 176
+  },
+  "liu-ziting/ThinkFlowAI": {
+    "2026-09-24": 174
+  },
+  "yantrikos/yantrikdb-server": {
+    "2026-09-24": 174
+  },
+  "joryeugene/dadbod-grip.nvim": {
+    "2026-09-24": 173
+  },
+  "lakeday-org/perch": {
+    "2026-09-24": 173
+  },
+  "eljulians/skillfile": {
+    "2026-09-24": 171
+  },
+  "fiyo/DBCheck": {
+    "2026-09-24": 169
+  },
+  "jaromiru/diktafon": {
+    "2026-09-24": 167
+  },
+  "XTmingyue/harnessNovel": {
+    "2026-09-24": 166
+  },
+  "VeryGoodOpenSource/vgv-ai-flutter-plugin": {
+    "2026-09-24": 164
+  },
+  "crabbuild/compass": {
+    "2026-09-24": 162
+  },
+  "acogood/diffmode_free": {
+    "2026-09-24": 162
+  },
+  "digipulse-engineering/GAAI-framework": {
+    "2026-09-24": 161
+  },
+  "Anandb71/arbor": {
+    "2026-09-24": 158
+  },
+  "flyfish-dev/shortlink": {
+    "2026-09-24": 158
+  },
+  "Guepard-Corp/gfs": {
+    "2026-09-24": 157
+  },
+  "askie/grix": {
+    "2026-09-24": 152
+  },
+  "prapaa-ai/agav": {
+    "2026-09-24": 148
+  },
+  "rokoss21/iosm-cli": {
+    "2026-09-24": 145
+  },
+  "hpcll/HMusic": {
+    "2026-09-24": 144
+  },
+  "dmae97/omk": {
+    "2026-09-24": 144
+  },
+  "LayerNorm/overlay-web": {
+    "2026-09-24": 143
+  },
+  "jtrackingai/analytics-tracking-automation": {
+    "2026-09-24": 140
+  },
+  "beava-dev/beava": {
+    "2026-09-24": 138
+  },
+  "lacvietanh/aki-mcp-sv": {
+    "2026-09-24": 138
+  },
+  "voidmind-io/voidllm": {
+    "2026-09-24": 136
+  },
+  "OpenLabs-so/oa-design": {
+    "2026-09-24": 132
+  },
+  "manishchaudhary101/kube-argus": {
+    "2026-09-24": 131
+  },
+  "GuqierMcl/NexusPilot": {
+    "2026-09-24": 131
+  },
+  "SparkyWen/qcue": {
+    "2026-09-24": 131
+  },
+  "pmady/keda-gpu-scaler": {
+    "2026-09-24": 130
+  },
+  "liyupi/github-global": {
+    "2026-09-24": 129
+  },
+  "sololabstr/uisight": {
+    "2026-09-24": 127
+  },
+  "SoFluffyOS/lumide": {
+    "2026-09-24": 125
+  },
+  "naberbabammm34343/llm-task-orchestrator": {
+    "2026-09-24": 125
+  },
+  "olemeyer/rocketplaneIO": {
+    "2026-09-24": 124
+  },
+  "kubetail-org/kstack": {
+    "2026-09-24": 122
+  },
+  "sesori-ai/sesori_apps_monorepo": {
+    "2026-09-24": 122
+  },
+  "decisionbox-io/decisionbox-platform": {
+    "2026-09-24": 120
+  },
+  "Brenonunesx/agent-pilot": {
+    "2026-09-24": 120
+  },
+  "ghy196830-del/agent-watch-approve": {
+    "2026-09-24": 120
+  },
+  "momotech/LinkWork": {
+    "2026-09-24": 119
+  },
+  "devarshishimpi/codra": {
+    "2026-09-24": 118
+  },
+  "nambok/mentedb": {
+    "2026-09-24": 118
+  },
+  "Juror-AI/juror": {
+    "2026-09-24": 118
+  },
+  "cometchat/cometchat-skills": {
+    "2026-09-24": 114
+  },
+  "kamranbekirovyz/skills": {
+    "2026-09-24": 113
+  },
+  "faucetdb/faucet": {
+    "2026-09-24": 112
+  },
+  "aliang-one/aliangboard": {
+    "2026-09-24": 110
+  },
+  "MADTeacher/mad-agents-skills": {
+    "2026-09-24": 109
+  },
+  "tombelieber/claude-view": {
+    "2026-09-24": 109
+  },
+  "DmitriyGolub/threejs-devtools-mcp": {
+    "2026-09-24": 109
+  },
+  "muratgur/ordinus": {
+    "2026-09-24": 108
+  },
+  "open-data-agent-platform/awesome-odap": {
+    "2026-09-24": 107
+  },
+  "togettoyou/zke": {
+    "2026-09-24": 107
+  },
+  "aai-labs/agent-barn": {
+    "2026-09-24": 106
+  },
+  "zunor/paro": {
+    "2026-09-24": 105
+  },
+  "diyanbogdanov/emend": {
+    "2026-09-24": 105
+  },
+  "chrisrobison/textweb": {
+    "2026-09-24": 104
+  },
+  "Sanqi-normal/dsh-webui-market-plugin": {
+    "2026-09-24": 103
+  },
+  "agamm/awesome-ai-sre": {
+    "2026-09-24": 103
+  },
+  "brucetoo/visual-agentic-dev": {
+    "2026-09-24": 103
+  },
+  "GaeaRuiW/kube-llmops": {
+    "2026-09-24": 102
+  },
+  "devsy-org/devsy": {
+    "2026-09-24": 102
+  },
+  "closedloop-ai/claude-plugins": {
+    "2026-09-24": 102
+  },
+  "Dbxstudio/dbx-studio": {
+    "2026-09-24": 101
+  },
+  "zhangqi444/open-forge": {
+    "2026-09-24": 98
+  },
+  "fj1981/dqex": {
+    "2026-09-24": 98
+  },
+  "crabtalk/cydonia": {
+    "2026-09-24": 97
+  },
+  "lahirusanjika/Worm-GPT": {
+    "2026-09-24": 96
+  },
+  "ShipWithAI/claude-code-mastery": {
+    "2026-09-24": 95
+  },
+  "masumedb/masume": {
+    "2026-09-24": 94
+  },
+  "runzhliu/deepseek-harness-docker": {
+    "2026-09-24": 93
+  },
+  "hamedgitty/bloks": {
+    "2026-09-24": 91
+  },
+  "1449690477/SusuAIOverclock": {
+    "2026-09-24": 91
+  },
+  "Humphrey4data/tableau-to-hex-skill": {
+    "2026-09-24": 90
+  },
+  "mycelium-clj/mycelium": {
+    "2026-09-24": 90
+  },
+  "ArkaneFans/servllama": {
+    "2026-09-24": 89
+  },
+  "merlinhu1/truthmark": {
+    "2026-09-24": 89
+  },
+  "cometchat/docs-mcp": {
+    "2026-09-24": 88
+  },
+  "toroleapinc/claude-brain": {
+    "2026-09-24": 88
+  },
+  "rohansx/workz": {
+    "2026-09-24": 88
+  },
+  "tanrikuluozlem/burn": {
+    "2026-09-24": 87
+  },
+  "peg/rampart": {
+    "2026-09-24": 87
+  },
+  "Lawofall/AgentCore": {
+    "2026-09-24": 86
+  },
+  "farol-team/gnap": {
+    "2026-09-24": 86
+  },
+  "hyperterse/hyperterse": {
+    "2026-09-24": 85
+  },
+  "oooscoos/Benzi": {
+    "2026-09-24": 85
+  },
+  "Humblytics/humblytics-marketing-skills": {
+    "2026-09-24": 84
+  },
+  "FreHilm/ordna": {
+    "2026-09-24": 82
+  },
+  "itshamzabendelladj/AIGuardSIEM": {
+    "2026-09-24": 82
+  },
+  "clarilayer/clarilayer": {
+    "2026-09-24": 82
+  },
+  "geckse/n8n-desk": {
+    "2026-09-24": 82
+  },
+  "rolecraft-sh/rolecraft": {
+    "2026-09-24": 82
+  },
+  "labring/sealos-skills": {
+    "2026-09-24": 81
+  },
+  "liuxingqitd/skills-hub": {
+    "2026-09-24": 81
+  },
+  "nplszfl/OmniTradeERP": {
+    "2026-09-24": 80
+  },
+  "vostride/id-agent": {
+    "2026-09-24": 80
+  },
+  "JingbiaoMei/Tokdash": {
+    "2026-09-24": 80
+  },
+  "AIPMAndy/LivePPT": {
+    "2026-09-24": 79
+  },
+  "DevOpsAIguru123/awesome-agentic-devops": {
+    "2026-09-24": 79
+  },
+  "crafter-station/skill-kit": {
+    "2026-09-24": 76
+  },
+  "srihari7070/lore-map": {
+    "2026-09-24": 76
+  },
+  "hashfunction/MarkuprPlus": {
+    "2026-09-24": 76
+  },
+  "respawn-llc/kent": {
+    "2026-09-24": 76
+  },
+  "SolidLao/GenDB": {
+    "2026-09-24": 75
+  },
+  "TaewoooPark/Agent-Blackbox": {
+    "2026-09-24": 75
+  },
+  "FROWNINGdev/django-orm-lens": {
+    "2026-09-24": 74
+  },
+  "SkyChenSky/DBPilot": {
+    "2026-09-24": 76
+  },
+  "wibus-wee/cradle-app": {
+    "2026-09-24": 74
+  },
+  "kirill-markin/flashcards-open-source-app": {
+    "2026-09-24": 71
+  },
+  "rarf/hermes-quota-plugin": {
+    "2026-09-24": 68
+  },
+  "pug-sh/pug": {
+    "2026-09-24": 67
+  },
+  "NetVar1337/vibe-island": {
+    "2026-09-24": 67
+  },
+  "dunetrace/dunetrace": {
+    "2026-09-24": 65
+  },
+  "opencowork-ai/opencowork": {
+    "2026-09-24": 65
+  },
+  "wang1970/API-Switch": {
+    "2026-09-24": 64
+  },
+  "totalumlabs/ai-app-builder-open": {
+    "2026-09-24": 64
+  },
+  "assaio/assaio": {
+    "2026-09-24": 64
+  },
+  "Beezi-AI/beezi-claude-plugin": {
+    "2026-09-24": 64
+  },
+  "yantrikos/yantrikdb": {
+    "2026-09-24": 63
+  },
+  "reatlat/fullstory-claude-plugin": {
+    "2026-09-24": 62
+  },
+  "Observal/pi-insights": {
+    "2026-09-24": 62
+  },
+  "MrXujiang/opne-aureka": {
+    "2026-09-24": 61
+  },
+  "FragDB/fragrance-database": {
+    "2026-09-24": 56
+  },
+  "Priyanshu-byte-coder/contextrot": {
+    "2026-09-24": 56
+  },
+  "eatmydata-org/eatmydata": {
+    "2026-09-24": 53
+  },
+  "yimindev/dati": {
+    "2026-09-24": 52
+  },
+  "aliyun/data-agent-skill": {
+    "2026-09-24": 53
+  },
+  "instancez/instancez": {
+    "2026-09-24": 50
+  },
+  "yelog/lazydb": {
+    "2026-09-24": 48
+  },
+  "sudomichael/agentgraphed": {
+    "2026-09-24": 48
+  },
+  "ninjitsuytber/Project-Orion": {
+    "2026-09-24": 48
+  },
+  "sochdb/sochdb": {
+    "2026-09-24": 47
+  },
+  "bonfirer/LingxiBI": {
+    "2026-09-24": 47
+  },
+  "ctxray/ctxray": {
+    "2026-09-24": 47
+  },
+  "anshk1234/stockly.ai": {
+    "2026-09-24": 46
+  },
+  "Nonanti/narwhal": {
+    "2026-09-24": 44
+  },
+  "krishna-build/claude-coach-kit": {
+    "2026-09-24": 44
+  },
+  "yx0716/clawd-insights": {
+    "2026-09-24": 43
+  },
+  "yaowen51888-rich/lumencode": {
+    "2026-09-24": 41
+  },
+  "honeydew-ai/honeydew-ai-coding-agents-plugins": {
+    "2026-09-24": 41
+  },
+  "songoao25/dsh-bottom-info-bar": {
+    "2026-09-24": 39
+  },
+  "Tangruwo/RuwoScan": {
+    "2026-09-24": 39
+  },
+  "Accoil/product-tracking-skills": {
+    "2026-09-24": 39
+  },
+  "Lianues/PureTavern": {
+    "2026-09-24": 38
+  },
+  "input-systems/pen": {
+    "2026-09-24": 37
+  },
+  "Ainsley0917/opencode-token-monitor": {
+    "2026-09-24": 35
+  },
+  "PoemMisty/CF-Request-Analytics-Panel": {
+    "2026-09-24": 36
+  },
+  "HengXin666/gpt-web-cf-make": {
+    "2026-09-24": 35
+  },
+  "talivia-group/agent": {
+    "2026-09-24": 34
+  },
+  "fischerf/aar": {
+    "2026-09-24": 33
+  },
+  "KreerC/ACCESSIBILITY.md": {
+    "2026-09-24": 32
+  },
+  "ashrafic/laravel-ai-orbit": {
+    "2026-09-24": 32
+  },
+  "vincenzo-afk/VisionX": {
+    "2026-09-24": 32
+  },
+  "keenableai/needle": {
+    "2026-09-24": 31
+  },
+  "HaoyueQin/dsh-better-reasoning-effort": {
+    "2026-09-24": 30
+  },
+  "lee-fuhr/claude-session-index": {
+    "2026-09-24": 30
+  },
+  "GetCassis/analytics-agent-articles": {
+    "2026-09-24": 30
+  },
+  "Readplace/readplace.com": {
+    "2026-09-24": 29
+  },
+  "fenjo26/OpenGSC": {
+    "2026-09-24": 29
+  },
+  "kznr02/OpenTester": {
+    "2026-09-24": 28
+  },
+  "SpeedHQ/RaceIQ": {
+    "2026-09-24": 28
+  },
+  "oddbit/shrtnr": {
+    "2026-09-24": 28
+  },
+  "AgamiAI/agami-core": {
+    "2026-09-24": 28
+  },
+  "anyin-ai/aperture": {
+    "2026-09-24": 27
+  },
+  "lrusso/llama3pure": {
+    "2026-09-24": 26
+  },
+  "siropkin/budi": {
+    "2026-09-24": 26
+  },
+  "TarekAwwad/checkyouragent": {
+    "2026-09-24": 26
+  },
+  "anipotts/imessage-mcp": {
+    "2026-09-24": 25
+  },
+  "Intelligible/elbi": {
+    "2026-09-24": 24
+  },
+  "DataVyn-labs/DataVyn": {
+    "2026-09-24": 24
+  },
+  "guillermolg00/morphicons": {
+    "2026-09-24": 2658
+  },
+  "flyfish-dev/file-viewer": {
+    "2026-09-24": 2421
+  },
+  "shadcn-labs/pdfcn": {
+    "2026-09-24": 2133
+  },
+  "1jehuang/mermaid-rs-renderer": {
+    "2026-09-24": 1727
+  },
+  "nyakang/nyaterm": {
+    "2026-09-24": 1680
+  },
+  "hiaaryan/sileo": {
+    "2026-09-24": 1679
+  },
+  "pocket-nexus/pocketjs": {
+    "2026-09-24": 1636
+  },
+  "dqev/reicon": {
+    "2026-09-24": 1573
+  },
+  "haydenbleasel/files-sdk": {
+    "2026-09-24": 1551
+  },
+  "Remocn/remocn": {
+    "2026-09-24": 1516
+  },
+  "anl331/goey-toast": {
+    "2026-09-24": 1324
+  },
+  "orbien-org/orbien": {
+    "2026-09-24": 1283
+  },
+  "SPlayer-Dev/SPlayer-Next": {
+    "2026-09-24": 1224
+  },
+  "westpoint-io/mimik": {
+    "2026-09-24": 1216
+  },
+  "akii09/pdfx": {
+    "2026-09-24": 1182
+  },
+  "xevrion/breakscale": {
+    "2026-09-24": 1180
+  },
+  "shadcn-labs/termcn": {
+    "2026-09-24": 1163
+  },
+  "darula-hpp/shimmer-from-structure": {
+    "2026-09-24": 1121
+  },
+  "Moekotori/ECHO": {
+    "2026-09-24": 1069
+  },
+  "AlexandrosGounis/pdfx": {
+    "2026-09-24": 1064
+  },
+  "ifer47/markeron": {
+    "2026-09-24": 1058
+  },
+  "s010s/prehistoric-animal-museum": {
+    "2026-09-24": 1044
+  },
+  "shuaiplus/inkstone": {
+    "2026-09-24": 1003
+  },
+  "ianho7/maptoposter-online": {
+    "2026-09-24": 940
+  },
+  "MatinSenPai/Aether-GUI": {
+    "2026-09-24": 937
+  },
+  "vibeflowing-inc/vibe_figma": {
+    "2026-09-24": 843
+  },
+  "ddoemonn/interior": {
+    "2026-09-24": 802
+  },
+  "Aejkatappaja/phantom-ui": {
+    "2026-09-24": 800
+  },
+  "suislanchez/polymarket-kalshi-weather-bot": {
+    "2026-09-24": 763
+  },
+  "shadcnspace/shadcnspace": {
+    "2026-09-24": 760
+  },
+  "RtlZeroMemory/Rezi": {
+    "2026-09-24": 675
+  },
+  "yandanp/Connexio": {
+    "2026-09-24": 535
+  },
+  "alexishida/Moji": {
+    "2026-09-24": 484
+  },
+  "AmyangXYZ/reze-studio": {
+    "2026-09-24": 458
+  },
+  "change-42-yhmm/quota-float": {
+    "2026-09-24": 366
+  },
+  "better-notify/better-notify": {
+    "2026-09-24": 307
+  },
+  "nfqws/nfqws-keenetic-web": {
+    "2026-09-24": 306
+  },
+  "kaltwrk/spektral": {
+    "2026-09-24": 225
+  },
+  "Nako0/devglobe-extension": {
+    "2026-09-24": 216
+  },
+  "flyl1u/FocuSD": {
+    "2026-09-24": 213
+  },
+  "web-dashers/web-dashers.github.io": {
+    "2026-09-24": 174
+  },
+  "S3DFX-CYBER/FindMyGSoC": {
+    "2026-09-24": 173
+  },
+  "nordstjernen-web/nordstjernen-browser": {
+    "2026-09-24": 153
+  },
+  "RopemakerEnd/ds4windows-lab-2026": {
+    "2026-09-24": 150
+  },
+  "webc-site/math": {
+    "2026-09-24": 137
+  },
+  "atoolz/htmx-devtools": {
+    "2026-09-24": 137
+  },
+  "foxted/rsc-boundary": {
+    "2026-09-24": 128
+  },
+  "loom-go/loom": {
+    "2026-09-24": 126
+  },
+  "eas4ai/Web-Audio-Mastering": {
+    "2026-09-24": 120
+  },
+  "2BingLing/dsh-market": {
+    "2026-09-24": 118
+  },
+  "desikankn/discord-reward-claimer": {
+    "2026-09-24": 115
+  },
+  "Digicreon/muCSS": {
+    "2026-09-24": 113
+  },
+  "vetis-server/vetis": {
+    "2026-09-24": 111
+  },
+  "szabgab/awesome-axum": {
+    "2026-09-24": 108
+  },
+  "fridzema/oxide-dock": {
+    "2026-09-24": 98
+  },
+  "gomarten/marten": {
+    "2026-09-24": 96
+  },
+  "deeleeramone/PyWry": {
+    "2026-09-24": 93
+  },
+  "root-hunter/ppsspp-web": {
+    "2026-09-24": 89
+  },
+  "01Virex/dsh-status-rotator": {
+    "2026-09-24": 88
+  },
+  "Maks1mio/anixapp": {
+    "2026-09-24": 79
+  },
+  "shnlfriberg/csgofriberg": {
+    "2026-09-24": 71
+  },
+  "Flick-Corp/flick": {
+    "2026-09-24": 71
+  },
+  "IndigoKageBait/filmora-utility-2026": {
+    "2026-09-24": 70
+  },
+  "thehijacker/codexa": {
+    "2026-09-24": 67
+  },
+  "Zoroaaa/OmniBox": {
+    "2026-09-24": 63
+  },
+  "uerax/Animaku": {
+    "2026-09-24": 59
+  },
+  "imggion/html2realpdf": {
+    "2026-09-24": 58
+  },
+  "starling-browser/starling": {
+    "2026-09-24": 57
+  },
+  "dewydev10/digital-showcase": {
+    "2026-09-24": 55
+  },
+  "jangulob2022/morse-pulse-practice": {
+    "2026-09-24": 55
+  },
+  "Water-Run/MyBiOut": {
+    "2026-09-24": 53
+  },
+  "ftbhabuk/termread": {
+    "2026-09-24": 52
+  },
+  "gruberb/bulletproof-rust-web": {
+    "2026-09-24": 50
+  },
+  "zion-sati/fui-rs": {
+    "2026-09-24": 48
+  },
+  "yix/wg-busy": {
+    "2026-09-24": 41
+  },
+  "samalstudios/jsglobe": {
+    "2026-09-24": 39
+  },
+  "CodCatDev/CrosshairJs": {
+    "2026-09-24": 39
+  },
+  "ndugram/fasthttp": {
+    "2026-09-24": 38
+  },
+  "gynet/keewebx": {
+    "2026-09-24": 34
+  },
+  "snowieedev/readme-builder": {
+    "2026-09-24": 33
+  },
+  "7ucg/baron-baileys-v2": {
+    "2026-09-24": 31
+  },
+  "Daoductrung/PlayAural": {
+    "2026-09-24": 31
+  },
+  "zivhdinfo/lazy-ui": {
+    "2026-09-24": 29
+  },
+  "Limnetic-Git/mojelly": {
+    "2026-09-24": 29
+  },
+  "benedict-armstrong/presio": {
+    "2026-09-24": 27
+  },
+  "VastSea0/hilal-browser": {
+    "2026-09-24": 27
+  },
+  "EaseCation/easecation-open-myec": {
+    "2026-09-24": 26
+  },
+  "melting-language/melting-lang": {
+    "2026-09-24": 26
+  },
+  "Lvcky-gg/Gjallarhorn": {
+    "2026-09-24": 25
+  },
+  "susam/hnskins": {
+    "2026-09-24": 25
+  },
+  "xataio/xata": {
+    "2026-09-24": 1070
+  },
+  "CloakHQ/CloakBrowser-Manager": {
+    "2026-09-24": 956
+  },
+  "janosmiko/lfk": {
+    "2026-09-24": 903
+  },
+  "Lertaro/Lertaro": {
+    "2026-09-24": 674
+  },
+  "bjarneo/ku": {
+    "2026-09-24": 558
+  },
+  "DsThakurRawat/Backend-from-first-Principle": {
+    "2026-09-24": 531
+  },
+  "hybridops-tech/hybridops-core": {
+    "2026-09-24": 489
+  },
+  "SwiftList/SwiftList": {
+    "2026-09-24": 460
+  },
+  "LukasNiessen/kubernetes-skill": {
+    "2026-09-24": 435
+  },
+  "kubara-io/kubara": {
+    "2026-09-24": 419
+  },
+  "saiyam1814/kiac": {
+    "2026-09-24": 373
+  },
+  "eryajf/kite-desktop": {
+    "2026-09-24": 326
+  },
+  "openbootdotdev/openboot": {
+    "2026-09-24": 274
+  },
+  "zeborg/kubekosh": {
+    "2026-09-24": 239
+  },
+  "customermates/customermates": {
+    "2026-09-24": 223
+  },
+  "NVIDIA/nvcf": {
+    "2026-09-24": 222
+  },
+  "jumpstarter-dev/jumpstarter": {
+    "2026-09-24": 221
+  },
+  "evangelosvlachos96-dotcom/booking-microservices": {
+    "2026-09-24": 218
+  },
+  "amasen02/freshcart-backend": {
+    "2026-09-24": 207
+  },
+  "dougmaitelli/DockDash": {
+    "2026-09-24": 198
+  },
+  "maxfield-allison/dnsweaver": {
+    "2026-09-24": 194
+  },
+  "arkeep-io/arkeep": {
+    "2026-09-24": 177
+  },
+  "ChristianLempa/boilerplates-library": {
+    "2026-09-24": 177
+  },
+  "SuchanMadhikarmi/kubernetes-zero-to-production": {
+    "2026-09-24": 167
+  },
+  "emirce/bullstudio": {
+    "2026-09-24": 163
+  },
+  "stacksimplify/devops-real-world-project-implementation-on-aws": {
+    "2026-09-24": 155
+  },
+  "DaviReisVieira/stackport": {
+    "2026-09-24": 147
+  },
+  "andrewmoshu/diagram-mcp-server": {
+    "2026-09-24": 143
+  },
+  "jlandersen/k8s-unix-system": {
+    "2026-09-24": 139
+  },
+  "SametKUM/klustr": {
+    "2026-09-24": 139
+  },
+  "Infrasity-Labs/awesome-developer-conferences": {
+    "2026-09-24": 126
+  },
+  "inevolin/k8s-cpu-limits-analyzed": {
+    "2026-09-24": 120
+  },
+  "vvrnv/argo9s": {
+    "2026-09-24": 119
+  },
+  "kubeswift-io/kubeswift": {
+    "2026-09-24": 112
+  },
+  "home-operations/kopiur": {
+    "2026-09-24": 112
+  },
+  "szhekpisov/diffyml": {
+    "2026-09-24": 107
+  },
+  "sdk445/hmon": {
+    "2026-09-24": 107
+  },
+  "Anubhav9/Yellow-Olive": {
+    "2026-09-24": 95
+  },
+  "helmforgedev/charts": {
+    "2026-09-24": 91
+  },
+  "Scoutflo/Scoutflo-SRE-Playbooks": {
+    "2026-09-24": 82
+  },
+  "bytestrix/InfraCanvas": {
+    "2026-09-24": 81
+  },
+  "qjoly/talosctl-oidc": {
+    "2026-09-24": 79
+  },
+  "1sen3/YeeMusic": {
+    "2026-09-24": 65
+  },
+  "christt105/jellytags": {
+    "2026-09-24": 36
+  },
+  "nirholas/openbare": {
+    "2026-09-24": 25
+  },
+  "igerber/diff-diff": {
+    "2026-09-24": 395
+  },
+  "creationix/rx": {
+    "2026-09-24": 383
+  },
+  "almeidazs/better-drizzle": {
+    "2026-09-24": 333
+  },
+  "altstackHQ/altstack-data": {
+    "2026-09-24": 323
+  },
+  "opalinehq/cli": {
+    "2026-09-24": 295
+  },
+  "lynxbase/lynxdb": {
+    "2026-09-24": 284
+  },
+  "lux-db/lux": {
+    "2026-09-24": 282
+  },
+  "albertoarena/laravel-truss": {
+    "2026-09-24": 281
+  },
+  "kingroryg/turbokv": {
+    "2026-09-24": 269
+  },
+  "columnar-tech/databow": {
+    "2026-09-24": 269
+  },
+  "ValkDB/postgresparser": {
+    "2026-09-24": 264
+  },
+  "Dogkann/sql-calisma-ornekleri": {
+    "2026-09-24": 260
+  },
+  "Drakonis96/nodus": {
+    "2026-09-24": 260
+  },
+  "Manak-hash/LinkBreeze": {
+    "2026-09-24": 255
+  },
+  "foyzulkarim/claude-lens": {
+    "2026-09-24": 249
+  },
+  "OpenDCAI/DataMind": {
+    "2026-09-24": 244
+  },
+  "Priyanshu-byte-coder/devtrack": {
+    "2026-09-24": 240
+  },
+  "Dicklesworthstone/frankensqlite": {
+    "2026-09-24": 226
+  },
+  "arpanghosh8453/fit-dashboard": {
+    "2026-09-24": 224
+  },
+  "hadziqmtqn/erd-builder-pro": {
+    "2026-09-24": 206
+  },
+  "mendrik-private/sqv": {
+    "2026-09-24": 194
+  },
+  "samurmaykrr/zqlz": {
+    "2026-09-24": 190
+  },
+  "gorkem-bwl/atlas": {
+    "2026-09-24": 186
+  },
+  "Jaredharper1/Sortarr": {
+    "2026-09-24": 185
+  },
+  "dunkbing/dearsql": {
+    "2026-09-24": 166
+  },
+  "nanograph/nanograph": {
+    "2026-09-24": 155
+  },
+  "shivamanupadi/traks": {
+    "2026-09-24": 152
+  },
+  "hussainkazarani/multiplayer-maze-game": {
+    "2026-09-24": 150
+  },
+  "heywinit/discodb": {
+    "2026-09-24": 150
+  },
+  "bgarciamoura/obsidian-notion-bases-plugin": {
+    "2026-09-24": 145
+  },
+  "nabroleonx/dbslice": {
+    "2026-09-24": 142
+  },
+  "relytcloud/pg_ducklake": {
+    "2026-09-24": 139
+  },
+  "productdevbook/sumak": {
+    "2026-09-24": 127
+  },
+  "ShayanAbbas1/dbdelve": {
+    "2026-09-24": 125
+  },
+  "Zayfern/artisanal-streamlit-brew-metrics": {
+    "2026-09-24": 116
+  },
+  "hmenzagh/CCMeter": {
+    "2026-09-24": 116
+  },
+  "Nerdy-Technician/JellyGlance": {
+    "2026-09-24": 114
+  },
+  "patsnap/mcp": {
+    "2026-09-24": 111
+  },
+  "itsmekhoathekid/RecSys-MLops": {
+    "2026-09-24": 111
+  },
+  "tempoxyz/tidx": {
+    "2026-09-24": 107
+  },
+  "zaber-dev/laravel-quota": {
+    "2026-09-24": 106
+  },
+  "mstrYoda/goraphdb": {
+    "2026-09-24": 104
+  },
+  "vivekpandey76/Mysql-course": {
+    "2026-09-24": 97
+  },
+  "pthm/melange": {
+    "2026-09-24": 95
+  },
+  "FlorianBruniaux/ccboard": {
+    "2026-09-24": 95
+  },
+  "d3mocide/Sovereign_Watch": {
+    "2026-09-24": 92
+  },
+  "nubo-db/dynoxide": {
+    "2026-09-24": 90
+  },
+  "freenandes/actuallyexplain": {
+    "2026-09-24": 88
+  },
+  "JustVugg/loomabase": {
+    "2026-09-24": 79
+  },
+  "onewesong/codex-viz": {
+    "2026-09-24": 74
+  },
+  "relytcloud/pg_duckpipe": {
+    "2026-09-24": 74
+  },
+  "Duncan588/Discord-Analytics-Dashboard": {
+    "2026-09-24": 72
+  },
+  "replikativ/stratum": {
+    "2026-09-24": 68
+  },
+  "pixelooz/hinder-db": {
+    "2026-09-24": 68
+  },
+  "YuriCrystal/relay": {
+    "2026-09-24": 65
+  },
+  "aperio-search/aperio": {
+    "2026-09-24": 63
+  },
+  "bearcove/dibs": {
+    "2026-09-24": 63
+  },
+  "RubricLab/tokenmaxx": {
+    "2026-09-24": 63
+  },
+  "AmazingBV/laravel-google-sheets-database-driver": {
+    "2026-09-24": 62
+  },
+  "Hical61/Hical": {
+    "2026-09-24": 60
+  },
+  "jsthon/0xf": {
+    "2026-09-24": 58
+  },
+  "sumon-ohid/better-paas": {
+    "2026-09-24": 58
+  },
+  "netil/oh-my-hi": {
+    "2026-09-24": 57
+  },
+  "dbtrail/dbtrail": {
+    "2026-09-24": 56
+  },
+  "thishandilsara6-source/community-translation-vault": {
+    "2026-09-24": 55
+  },
+  "rustic-ai/uni-db": {
+    "2026-09-24": 54
+  },
+  "autumoswitzerland/Webduck": {
+    "2026-09-24": 53
+  },
+  "DDecoene/WebBaseIII": {
+    "2026-09-24": 53
+  },
+  "swytchdb/swytch": {
+    "2026-09-24": 50
+  },
+  "ayoubnabil/aiondb": {
+    "2026-09-24": 50
+  },
+  "SecureWithUmer/CVE-2026-PoCs": {
+    "2026-09-24": 49
+  },
+  "song-chaoyang/UnityAssetDB": {
+    "2026-09-24": 49
+  },
+  "karem505/egyptian-drug-database": {
+    "2026-09-24": 47
+  },
+  "zepdb/zeppelin": {
+    "2026-09-24": 46
+  },
+  "RF-YVY/APRS-PropView": {
+    "2026-09-24": 43
+  },
+  "atomchung/ccstory": {
+    "2026-09-24": 43
+  },
+  "miantiao-me/Slite": {
+    "2026-09-24": 39
+  },
+  "Wave-RF/WaveHouse": {
+    "2026-09-24": 37
+  },
+  "AOSSIE-Org/OrgExplorer": {
+    "2026-09-24": 36
+  },
+  "achyutkneupane/filament-storage-monitor": {
+    "2026-09-24": 36
+  },
+  "buggedcom/HASS-Data-Points": {
+    "2026-09-24": 33
+  },
+  "ashvardanian/NumWars": {
+    "2026-09-24": 33
+  },
+  "Telemetry-Tracker/telemetry-tracker": {
+    "2026-09-24": 31
+  },
+  "volodymyr4509/kulmanlab": {
+    "2026-09-24": 29
+  },
+  "Make0209/dsh-usage-stats": {
+    "2026-09-24": 26
+  },
+  "databrickslabs/impulse": {
+    "2026-09-24": 25
+  },
+  "O2sa/DevImpact": {
+    "2026-09-24": 25
+  },
+  "he4rt/marketing-extension": {
+    "2026-09-24": 24
+  },
+  "Codpal-Limited/deckgauge": {
+    "2026-09-24": 24
+  },
+  "SagarBiswas-MultiHAT/bazaarflow-ecommerce": {
+    "2026-09-24": 24
+  },
+  "erweixin/RaTeX": {
+    "2026-09-24": 1497
+  },
+  "Mekotofeuka/MTPROTO_FIX_By_MEKO": {
+    "2026-09-24": 1417
+  },
+  "samyak2403/RepoStore": {
+    "2026-09-24": 1301
+  },
+  "jxlarrea/kiosk-satellite": {
+    "2026-09-24": 1250
+  },
+  "Aryan-Raj3112/episteme": {
+    "2026-09-24": 1238
+  },
+  "dominostars/playtranslate": {
+    "2026-09-24": 1190
+  },
+  "NativePHP/mobile-air": {
+    "2026-09-24": 1185
+  },
+  "amurcanov/proxy-turn-vk-android": {
+    "2026-09-24": 1163
+  },
+  "dungngminh/simutil": {
+    "2026-09-24": 1163
+  },
+  "thejaustin/ShizukuPlus": {
+    "2026-09-24": 1119
+  },
+  "rawnaldclark/Stash": {
+    "2026-09-24": 1104
+  },
+  "appsfolder/livebridge": {
+    "2026-09-24": 1082
+  },
+  "K9i-0/ccpocket": {
+    "2026-09-24": 1075
+  },
+  "ssalggnikool/Navic": {
+    "2026-09-24": 1070
+  },
+  "denialwm/denial": {
+    "2026-09-24": 1068
+  },
+  "chrisbanes/skills": {
+    "2026-09-24": 1055
+  },
+  "kunkka19xx/look": {
+    "2026-09-24": 1052
+  },
+  "flectar/mail": {
+    "2026-09-24": 1039
+  },
+  "eltavine/Duck-Detector-Refactoring": {
+    "2026-09-24": 1036
+  },
+  "pmh1314520/MCTier": {
+    "2026-09-24": 1019
+  },
+  "mokshablr/gander": {
+    "2026-09-24": 1015
+  },
+  "CyrilPeng/Venera-Next": {
+    "2026-09-24": 1005
+  },
+  "realskyrin/capcap": {
+    "2026-09-24": 930
+  },
+  "monogram-android/monogram": {
+    "2026-09-24": 921
+  },
+  "marswaveai/TypeNo": {
+    "2026-09-24": 900
+  },
+  "tdeverx/contained-app": {
+    "2026-09-24": 841
+  },
+  "sipeter/CloneTTS": {
+    "2026-09-24": 820
+  },
+  "techjarves/termux-hacklab": {
+    "2026-09-24": 799
+  },
+  "dickwu/apple-design-skill": {
+    "2026-09-24": 781
+  },
+  "harmony-on-android/HOA": {
+    "2026-09-24": 766
+  },
+  "Moonfin-Client/Moonfin-Core": {
+    "2026-09-24": 727
+  },
+  "xZenLabs/zen-os": {
+    "2026-09-24": 709
+  },
+  "JoshAtticus/Compressor": {
+    "2026-09-24": 697
+  },
+  "evoker0/AlwaysStrong": {
+    "2026-09-24": 682
+  },
+  "esengine/estella": {
+    "2026-09-24": 679
+  },
+  "avadhesh18/at4k": {
+    "2026-09-24": 675
+  },
+  "jasonwu1994/Gboard-patches": {
+    "2026-09-24": 672
+  },
+  "jo-duchan/tapflow": {
+    "2026-09-24": 667
+  },
+  "rust-ui/ui": {
+    "2026-09-24": 664
+  },
+  "danielealbano/android-remote-control-mcp": {
+    "2026-09-24": 658
+  },
+  "eyalm2000/adns": {
+    "2026-09-24": 653
+  },
+  "dietrichmax/colota": {
+    "2026-09-24": 643
+  },
+  "sky22333/skyadb": {
+    "2026-09-24": 643
+  },
+  "yaoyao2mm/cheatreader": {
+    "2026-09-24": 640
+  },
+  "WinNative-Emu/WinNative": {
+    "2026-09-24": 614
+  },
+  "OpenStrap/edge": {
+    "2026-09-24": 611
+  },
+  "zibo-chen/SubnetDesk": {
+    "2026-09-24": 607
+  },
+  "Eul45/omni-search": {
+    "2026-09-24": 603
+  },
+  "v-modal/vmodal_sdk_android": {
+    "2026-09-24": 583
+  },
+  "SlickAmogus/silent-hill-decomp": {
+    "2026-09-24": 582
+  },
+  "chen2he/orange-cloud": {
+    "2026-09-24": 579
+  },
+  "Obiente/native": {
+    "2026-09-24": 579
+  },
+  "okhsunrog/vpnhide": {
+    "2026-09-24": 566
+  },
+  "Nai64/Nai64Patches": {
+    "2026-09-24": 562
+  },
+  "dddevid/Musly": {
+    "2026-09-24": 555
+  },
+  "InlitX/GymMane": {
+    "2026-09-24": 557
+  },
+  "hacan359/tonkatsu_box": {
+    "2026-09-24": 552
+  },
+  "Leadaxe/LxBox": {
+    "2026-09-24": 547
+  },
+  "Ashnar2602/X360-Mobile---OFFICIAL": {
+    "2026-09-24": 543
+  },
+  "skydoves/compose-nav-graph": {
+    "2026-09-24": 539
+  },
+  "1812z/HyperIsland": {
+    "2026-09-24": 530
+  },
+  "kelai141/dsh-mobile-apk": {
+    "2026-09-24": 523
+  },
+  "josskixg/renjana": {
+    "2026-09-24": 516
+  },
+  "heyderekj/dinky": {
+    "2026-09-24": 513
+  },
+  "CreditTone/android-reverse-engineering-skill": {
+    "2026-09-24": 513
+  },
+  "cortenaui/cortenaui": {
+    "2026-09-24": 505
+  },
+  "MuwMx/YumaPlayer": {
+    "2026-09-24": 501
+  },
+  "Weiss-UltimateSavior/Tyranor-Next": {
+    "2026-09-24": 494
+  },
+  "mbm110/MSN-GUARD": {
+    "2026-09-24": 490
+  },
+  "cosmictaserdev-creator/Convx": {
+    "2026-09-24": 485
+  },
+  "devicelab-dev/maestro-runner": {
+    "2026-09-24": 481
+  },
+  "ProxymanApp/atlantis-android": {
+    "2026-09-24": 472
+  },
+  "1372Slash/Zenith": {
+    "2026-09-24": 458
+  },
+  "InlitX/streak": {
+    "2026-09-24": 459
+  },
+  "LUC4N3X/Levyra-deepsound": {
+    "2026-09-24": 454
+  },
+  "Kabanya/Pomodoist": {
+    "2026-09-24": 454
+  },
+  "ahXN00/OwnTV": {
+    "2026-09-24": 452
+  },
+  "elhizazi1/ShizuCoreFetch": {
+    "2026-09-24": 452
+  },
+  "fluxerapp/flutter_client": {
+    "2026-09-24": 442
+  },
+  "singleton-altman/MoviePilotLite": {
+    "2026-09-24": 438
+  },
+  "samirpatil2000/Buffer": {
+    "2026-09-24": 430
+  },
+  "Kyosee/VeneraX": {
+    "2026-09-24": 408
+  },
+  "heyderekj/binky": {
+    "2026-09-24": 379
+  },
+  "NucleusFramework/Nucleus": {
+    "2026-09-24": 378
+  },
+  "palamim/starboard": {
+    "2026-09-24": 371
+  },
+  "JuliusBrussee/revu-swift": {
+    "2026-09-24": 371
+  },
+  "15dd/hikari_novel_flutter": {
+    "2026-09-24": 365
+  },
+  "AprDeci/bili-music": {
+    "2026-09-24": 368
+  },
+  "leanbitlab-org/LtvLauncher": {
+    "2026-09-24": 345
+  },
+  "Santofer/Remindian": {
+    "2026-09-24": 343
+  },
+  "akalikbergenov/cyclop": {
+    "2026-09-24": 335
+  },
+  "AndroidCSIDE/ACSIDE": {
+    "2026-09-24": 302
+  },
+  "royalbhati/HopTab": {
+    "2026-09-24": 301
+  },
+  "MilkFeng/lumina": {
+    "2026-09-24": 288
+  },
+  "cornradio/AirMouse": {
+    "2026-09-24": 285
+  },
+  "klboke/kkRepo": {
+    "2026-09-24": 283
+  },
+  "rejourneyco/rejourney": {
+    "2026-09-24": 279
+  },
+  "Arjun544/flutter_init": {
+    "2026-09-24": 262
+  },
+  "wgtunnel/desktop": {
+    "2026-09-24": 255
+  },
+  "sidhant947/Puzzle": {
+    "2026-09-24": 237
+  },
+  "callstackincubator/react-native-grab": {
+    "2026-09-24": 228
+  },
+  "kamranbekirovyz/bunpod": {
+    "2026-09-24": 226
+  },
+  "first-fluke/fullstack-starter": {
+    "2026-09-24": 224
+  },
+  "abduznik/Freegosy": {
+    "2026-09-24": 219
+  },
+  "AneryCoft/course_helper": {
+    "2026-09-24": 209
+  },
+  "misobadev/neostation-frontend": {
+    "2026-09-24": 206
+  },
+  "arcboxlabs/arcbox-desktop": {
+    "2026-09-24": 199
+  },
+  "jangviktor-web/nihaixia-app": {
+    "2026-09-24": 199
+  },
+  "NativeBlade/NativeBlade": {
+    "2026-09-24": 199
+  },
+  "songloft-org/songloft-player": {
+    "2026-09-24": 196
+  },
+  "garden-co/jazz": {
+    "2026-09-24": 195
+  },
+  "emanuele-em/cove": {
+    "2026-09-24": 182
+  },
+  "KickNext/morphnext": {
+    "2026-09-24": 176
+  },
+  "qingyueyin/Pure-music": {
+    "2026-09-24": 173
+  },
+  "TNT-Likely/BeeCount-Cloud": {
+    "2026-09-24": 161
+  },
+  "NativeScript/SimDeck": {
+    "2026-09-24": 150
+  },
+  "M5Devs/OpenROM": {
+    "2026-09-24": 145
+  },
+  "yuluoos/TVBox-tvs": {
+    "2026-09-24": 139
+  },
+  "arthenica/ffmpeg-kit-next": {
+    "2026-09-24": 139
+  },
+  "meow-rs/meow-android": {
+    "2026-09-24": 138
+  },
+  "xuange6610/SyncWatch": {
+    "2026-09-24": 133
+  },
+  "jokezc/mi_music": {
+    "2026-09-24": 133
+  },
+  "huarangmeng/latex": {
+    "2026-09-24": 128
+  },
+  "hoangnd24/docker-android-emulator-cluster": {
+    "2026-09-24": 121
+  },
+  "elymsyr/dungeon-master-tool": {
+    "2026-09-24": 120
+  },
+  "Regncreative/Pulse": {
+    "2026-09-24": 118
+  },
+  "ayush0x1/termux-desktop": {
+    "2026-09-24": 117
+  },
+  "DarkFlippers/qUnleashed": {
+    "2026-09-24": 116
+  },
+  "PasitYuu/pika-panels": {
+    "2026-09-24": 116
+  },
+  "zehaaaa5/heaven-scroll-reader": {
+    "2026-09-24": 116
+  },
+  "2501035-wq/mobile-sim-streamer": {
+    "2026-09-24": 115
+  },
+  "Brandon56-code/worktree-pool-manager": {
+    "2026-09-24": 115
+  },
+  "Anirudh-pandit-466/android-adb-tunnel-vantage": {
+    "2026-09-24": 115
+  },
+  "resurrectdev1/Grove": {
+    "2026-09-24": 113
+  },
+  "Fathom-Media/fathom": {
+    "2026-09-24": 111
+  },
+  "JunWeiUp/Clipy": {
+    "2026-09-24": 110
+  },
+  "aydozy/popcorn": {
+    "2026-09-24": 110
+  },
+  "moezakura/mux-pod": {
+    "2026-09-24": 107
+  },
+  "albertzhzhou-droid/ParkinSUM": {
+    "2026-09-24": 105
+  },
+  "devaldaki3/BudgetBudy": {
+    "2026-09-24": 103
+  },
+  "HumanAILoop/zemote": {
+    "2026-09-24": 103
+  },
+  "jjrodcast/TextKit": {
+    "2026-09-24": 100
+  },
+  "RedGridTactical/RedGridLink": {
+    "2026-09-24": 96
+  },
+  "warpdotsys/reader-dev": {
+    "2026-09-24": 96
+  },
+  "aydozy/flutter-vscode-settings": {
+    "2026-09-24": 92
+  },
+  "philfung/open-mrna": {
+    "2026-09-24": 92
+  },
+  "Waydir/Waydir": {
+    "2026-09-24": 79
+  },
+  "stefanprodan/kswitch": {
+    "2026-09-24": 78
+  },
+  "Alchemist-Aloha/StashFlow": {
+    "2026-09-24": 64
+  },
+  "DenserMeerkat/hyphen": {
+    "2026-09-24": 63
+  },
+  "amethystsoft/vein": {
+    "2026-09-24": 53
+  },
+  "Erkko68/filament-kmp": {
+    "2026-09-24": 47
+  },
+  "dwqdaiwenqi/claude-code-web": {
+    "2026-09-24": 44
+  },
+  "apoorvdarshan/verceltics": {
+    "2026-09-24": 33
+  },
+  "teggr/awesome-java-ui": {
+    "2026-09-24": 32
+  },
+  "JoaoPauloCMarra/react-native-nitro-qrcode": {
+    "2026-09-24": 26
+  },
+  "Albert-Weasker/niubi_guard": {
+    "2026-09-24": 1309
+  },
+  "immanuwell/dockerfile-roast": {
+    "2026-09-24": 1124
+  },
+  "dannymcc/bluehood": {
+    "2026-09-24": 1110
+  },
+  "SafeAI-Lab-X/ClawKeeper": {
+    "2026-09-24": 1021
+  },
+  "ovexro/dockpanel": {
+    "2026-09-24": 968
+  },
+  "getplumber/plumber": {
+    "2026-09-24": 795
+  },
+  "hadriansecurity/OpenHack": {
+    "2026-09-24": 742
+  },
+  "OWASP/cve-lite-cli": {
+    "2026-09-24": 728
+  },
+  "praetorian-inc/titus": {
+    "2026-09-24": 706
+  },
+  "MyuriKanao/src-hunter-skill": {
+    "2026-09-24": 625
+  },
+  "7onez/cti-expert": {
+    "2026-09-24": 599
+  },
+  "Webba-Creative-Technologies/vice": {
+    "2026-09-24": 594
+  },
+  "Nour833/StegoForge": {
+    "2026-09-24": 591
+  },
+  "okasi/bot-signal": {
+    "2026-09-24": 540
+  },
+  "3516634930/Payloader": {
+    "2026-09-24": 505
+  },
+  "pis10/TraceSurface": {
+    "2026-09-24": 500
+  },
+  "dweep-desai/FaceGate-Mac": {
+    "2026-09-24": 479
+  },
+  "Mafifrizi/ARES": {
+    "2026-09-24": 444
+  },
+  "nhovongoc0-max/meme-radar": {
+    "2026-09-24": 434
+  },
+  "ClouGence/open-cdm": {
+    "2026-09-24": 397
+  },
+  "flythenimbus/bramble": {
+    "2026-09-24": 394
+  },
+  "portbuster1337/lpe-toolkit": {
+    "2026-09-24": 391
+  },
+  "TheQmaks/phantom-frida": {
+    "2026-09-24": 381
+  },
+  "boostsecurityio/smokedmeat": {
+    "2026-09-24": 381
+  },
+  "mariusdjen/vpskit": {
+    "2026-09-24": 365
+  },
+  "wolffcatskyy/crowdsec-blocklist-import": {
+    "2026-09-24": 364
+  },
+  "oversecured/Samsung_Vulnerabilities": {
+    "2026-09-24": 351
+  },
+  "safe1024/apollofish": {
+    "2026-09-24": 343
+  },
+  "Eljakani/ward": {
+    "2026-09-24": 336
+  },
+  "f3rb123/kill_flutter": {
+    "2026-09-24": 304
+  },
+  "nylxar/curium": {
+    "2026-09-24": 280
+  },
+  "k8scout/k8scout": {
+    "2026-09-24": 254
+  },
+  "immanuwell/k16s-exam-simulator": {
+    "2026-09-24": 211
+  },
+  "phsycologicalFudge/SafeHaven-Store": {
+    "2026-09-24": 203
+  },
+  "PlatformRelay/Kubernetes-Workshop": {
+    "2026-09-24": 198
+  },
+  "Percivalll/Copy-Fail-CVE-2026-31431-Kubernetes-PoC": {
+    "2026-09-24": 189
+  },
+  "pii-shield/pii-shield": {
+    "2026-09-24": 168
+  },
+  "SoulNaturalist/zero_password_manager": {
+    "2026-09-24": 167
+  },
+  "Hostzero-GmbH/keycloak-operator": {
+    "2026-09-24": 159
+  },
+  "sealandseacat/dbmask": {
+    "2026-09-24": 148
+  },
+  "taovietducofficial/CI-CD-Beginner": {
+    "2026-09-24": 144
+  },
+  "script-or-script/FlutterTap": {
+    "2026-09-24": 120
+  },
+  "caverav/flutterdec": {
+    "2026-09-24": 100
+  },
+  "duy90utc528/repo-publication-audit": {
+    "2026-09-24": 97
+  },
+  "0hardik1/kubesplaining": {
+    "2026-09-24": 96
+  },
+  "dopbase/dopbase": {
+    "2026-09-24": 88
+  },
+  "hash-anu/snkv": {
+    "2026-09-24": 78
+  },
+  "Goldziher/scythe": {
+    "2026-09-24": 71
+  },
+  "ejfkdev/dj": {
+    "2026-09-24": 51
+  },
+  "Chocapikk/pgread": {
+    "2026-09-24": 50
+  },
+  "anmolksachan/CloudFail": {
+    "2026-09-24": 45
+  },
+  "arumes31/redrx": {
+    "2026-09-24": 31
+  },
+  "therealaleph/MasterHttpRelayVPN-RUST": {
+    "2026-09-24": 3588
+  },
+  "orhun/ratty": {
+    "2026-09-24": 3244
+  },
+  "hoowhoami/EchoMusic": {
+    "2026-09-24": 3216
+  },
+  "chuspeeism/dashi-taskboard": {
+    "2026-09-24": 3196
+  },
+  "harry0703/MangoDisk": {
+    "2026-09-24": 3096
+  },
+  "Veirt/weathr": {
+    "2026-09-24": 3058
+  },
+  "realiti4/claude-swap": {
+    "2026-09-24": 2798
+  },
+  "dsh-tauri/deepseek-harness-desktop": {
+    "2026-09-24": 2571
+  },
+  "ZenNotes/zennotes": {
+    "2026-09-24": 2493
+  },
+  "snownico0722/PaperTodo": {
+    "2026-09-24": 2417
+  },
+  "AaronL725/grok-register": {
+    "2026-09-24": 2253
+  },
+  "mesamirh/MovieBox-Tui": {
+    "2026-09-24": 2229
+  },
+  "zenbu-labs/terminal-code": {
+    "2026-09-24": 2059
+  },
+  "chrisryugj/kordoc": {
+    "2026-09-24": 1948
+  },
+  "Timmoth/RackPeek": {
+    "2026-09-24": 1786
+  },
+  "BayramAnnakov/claude-reflect": {
+    "2026-09-24": 1695
+  },
+  "MayersScott/rkn-block-checker": {
+    "2026-09-24": 1627
+  },
+  "chojs23/concord": {
+    "2026-09-24": 1547
+  },
+  "eval-exec/neomacs": {
+    "2026-09-24": 1482
+  },
+  "lance0/ttl": {
+    "2026-09-24": 1458
+  },
+  "514-labs/dnsglobe": {
+    "2026-09-24": 1195
+  },
+  "hsr88/mouzi": {
+    "2026-09-24": 921
+  },
+  "Giammarco-Ferranti/deja": {
+    "2026-09-24": 758
+  },
+  "dotpm/obsidian-pm": {
+    "2026-09-24": 721
+  },
+  "neur0map/glazepkg": {
+    "2026-09-24": 639
+  },
+  "PhoenixNil/XrayUI-dev": {
+    "2026-09-24": 632
+  },
+  "3xpyth0n/ideon": {
+    "2026-09-24": 610
+  },
+  "0xKarl-dev/claw-codes": {
+    "2026-09-24": 503
+  },
+  "xarbit/plasma6-applet-appgrid": {
+    "2026-09-24": 445
+  },
+  "25H/MayeNano": {
+    "2026-09-24": 419
+  },
+  "johnzfitch/claude-cowork-linux": {
+    "2026-09-24": 419
+  },
+  "ARCANGEL0/CyberArch-Shell": {
+    "2026-09-24": 412
+  },
+  "Wangnov/codex-threadripper": {
+    "2026-09-24": 399
+  },
+  "NubPlayz/GoodLib-Zlib-Goodreads-extension": {
+    "2026-09-24": 394
+  },
+  "lightmode-laboratories/spacesuit": {
+    "2026-09-24": 336
+  },
+  "jchultarsky/mirador": {
+    "2026-09-24": 315
+  },
+  "sazardev/shiki": {
+    "2026-09-24": 302
+  },
+  "nyakuoff/Snowify": {
+    "2026-09-24": 292
+  },
+  "l06066hb/MarKing": {
+    "2026-09-24": 285
+  },
+  "lanes-sh/app": {
+    "2026-09-24": 271
+  },
+  "heartached/Noctis": {
+    "2026-09-24": 229
+  },
+  "BridgeDruidCompress/TauriKit": {
+    "2026-09-24": 223
+  },
+  "BufferHerald/WarpLite": {
+    "2026-09-24": 223
+  },
+  "BricklayerSurmount/DockForge": {
+    "2026-09-24": 223
+  },
+  "AutocratGirder/ClashDesk": {
+    "2026-09-24": 222
+  },
+  "CassowaryDevelop/HelixEdit": {
+    "2026-09-24": 221
+  },
+  "centralcashierboost/ZedLite": {
+    "2026-09-24": 221
+  },
+  "Behemothlyaoscillate/RustDeskPro": {
+    "2026-09-24": 221
+  },
+  "VictorGabriel7Dev/OpenFinance-Dashboard": {
+    "2026-09-24": 219
+  },
+  "Joao2Pereira1/Wallpapers": {
+    "2026-09-24": 168
+  },
+  "crgimenes/glaze": {
+    "2026-09-24": 146
+  },
+  "dhdbv-cbs/genericagent-launcher": {
+    "2026-09-24": 130
+  },
+  "DanielCardonaRojas/codemark": {
+    "2026-09-24": 123
+  },
+  "ejboy/awesome-efficient-devtools": {
+    "2026-09-24": 111
+  },
+  "wess09/DeepSeekHarnessDesktop": {
+    "2026-09-24": 109
+  },
+  "ZRainbow1275/bentodesk": {
+    "2026-09-24": 107
+  },
+  "Rsplwe/bili-live-hime": {
+    "2026-09-24": 100
+  },
+  "AhsanSheraz/pywho": {
+    "2026-09-24": 91
+  },
+  "tinesoft/spectatui": {
+    "2026-09-24": 85
+  },
+  "Simoon-F/envora": {
+    "2026-09-24": 84
+  },
+  "Abinesh-L/claude-crusts": {
+    "2026-09-24": 83
+  },
+  "Sanjai-Shaarugesh/Advanced-media-controller": {
+    "2026-09-24": 72
+  },
+  "gogpu/systray": {
+    "2026-09-24": 68
+  },
+  "WSTxda/MediaShell": {
+    "2026-09-24": 69
+  },
+  "PleasePrompto/smabar": {
+    "2026-09-24": 63
+  },
+  "dennishilk/boringos": {
+    "2026-09-24": 63
   }
 }
