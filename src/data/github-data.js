@@ -135,7 +135,7 @@ const PROJECT_SEEDS = [
   // ---- 2023-2025 年 ----
   ['nuejs/nue', 'Nue', '贴近 Web 标准的现代前端框架，强调渐进增强与极致性能', 'web', 'JavaScript', 8822, 258, 0, 380, 1100, 76, 'MIT', ['frontend', 'framework', 'web-standards'], '2023-09-12'],
   ['tconbeer/harlequin', 'Harlequin', '运行在终端里的 SQL IDE，支持 DuckDB 与 ClickHouse', 'developer-tools', 'Python', 6416, 178, 0, 300, 850, 32, 'MIT', ['sql', 'terminal', 'duckdb'], '2023-03-21'],
-  ['NVIDIA/dynamo', 'Dynamo', 'NVIDIA 开源的 LLM 推理服务框架，支持推理阶段解耦', 'infra', 'Python', 12900, 780, 170, 840, 2300, 92, 'Apache-2.0', ['llm', 'inference', 'serving'], '2025-02-24'],
+  ['ai-dynamo/dynamo', 'Dynamo', 'NVIDIA 开源的 LLM 推理服务框架，支持推理阶段解耦（原 NVIDIA/dynamo，已迁移至 ai-dynamo 组织）', 'infra', 'Python', 8153, 1617, 170, 840, 2300, 1562, 'Apache-2.0', ['llm', 'inference', 'serving'], '2025-03-03'],
   ['huggingface/smolagents', 'smolagents', 'Hugging Face 极简智能体框架，核心逻辑不足千行', 'ai', 'Python', 29464, 2991, 1, 900, 2400, 827, 'Apache-2.0', ['agents', 'llm', 'huggingface'], '2024-12-09'],
   ['deepseek-ai/DeepSeek-R1', 'DeepSeek-R1', 'DeepSeek 开源的推理大模型，强化学习驱动思维链', 'ai', 'Python', 91969, 11678, 0, 1100, 2900, 37, 'MIT', ['llm', 'reasoning', 'open-model'], '2025-01-20'],
   ['tensorzero/tensorzero', 'TensorZero', '面向生产环境的 LLM 应用栈，统一网关与优化回路', 'infra', 'Rust', 11719, 970, 0, 460, 1300, 392, 'Apache-2.0', ['llm', 'gateway', 'observability'], '2024-09-10'],
