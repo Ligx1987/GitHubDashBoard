@@ -1,8 +1,638 @@
 {
   "openai/whisper": {
-    "2026-09-24": 109527
+    "2026-09-24": 109529
   },
   "ollama/ollama": {
-    "2026-09-24": 181544
+    "2026-09-24": 181552
+  },
+  "huggingface/transformers": {
+    "2026-09-24": 166574
+  },
+  "langchain-ai/langchain": {
+    "2026-09-24": 146957
+  },
+  "microsoft/semantic-kernel": {
+    "2026-09-24": 28593
+  },
+  "microsoft/vscode": {
+    "2026-09-24": 192830
+  },
+  "neovim/neovim": {
+    "2026-09-24": 102541
+  },
+  "astral-sh/uv": {
+    "2026-09-24": 90117
+  },
+  "zed-industries/zed": {
+    "2026-09-24": 90792
+  },
+  "denoland/deno": {
+    "2026-09-24": 108486
+  },
+  "facebook/react": {
+    "2026-09-24": 250673
+  },
+  "vercel/next.js": {
+    "2026-09-24": 142413
+  },
+  "sveltejs/svelte": {
+    "2026-09-24": 88172
+  },
+  "tailwindlabs/tailwindcss": {
+    "2026-09-24": 97651
+  },
+  "vuejs/core": {
+    "2026-09-24": 54422
+  },
+  "remix-run/remix": {
+    "2026-09-24": 33369
+  },
+  "kubernetes/kubernetes": {
+    "2026-09-24": 127935
+  },
+  "docker/compose": {
+    "2026-09-24": 38206
+  },
+  "hashicorp/terraform": {
+    "2026-09-24": 49714
+  },
+  "grafana/grafana": {
+    "2026-09-24": 76876
+  },
+  "prometheus/prometheus": {
+    "2026-09-24": 66196
+  },
+  "apache/airflow": {
+    "2026-09-24": 46957
+  },
+  "dbt-labs/dbt-core": {
+    "2026-09-24": 13915
+  },
+  "pandas-dev/pandas": {
+    "2026-09-24": 49787
+  },
+  "duckdb/duckdb": {
+    "2026-09-24": 41674
+  },
+  "apache/spark": {
+    "2026-09-24": 44033
+  },
+  "facebook/react-native": {
+    "2026-09-24": 126703
+  },
+  "flutter/flutter": {
+    "2026-09-24": 179060
+  },
+  "expo/expo": {
+    "2026-09-24": 52403
+  },
+  "supabase/supabase": {
+    "2026-09-24": 110711
+  },
+  "appwrite/appwrite": {
+    "2026-09-24": 57454
+  },
+  "ossf/scorecard": {
+    "2026-09-24": 5702
+  },
+  "trufflesecurity/trufflehog": {
+    "2026-09-24": 28037
+  },
+  "aquasecurity/trivy": {
+    "2026-09-24": 38048
+  },
+  "gitleaks/gitleaks": {
+    "2026-09-24": 29456
+  },
+  "microsoft/PowerToys": {
+    "2026-09-24": 138953
+  },
+  "jesseduffield/lazygit": {
+    "2026-09-24": 82627
+  },
+  "junegunn/fzf": {
+    "2026-09-24": 83223
+  },
+  "ggml-org/llama.cpp": {
+    "2026-09-24": 129358
+  },
+  "AUTOMATIC1111/stable-diffusion-webui": {
+    "2026-09-24": 165091
+  },
+  "comfyanonymous/ComfyUI": {
+    "2026-09-24": 134750
+  },
+  "tokio-rs/tokio": {
+    "2026-09-24": 33216
+  },
+  "rust-lang/rust-analyzer": {
+    "2026-09-24": 16868
+  },
+  "BurntSushi/ripgrep": {
+    "2026-09-24": 68555
+  },
+  "cli/cli": {
+    "2026-09-24": 46387
+  },
+  "axios/axios": {
+    "2026-09-24": 109209
+  },
+  "solidjs/solid": {
+    "2026-09-24": 36071
+  },
+  "storybookjs/storybook": {
+    "2026-09-24": 91141
+  },
+  "withastro/astro": {
+    "2026-09-24": 62776
+  },
+  "argoproj/argo-cd": {
+    "2026-09-24": 24226
+  },
+  "istio/istio": {
+    "2026-09-24": 38404
+  },
+  "helm/helm": {
+    "2026-09-24": 30273
+  },
+  "pola-rs/polars": {
+    "2026-09-24": 39851
+  },
+  "ClickHouse/ClickHouse": {
+    "2026-09-24": 50043
+  },
+  "sigstore/cosign": {
+    "2026-09-24": 6322
+  },
+  "sharkdp/bat": {
+    "2026-09-24": 60557
+  },
+  "CompVis/stable-diffusion": {
+    "2026-09-24": 73478
+  },
+  "starship/starship": {
+    "2026-09-24": 60023
+  },
+  "DavidHDev/react-bits": {
+    "2026-09-24": 47961
+  },
+  "charmbracelet/crush": {
+    "2026-09-24": 28277
+  },
+  "pydantic/pydantic-ai": {
+    "2026-09-24": 20133
+  },
+  "vllm-project/production-stack": {
+    "2026-09-24": 2630
+  },
+  "openai/openai-agents-python": {
+    "2026-09-24": 29667
+  },
+  "google-gemini/gemini-cli": {
+    "2026-09-24": 107141
+  },
+  "volcengine/verl": {
+    "2026-09-24": 23591
+  },
+  "microsoft/agent-framework": {
+    "2026-09-24": 13763
+  },
+  "nuejs/nue": {
+    "2026-09-24": 8822
+  },
+  "tconbeer/harlequin": {
+    "2026-09-24": 6416
+  },
+  "huggingface/smolagents": {
+    "2026-09-24": 29463
+  },
+  "deepseek-ai/DeepSeek-R1": {
+    "2026-09-24": 91973
+  },
+  "tensorzero/tensorzero": {
+    "2026-09-24": 11720
+  },
+  "daytonaio/daytona": {
+    "2026-09-24": 71725
+  },
+  "QwenLM/Qwen3": {
+    "2026-09-24": 27656
+  },
+  "openai/codex": {
+    "2026-09-24": 126212
+  },
+  "bytedance/UI-TARS": {
+    "2026-09-24": 11518
+  },
+  "sst/opencode": {
+    "2026-09-24": 209700
+  },
+  "voideditor/void": {
+    "2026-09-24": 28795
+  },
+  "Yonom/assistant-ui": {
+    "2026-09-24": 12282
+  },
+  "janhq/jan": {
+    "2026-09-24": 44628
+  },
+  "vllm-project/aibrix": {
+    "2026-09-24": 5107
+  },
+  "kgateway-dev/kgateway": {
+    "2026-09-24": 5691
+  },
+  "promptfoo/promptfoo": {
+    "2026-09-24": 25411
+  },
+  "dlt-hub/dlt": {
+    "2026-09-24": 5887
+  },
+  "shorebirdtech/shorebird": {
+    "2026-09-24": 3028
+  },
+  "chdb-io/chdb": {
+    "2026-09-24": 2906
+  },
+  "xai-org/grok-1": {
+    "2026-09-24": 52234
+  },
+  "microsoft/PyRIT": {
+    "2026-09-24": 4534
+  },
+  "grafana/alloy": {
+    "2026-09-24": 3553
+  },
+  "unitycatalog/unitycatalog": {
+    "2026-09-24": 3539
+  },
+  "openbao/openbao": {
+    "2026-09-24": 7471
+  },
+  "lancedb/lancedb": {
+    "2026-09-24": 11513
+  },
+  "mendableai/firecrawl": {
+    "2026-09-24": 183920
+  },
+  "livekit/livekit": {
+    "2026-09-24": 21078
+  },
+  "Significant-Gravitas/Auto-GPT": {
+    "2026-09-24": 187516
+  },
+  "continuedev/continue": {
+    "2026-09-24": 36008
+  },
+  "paradedb/paradedb": {
+    "2026-09-24": 9301
+  },
+  "protectai/llm-guard": {
+    "2026-09-24": 3208
+  },
+  "denoland/fresh": {
+    "2026-09-24": 13789
+  },
+  "opencost/opencost": {
+    "2026-09-24": 6755
+  },
+  "usememos/memos": {
+    "2026-09-24": 63295
+  },
+  "lynx-family/lynx": {
+    "2026-09-24": 15128
+  },
+  "google/langextract": {
+    "2026-09-24": 38660
+  },
+  "affaan-m/ECC": {
+    "2026-09-24": 266242
+  },
+  "DietrichGebert/ponytail": {
+    "2026-09-24": 145081
+  },
+  "Graphify-Labs/graphify": {
+    "2026-09-24": 120955
+  },
+  "JuliusBrussee/caveman": {
+    "2026-09-24": 107580
+  },
+  "nexu-io/open-design": {
+    "2026-09-24": 97852
+  },
+  "karpathy/autoresearch": {
+    "2026-09-24": 96689
+  },
+  "Leonxlnx/taste-skill": {
+    "2026-09-24": 89635
+  },
+  "koala73/worldmonitor": {
+    "2026-09-24": 87293
+  },
+  "Panniantong/Agent-Reach": {
+    "2026-09-24": 85126
+  },
+  "Egonex-AI/Understand-Anything": {
+    "2026-09-24": 83925
+  },
+  "rtk-ai/rtk": {
+    "2026-09-24": 81595
+  },
+  "stablyai/orca": {
+    "2026-09-24": 76702
+  },
+  "headroomlabs-ai/headroom": {
+    "2026-09-24": 73660
+  },
+  "career-ops-hq/career-ops": {
+    "2026-09-24": 72541
+  },
+  "tt-a1i/archify": {
+    "2026-09-24": 70709
+  },
+  "diegosouzapw/OmniRoute": {
+    "2026-09-24": 69643
+  },
+  "ZhuLinsen/daily_stock_analysis": {
+    "2026-09-24": 65543
+  },
+  "mvanhorn/last30days-skill": {
+    "2026-09-24": 62726
+  },
+  "calesthio/OpenMontage": {
+    "2026-09-24": 61067
+  },
+  "MemPalace/mempalace": {
+    "2026-09-24": 59255
+  },
+  "rohitg00/ai-engineering-from-scratch": {
+    "2026-09-24": 55795
+  },
+  "jamiepine/voicebox": {
+    "2026-09-24": 55542
+  },
+  "VoltAgent/awesome-openclaw-skills": {
+    "2026-09-24": 52757
+  },
+  "heygen-com/hyperframes": {
+    "2026-09-24": 52697
+  },
+  "blader/humanizer": {
+    "2026-09-24": 51692
+  },
+  "multica-ai/multica": {
+    "2026-09-24": 51242
+  },
+  "ayghri/i-have-adhd": {
+    "2026-09-24": 50737
+  },
+  "HKUDS/CLI-Anything": {
+    "2026-09-24": 49998
+  },
+  "Imbad0202/academic-research-skills": {
+    "2026-09-24": 49315
+  },
+  "kepano/obsidian-skills": {
+    "2026-09-24": 48816
+  },
+  "VoltAgent/awesome-design-md": {
+    "2026-09-24": 117561
+  },
+  "openai/symphony": {
+    "2026-09-24": 27382
+  },
+  "browser-use/video-use": {
+    "2026-09-24": 26566
+  },
+  "edwardkim/rhwp": {
+    "2026-09-24": 3848
+  },
+  "NVlabs/cuda-oxide": {
+    "2026-09-24": 3577
+  },
+  "getopenscreen/openscreen": {
+    "2026-09-24": 3188
+  },
+  "Sidenai/sidex": {
+    "2026-09-24": 3003
+  },
+  "HakanSeven12/OpenCADStudio": {
+    "2026-09-24": 2249
+  },
+  "kunchenguid/treehouse": {
+    "2026-09-24": 1767
+  },
+  "ivov/lisette": {
+    "2026-09-24": 1499
+  },
+  "devframes/devframe": {
+    "2026-09-24": 574
+  },
+  "netz888/zhong-wechat-wmpf-debugger": {
+    "2026-09-24": 112
+  },
+  "the0807/git-graph-plus": {
+    "2026-09-24": 94
+  },
+  "zhishile/codex-auth-helper": {
+    "2026-09-24": 16543
+  },
+  "lnkiai/m3e-canvas": {
+    "2026-09-24": 8098
+  },
+  "joeseesun/qiaomu-anything-to-notebooklm": {
+    "2026-09-24": 6148
+  },
+  "MengTo/threeui": {
+    "2026-09-24": 6134
+  },
+  "srizzon/git-city": {
+    "2026-09-24": 5787
+  },
+  "asciimoo/hister": {
+    "2026-09-24": 5631
+  },
+  "Achilng/floral-notepaper": {
+    "2026-09-24": 5280
+  },
+  "DavidHDev/canvas-ui": {
+    "2026-09-24": 4677
+  },
+  "guokaigdg/animal-island-ui": {
+    "2026-09-24": 4661
+  },
+  "crafter-station/petdex": {
+    "2026-09-24": 4154
+  },
+  "Hypostasis-Cat/HypoMux": {
+    "2026-09-24": 3632
+  },
+  "cpaczek/skylight": {
+    "2026-09-24": 3296
+  },
+  "zenbu-labs/terminal-browser": {
+    "2026-09-24": 3222
+  },
+  "gkurt/tegaki": {
+    "2026-09-24": 3098
+  },
+  "jimuzhe/tiez-clipboard": {
+    "2026-09-24": 2862
+  },
+  "floci-io/floci": {
+    "2026-09-24": 25406
+  },
+  "caamer20/Telegram-Drive": {
+    "2026-09-24": 5188
+  },
+  "CJackHwang/ds2api": {
+    "2026-09-24": 4742
+  },
+  "ministackorg/ministack": {
+    "2026-09-24": 4678
+  },
+  "nklmilojevic/sofka": {
+    "2026-09-24": 1438
+  },
+  "rohitg00/k8sgames": {
+    "2026-09-24": 1369
+  },
+  "transmute-app/transmute": {
+    "2026-09-24": 1357
+  },
+  "berbicanes/apiark": {
+    "2026-09-24": 1278
+  },
+  "4q4r/telemt-docker": {
+    "2026-09-24": 1255
+  },
+  "bulwarkmail/webmail": {
+    "2026-09-24": 1196
+  },
+  "bilawalsidhu/gods-eye-view": {
+    "2026-09-24": 41975
+  },
+  "hello245m/free-stockdb": {
+    "2026-09-24": 2689
+  },
+  "talivia-group/talivia": {
+    "2026-09-24": 2393
+  },
+  "bklit/bklit-ui": {
+    "2026-09-24": 1678
+  },
+  "arpanghosh8453/open-dronelog": {
+    "2026-09-24": 1538
+  },
+  "DuarteSantos8/openGym": {
+    "2026-09-24": 1302
+  },
+  "ModernRelay/omnigraph": {
+    "2026-09-24": 1197
+  },
+  "TanStack/charts": {
+    "2026-09-24": 758
+  },
+  "royalbhati/sqltoerdiagram": {
+    "2026-09-24": 624
+  },
+  "OpenLabs-so/openanalytics": {
+    "2026-09-24": 561
+  },
+  "RavelloH/InsightFlare": {
+    "2026-09-24": 501
+  },
+  "SouravRoy-ETL/slothdb": {
+    "2026-09-24": 413
+  },
+  "hasaneyldrm/exercises-dataset": {
+    "2026-09-24": 22246
+  },
+  "vorssaint/vorssaint-utils": {
+    "2026-09-24": 21103
+  },
+  "rorkai/App-Store-Connect-CLI": {
+    "2026-09-24": 7336
+  },
+  "tiajinsha/JKVideo": {
+    "2026-09-24": 4995
+  },
+  "PerryTS/perry": {
+    "2026-09-24": 4888
+  },
+  "mayukh4/linux-android": {
+    "2026-09-24": 3560
+  },
+  "software-mansion/argent": {
+    "2026-09-24": 2884
+  },
+  "Shrey113/Android-Dex": {
+    "2026-09-24": 2657
+  },
+  "yjeanrenaud/yj_nearbyglasses": {
+    "2026-09-24": 2374
+  },
+  "ravindu644/Droidspaces-OSS": {
+    "2026-09-24": 2217
+  },
+  "pass-with-high-score/blockads-android": {
+    "2026-09-24": 2064
+  },
+  "kitsumed/ShizuCallRecorder": {
+    "2026-09-24": 1587
+  },
+  "anthropics/defending-code-reference-harness": {
+    "2026-09-24": 7515
+  },
+  "AdventDevInc/kudu": {
+    "2026-09-24": 3569
+  },
+  "RevylAI/greenlight": {
+    "2026-09-24": 2434
+  },
+  "betterleaks/betterleaks": {
+    "2026-09-24": 2012
+  },
+  "JesseCHale/HaleHound-CYD": {
+    "2026-09-24": 1740
+  },
+  "kulikov0/whitelist-bypass": {
+    "2026-09-24": 1671
+  },
+  "potatameister/PaperKnife": {
+    "2026-09-24": 1465
+  },
+  "anonvector/SlipNet": {
+    "2026-09-24": 1433
+  },
+  "anywhere-labs/dsh-desktop": {
+    "2026-09-24": 28734
+  },
+  "jarrodwatts/claude-hud": {
+    "2026-09-24": 28140
+  },
+  "refactoringhq/tolaria": {
+    "2026-09-24": 19876
+  },
+  "Kuberwastaken/claurst": {
+    "2026-09-24": 10306
+  },
+  "modem-dev/hunk": {
+    "2026-09-24": 9371
+  },
+  "TomBadash/Mouser": {
+    "2026-09-24": 5261
+  },
+  "Tianyu199509/DeskBox": {
+    "2026-09-24": 5099
+  },
+  "fallow-rs/fallow": {
+    "2026-09-24": 4844
+  },
+  "Jia-Ethan/codex-keysmith": {
+    "2026-09-24": 4586
+  },
+  "crmne/spotifast": {
+    "2026-09-24": 4562
   }
 }
