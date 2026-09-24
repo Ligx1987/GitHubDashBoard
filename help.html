@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1220" />
+    <title>使用说明 · GitHub Pulse</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #080d16; --surface: #101927; --border: rgba(155, 176, 206, 0.13);
+        --text: #edf3fc; --muted: #8ea0b8; --green: #62d59b; --blue: #6fa9ed;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: Manrope, ui-sans-serif, system-ui, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+      .wrap { max-width: 780px; margin: 0 auto; padding: 48px 24px 64px; }
+      .back { display: inline-flex; align-items: center; gap: 6px; color: var(--green); text-decoration: none; font-size: 13px; margin-bottom: 28px; }
+      .back:hover { text-decoration: underline; }
+      h1 { font-size: 30px; letter-spacing: -0.04em; margin: 0 0 6px; }
+      .sub { color: var(--muted); margin: 0 0 36px; font-size: 13px; }
+      h2 { font-size: 17px; letter-spacing: -0.02em; margin: 38px 0 12px; padding-top: 26px; border-top: 1px solid var(--border); }
+      p { margin: 0 0 12px; color: #c6d2e2; }
+      ul { margin: 0 0 12px; padding-left: 22px; color: #c6d2e2; }
+      li { margin-bottom: 6px; }
+      code { font-family: "DM Mono", monospace; font-size: 12px; background: rgba(111, 169, 237, 0.12); color: #a9cdf3; padding: 2px 6px; border-radius: 4px; }
+      pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; margin: 0 0 12px; }
+      pre code { background: transparent; padding: 0; color: #cfe6d8; font-size: 12px; line-height: 1.7; }
+      table { border-collapse: collapse; width: 100%; margin: 0 0 12px; font-size: 13px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); color: #c6d2e2; }
+      th { color: var(--muted); font-weight: 600; font-size: 12px; }
+      .tip { border: 1px solid rgba(98, 213, 155, 0.25); background: rgba(98, 213, 155, 0.07); border-radius: 10px; padding: 12px 14px; color: #b9ddc8; font-size: 13px; margin: 0 0 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="back" href="./index.html">← 返回看板</a>
+      <h1>GitHub Pulse 使用说明</h1>
+      <p class="sub">开源工程看板 · 实时榜单 · 分类探索 · 描述自动翻译</p>
+
+      <h2>快速开始</h2>
+      <pre><code>npm run dev
+# 然后浏览器打开 http://localhost:4173</code></pre>
+      <p>项目是纯前端静态页面，无任何依赖，也可以用任意静态服务器（如 VS Code Live Server）打开。</p>
+
+      <h2>界面功能</h2>
+      <table>
+        <tr><th>区域</th><th>说明</th></tr>
+        <tr><td>指标卡</td><td>追踪工程总数、今日活跃工程、本周新增 Stars、生态活跃指数</td></tr>
+        <tr><td>增长榜</td><td>右上角"今天 / 本周 / 本月"切换统计周期，按对应周期 Star 增量排序</td></tr>
+        <tr><td>走势图</td><td>全部追踪工程近 7 天的 Star 增长柱状图</td></tr>
+        <tr><td>分类探索</td><td>8 个领域的占比环形图与聚焦卡，点击 Tab 可筛选全站榜单</td></tr>
+        <tr><td>年度榜</td><td>按自然年（2022-2026 可切换，默认当前年）展示每个分类的 Top 10。选中具体分类时显示该分类当年的明细表（含真实创建年月）；选中"全部"时按分类并排展示紧凑小榜单。创建时间均为各工程真实创建日期（年-月级精度），演示数据覆盖 2022-2025 年；当前年份的榜在演示模式下为空，面板内提供"接入 GitHub Token"按钮引导</td></tr>
+        <tr><td>当年新增榜</td><td>本周 / 本月 / 本季度（近 7 / 30 / 90 天）三个窗口的新建工程榜，各窗口独立按 Star 数取 Top 10（时间段嵌套但成员可能不同），点击工程行跳转 GitHub 仓库。演示数据不含 90 天内的新工程，窗口为空时同样提供接入 Token 的引导；想看涨星最快的工程，请用"增长榜"的今天 / 本周 / 本月切换</td></tr>
+      </table>
+      <ul>
+        <li>点击工程行会在新标签页打开对应的 GitHub 仓库。</li>
+        <li>侧栏"我的关注"是快捷筛选：ai-toolkit 看 AI 分类、frontend-radar 看前端、rust-weekly 搜索 Rust 工程。</li>
+        <li>每 30 分钟自动后台同步一次，也可随时点"立即更新"。</li>
+      </ul>
+
+      <h2>数据模式</h2>
+      <p>看板有两种数据来源：</p>
+      <ul>
+        <li><strong>演示快照（默认）</strong>：内置 105 个代表性开源工程，创建时间为各工程的<strong>真实创建日期</strong>（年-月级精度，日为当月合理值），因此 2022-2025 的年度榜是真实的历史分布；"立即更新"做模拟增量同步，开箱即用。由于追踪的工程中没有 90 天内新建的，本周 / 本月 / 本季度新增榜与当前年份的年度榜在演示模式下为空——这是设计行为，不是 bug。</li>
+        <li><strong>GitHub 实时数据</strong>：在侧栏"GitHub Token（可选）"输入框填入 Token（或控制台执行 <code>githubPulse.setToken('ghp_你的token')</code>），之后点"立即更新"会改为调用 GitHub Search API 拉取真实数据（Token 只保存在本机浏览器，不会上传）。新增榜与年度榜都使用仓库真实的 <code>created_at</code>（客户端按 7 / 30 / 90 天窗口与自然年过滤），并额外用 <code>created:&gt;日期</code> 查询专门拉取近 90 天创建的高星工程：</li>
+      </ul>
+      <pre><code>githubPulse.setToken('ghp_你的token')</code></pre>
+      <p>取消实时模式：<code>githubPulse.setToken('')</code>。注意 Search API 有速率限制（认证 30 次/分钟），看板默认只用 4 个查询（3 个宽泛话题 + 1 个近 90 天新建工程专用），未认证时 10 次/分钟的额度同样够用。</p>
+
+      <h2>描述实时翻译</h2>
+      <p>实时模式下，拉取到的英文仓库描述会自动翻译成中文，规则如下：</p>
+      <ul>
+        <li>使用免费的 MyMemory 机器翻译接口（免密钥），中文描述和空描述自动跳过。</li>
+        <li>翻译结果缓存在浏览器 localStorage，相同描述不会重复翻译、不重复消耗配额。</li>
+        <li>接口故障或当日配额用尽时自动保留英文原文，不影响同步；次日配额恢复。</li>
+        <li>想换 DeepL / 百度等翻译服务：替换 <code>src/data/github-data.js</code> 中的 <code>translateText</code> 函数即可（签名 <code>(text, { signal, store }) =&gt; Promise&lt;string&gt;</code>）。</li>
+      </ul>
+      <div class="tip">机器翻译质量有限，个别技术词汇可能译得不准（例如 Container 偶尔被译成"集装箱"）。对准确度要求高时建议接入付费翻译服务。</div>
+
+      <h2>商机评分与商机榜</h2>
+      <p>看板内置一个研究价值/商业化潜力启发式评分（0-100），计算方式完全透明，可在 <code>src/data/github-data.js</code> 的 <code>scoreOpportunity</code> 中调整：</p>
+      <table>
+        <tr><th>维度</th><th>权重</th><th>说明</th></tr>
+        <tr><td>周增速</td><td>40</td><td>周增星占 star 总数的比例，热门工程约 1-7%/周</td></tr>
+        <tr><td>采用度</td><td>25</td><td>按总 star 数取对数，规模越大生态越成熟</td></tr>
+        <tr><td>Fork 健康</td><td>15</td><td>star/fork 比在 8 附近得分最高（收藏型项目会被压低）</td></tr>
+        <tr><td>活跃度</td><td>10</td><td>最近提交距今越近得分越高</td></tr>
+        <tr><td>License</td><td>10</td><td>宽松许可（MIT/Apache/BSD）10 分；GPL/AGPL 6 分；BUSL/SSPL 等 2 分并标橙色警示</td></tr>
+      </table>
+      <p>"商机榜 · Top 10" 面板按该评分排序，每行额外展示贡献者数和最近提交时间。榜单行尾的"商 XX"徽章即该工程评分（绿 ≥75 / 黄 50-74 / 红 &lt;50）。</p>
+
+      <h2>快捷键</h2>
+      <table>
+        <tr><th>按键</th><th>作用</th></tr>
+        <tr><td><code>Ctrl / ⌘ + K</code></td><td>聚焦搜索框</td></tr>
+        <tr><td><code>回车</code></td><td>打开"当年新增"榜第一个工程</td></tr>
+      </table>
+
+      <h2>常见问题</h2>
+      <ul>
+        <li><strong>打不开页面？</strong> 必须通过 http 访问（<code>npm run dev</code>），直接双击 index.html 会因浏览器安全策略无法加载数据模块。</li>
+        <li><strong>改了代码没变化？</strong> 按 Ctrl+F5 强制刷新，避免浏览器缓存旧文件。</li>
+        <li><strong>榜单数字和 GitHub 不完全一致？</strong> 演示快照中的增量是代表性数据（文件头有注释说明）；配置 Token 后即可看到真实数据。</li>
+        <li><strong>主题/翻译缓存想清空？</strong> 控制台执行 <code>localStorage.clear()</code> 后刷新。</li>
+      </ul>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,3 @@
+# local investigation workspace and generated reports
+.scratch/
+*.xlsx

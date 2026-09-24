@@ -2,6 +2,7 @@
   "name": "github-pulse-dashboard",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "description": "A focused GitHub open source activity dashboard.",
   "scripts": {
     "dev": "python -m http.server 4173",

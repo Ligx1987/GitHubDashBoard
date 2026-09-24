@@ -44,17 +44,21 @@
 
         <nav class="nav-group saved-group">
           <div class="nav-label">我的关注 <button class="add-button" aria-label="添加关注">+</button></div>
-          <a href="#saved" class="nav-item"><span class="repo-dot orange"></span>ai-toolkit <span class="saved-count">12</span></a>
-          <a href="#saved" class="nav-item"><span class="repo-dot purple"></span>frontend-radar <span class="saved-count">8</span></a>
-          <a href="#saved" class="nav-item"><span class="repo-dot green"></span>rust-weekly <span class="saved-count">5</span></a>
+          <a href="#rising" class="nav-item" data-category="ai"><span class="repo-dot orange"></span>ai-toolkit <span class="saved-count">12</span></a>
+          <a href="#rising" class="nav-item" data-category="web"><span class="repo-dot purple"></span>frontend-radar <span class="saved-count">8</span></a>
+          <a href="#rising" class="nav-item" data-search="rust"><span class="repo-dot green"></span>rust-weekly <span class="saved-count">5</span></a>
         </nav>
 
         <div class="sidebar-footer">
+          <div class="token-box">
+            <input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="GitHub Token（可选）" />
+            <span class="token-hint">填入后点"立即更新"拉取真实数据，仅保存在本机浏览器</span>
+          </div>
           <div class="sync-card">
             <span class="sync-pulse"></span>
             <div><strong>数据自动更新中</strong><span>每 30 分钟同步一次</span></div>
           </div>
-          <div class="sidebar-links"><a href="#settings">设置</a><span>·</span><a href="#docs">使用说明</a></div>
+          <div class="sidebar-links"><a href="./help.html">使用说明</a></div>
         </div>
       </aside>
 
@@ -77,7 +81,7 @@
             <div>
               <div class="section-kicker"><span class="live-dot"></span> LIVE MONITORING <span class="kicker-time">· <span id="lastUpdated">刚刚</span>更新</span></div>
               <h1>开源世界，<span>正在发生什么？</span></h1>
-              <p class="hero-subtitle">从每天的活跃变化，到一周和一个月的涨星榜，快速找到值得关注的工程。</p>
+              <p class="hero-subtitle">从每天的活跃变化，到涨星最快、当年新增与各分类年度榜，快速找到值得关注的项目。</p>
             </div>
             <div class="hero-actions">
               <div class="range-control" role="group" aria-label="时间范围">
@@ -92,18 +96,18 @@
           <section class="metrics-grid" aria-label="关键指标">
             <article class="metric-card metric-main">
               <div class="metric-header"><span class="metric-label">追踪中的工程</span><span class="metric-period">全部分类</span></div>
-              <div class="metric-value-row"><strong id="trackedCount">1,284</strong><span class="metric-change positive">↗ 6.4%</span></div>
-              <div class="metric-foot"><div class="mini-stacked"><i style="width:39%"></i><i style="width:26%"></i><i style="width:20%"></i><i style="width:15%"></i></div><span>过去 30 天</span></div>
+              <div class="metric-value-row"><strong id="trackedCount">–</strong><span class="metric-change positive">↗ 实时同步</span></div>
+              <div class="metric-foot"><div class="mini-stacked"><i style="width:39%"></i><i style="width:26%"></i><i style="width:20%"></i><i style="width:15%"></i></div><span>覆盖 8 个分类</span></div>
             </article>
             <article class="metric-card">
-              <div class="metric-header"><span class="metric-label">今日新增</span><span class="metric-icon green">✦</span></div>
-              <div class="metric-value-row"><strong id="newToday">24</strong><span class="metric-change positive">↗ 18.2%</span></div>
-              <div class="metric-foot"><span class="muted-text">较昨日多 4 个</span><span class="sparkline green-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+              <div class="metric-header"><span class="metric-label">今日活跃工程</span><span class="metric-icon green">✦</span></div>
+              <div class="metric-value-row"><strong id="newToday">–</strong><span class="metric-change positive">↗ 实时统计</span></div>
+              <div class="metric-foot"><span class="muted-text">今日有 Star 增长的工程数</span><span class="sparkline green-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
             </article>
             <article class="metric-card">
               <div class="metric-header"><span class="metric-label">本周新增 Stars</span><span class="metric-icon orange">★</span></div>
-              <div class="metric-value-row"><strong id="weeklyStars">8.7k</strong><span class="metric-change positive">↗ 12.8%</span></div>
-              <div class="metric-foot"><span class="muted-text">环比上周</span><span class="sparkline orange-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+              <div class="metric-value-row"><strong id="weeklyStars">–</strong><span class="metric-period">全部追踪工程</span></div>
+              <div class="metric-foot"><span class="muted-text">过去 7 天累计</span><span class="sparkline orange-line"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
             </article>
             <article class="metric-card health-card">
               <div class="metric-header"><span class="metric-label">生态活跃指数</span><span class="metric-period">实时</span></div>
@@ -116,7 +120,7 @@
           <section class="main-grid">
             <article class="panel activity-panel" id="rising">
               <div class="panel-heading">
-                <div><span class="panel-eyebrow">TODAY'S SIGNAL</span><h2>今天有什么新动向</h2></div>
+                <div><span class="panel-eyebrow">TODAY'S SIGNAL</span><h2 id="activityTitle">今日增长最快</h2></div>
                 <button class="text-button" data-action="view-all">查看全部 <span>→</span></button>
               </div>
               <div class="activity-list" id="activityList"></div>
@@ -124,42 +128,55 @@
 
             <article class="panel trend-panel">
               <div class="panel-heading">
-                <div><span class="panel-eyebrow">STAR VELOCITY</span><h2>近一周涨星最快</h2></div>
-                <button class="period-select" id="trendPeriod">过去 7 天 <span>⌄</span></button>
+                <div><span class="panel-eyebrow">STAR VELOCITY</span><h2>近一周 Star 增长走势</h2></div>
+                <span class="metric-period">全部追踪工程 · 7 天</span>
               </div>
               <div class="trend-chart-wrap">
-                <div class="y-axis"><span>+8k</span><span>+6k</span><span>+4k</span><span>+2k</span><span>0</span></div>
+                <div class="y-axis"></div>
                 <div class="trend-chart" id="trendChart"><div class="chart-grid"><i></i><i></i><i></i><i></i><i></i></div><div class="chart-bars"></div></div>
               </div>
-              <div class="chart-labels"><span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>今天</span></div>
-              <div class="trend-callout"><span class="callout-dot"></span><div><strong>本周开源热度上升 <em>12.8%</em></strong><span>AI 工具和开发者基础设施是主要驱动力</span></div><span class="callout-arrow">↗</span></div>
+              <div class="chart-labels"></div>
+              <div class="trend-callout"><span class="callout-dot"></span><div><strong>本周开源热度持续走高</strong><span>AI 工具与开发者基础设施是主要驱动力</span></div><span class="callout-arrow">↗</span></div>
             </article>
           </section>
 
           <section class="panel category-panel" id="categories">
             <div class="panel-heading category-heading">
               <div><span class="panel-eyebrow">ECOSYSTEM MAP</span><h2>按领域探索</h2></div>
-              <div class="category-tabs" role="tablist"><button class="category-tab active" data-category="all">全部 <span>1,284</span></button><button class="category-tab" data-category="ai">AI / ML <span>248</span></button><button class="category-tab" data-category="frontend">前端 <span>192</span></button><button class="category-tab" data-category="infra">基础设施 <span>176</span></button><button class="category-tab" data-category="rust">Rust <span>86</span></button></div>
+              <div class="category-tabs" role="tablist"></div>
             </div>
             <div class="category-body">
               <div class="category-visual" aria-label="工程分类占比">
-                <div class="donut"><div class="donut-center"><strong>1,284</strong><span>个工程</span></div></div>
-                <div class="legend"><div><i class="legend-dot ai"></i><span>AI / ML</span><strong>248</strong><em>19.3%</em></div><div><i class="legend-dot frontend"></i><span>前端生态</span><strong>192</strong><em>15.0%</em></div><div><i class="legend-dot infra"></i><span>基础设施</span><strong>176</strong><em>13.7%</em></div><div><i class="legend-dot data"></i><span>数据工具</span><strong>143</strong><em>11.1%</em></div></div>
+                <div class="donut"><div class="donut-center"><strong>–</strong><span>个工程</span></div></div>
+                <div class="legend"></div>
               </div>
-              <div class="spotlight" id="spotlightCard"><div class="spotlight-top"><span class="spotlight-label">CATEGORY SPOTLIGHT</span><span class="spotlight-badge">AI / ML</span></div><div class="spotlight-content"><div class="spotlight-icon">✦</div><div><h3>AI 工具正在加速</h3><p>过去 7 天，AI / ML 分类贡献了 <strong>41%</strong> 的新增 Stars。</p><div class="spotlight-meta"><span>248 个工程</span><span>·</span><span class="positive">+24.6% 周增长</span></div></div></div><div class="spotlight-bar"><span style="width:72%"></span></div></div>
+              <div class="spotlight" id="spotlightCard"></div>
             </div>
           </section>
 
           <section class="rankings-grid" id="rankings">
-            <article class="panel ranking-panel">
-              <div class="panel-heading"><div><span class="panel-eyebrow">WEEKLY LEADERS</span><h2>Top 10 · 周榜</h2></div><button class="text-button" data-action="open-ranking">完整榜单 <span>→</span></button></div>
-              <div class="ranking-table" id="weeklyTable"></div>
+            <article class="panel ranking-panel yearly-panel">
+              <div class="panel-heading">
+                <div><span class="panel-eyebrow">YEARLY LEADERS</span><h2>年度榜 · 各分类 Top 10</h2></div>
+                <div class="year-chips" id="yearChips" role="group" aria-label="选择年份"></div>
+              </div>
+              <div class="yearly-board" id="yearlyBoard"></div>
             </article>
-            <article class="panel ranking-panel month-ranking">
-              <div class="panel-heading"><div><span class="panel-eyebrow">MONTHLY LEADERS</span><h2>Top 30 · 月榜</h2></div><button class="text-button" data-action="open-ranking">完整榜单 <span>→</span></button></div>
-              <div class="month-summary"><strong>本月最值得关注的 30 个工程</strong><span><span class="status-dot"></span>实时计算中</span></div>
-              <div class="ranking-table" id="monthlyTable"></div>
-              <button class="load-more" id="loadMore">加载剩余 25 个工程 <span>↓</span></button>
+            <article class="panel ranking-panel">
+              <div class="panel-heading">
+                <div><span class="panel-eyebrow">NEW PROJECTS</span><h2>当年新增 · Top 10</h2></div>
+                <div class="period-tabs" role="group" aria-label="新增窗口">
+                  <button class="period-tab active" data-window="week">本周</button>
+                  <button class="period-tab" data-window="month">本月</button>
+                  <button class="period-tab" data-window="quarter">本季度</button>
+                </div>
+              </div>
+              <div class="ranking-table" id="newProjectsTable"></div>
+            </article>
+            <article class="panel ranking-panel opportunity-panel">
+              <div class="panel-heading"><div><span class="panel-eyebrow">OPPORTUNITY RADAR</span><h2>商机榜 · Top 10</h2></div><span class="metric-period">增速×40 + 采用度25 + Fork健康15 + 活跃10 + License10</span></div>
+              <div class="month-summary"><strong>研究价值与商业化潜力综合评分</strong><span><span class="status-dot"></span>全部分类</span></div>
+              <div class="ranking-table" id="opportunityTable"></div>
             </article>
           </section>
 
