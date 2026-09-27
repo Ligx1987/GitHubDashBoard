@@ -1,168 +1,285 @@
-// Sync curated seed stats (stars / forks / open issues) with live GitHub data.
-//
-// Each run records the day's totals in src/data/star-history.json; once
-// baselines exist, the today / week / month star deltas in the seeds are
-// recomputed as real diffs (7/30-day deltas become fully real after the
-// script has run daily for 7 / 30 days).
-//
-// Usage: node scripts/sync-github-data.mjs [--dry] [--limit N]
-//   --dry     print what would change, write nothing
-//   --limit N only sync the first N seeded repos (useful for testing)
-// Token: set GITHUB_TOKEN to raise the limit from ~60 to 5000 requests/hour;
-// without it the script stops when the unauthenticated budget is spent and
-// picks up where it left on the next run.
-import { readFileSync, writeFileSync, renameSync } from 'node:fs';
+// Collect real metadata; exact UTC-date star baselines live in star-history.json.
+// Never rewrite source code or synthesize missing counts or dates.
+import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DATA_FILE = join(ROOT, 'src', 'data', 'github-data.js');
-const HISTORY_FILE = join(ROOT, 'src', 'data', 'star-history.json');
-const DRY = process.argv.includes('--dry');
-const limitAt = process.argv.indexOf('--limit');
-const LIMIT = limitAt > -1 ? Number(process.argv[limitAt + 1]) : Infinity;
-const DAY_MS = 24 * 3600 * 1000;
-const today = new Date().toISOString().slice(0, 10);
+const DAY_MS = 86_400_000;
+const VALID_NAME = /^[\w.-]+\/[\w.-]+$/;
+const integer = (value) => Number.isSafeInteger(value) && value >= 0 ? value : null;
+const iso = (value) => value && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
+const day = (value) => new Date(value).toISOString().slice(0, 10);
+const isNonPublic = (data) => data.private === true || (data.visibility && data.visibility !== 'public');
 
-const resolveToken = () => {
-  if (process.env.GITHUB_TOKEN) return process.env.GITHUB_TOKEN;
-  try {
-    return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-  } catch {
-    return '';
+export function recordDailySample(history, fullName, stars, sampledAt) {
+  if (!VALID_NAME.test(fullName) || integer(stars) === null) throw new Error('Invalid star sample');
+  const cutoff = Date.parse(day(sampledAt)) - 45 * DAY_MS;
+  const next = {};
+  for (const [name, entries] of Object.entries(history)) {
+    const kept = Object.fromEntries(Object.entries(entries).filter(([date, count]) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(date) && integer(count) !== null &&
+      Date.parse(date) >= cutoff && Date.parse(date) <= Date.parse(day(sampledAt))));
+    if (Object.keys(kept).length) next[name] = kept;
   }
-};
-const TOKEN = resolveToken();
-if (!TOKEN) console.log('note: no GITHUB_TOKEN, unauthenticated budget is ~60 repos/hour');
-
-// --- parse the seeds block by evaluating the array literal (same values the module sees)
-// Windows checkouts (core.autocrlf) give CRLF; keep the file's own EOL so the
-// regenerated block stays byte-uniform and the drift check compares cleanly.
-const source = readFileSync(DATA_FILE, 'utf8');
-const EOL = source.includes('\r\n') ? '\r\n' : '\n';
-const start = source.indexOf('const PROJECT_SEEDS = [');
-if (start < 0) throw new Error('PROJECT_SEEDS not found');
-const open = source.indexOf('[', start);
-const close = source.indexOf(EOL + '];', open);
-if (open < 0 || close < 0) throw new Error('PROJECT_SEEDS boundaries not found');
-const blockText = source.slice(open, close);
-const seeds = Function(`'use strict'; return (${blockText}\n]);`)();
-if (!Array.isArray(seeds) || seeds.some((seed) => !Array.isArray(seed) || seed.length !== 14)) {
-  throw new Error('unexpected seed shape (need 14 fields per seed)');
+  // Only today's last sample changes. Earlier UTC days remain fixed baselines.
+  next[fullName] = { ...next[fullName], [day(sampledAt)]: stars };
+  return next;
 }
 
-// --- snapshot history, pruned to a 40-day window (covers the 30-day delta)
-let history = {};
-try {
-  history = JSON.parse(readFileSync(HISTORY_FILE, 'utf8'));
-} catch { /* first run */ }
-for (const [name, entries] of Object.entries(history)) {
-  const kept = Object.fromEntries(Object.entries(entries)
-    .filter(([date]) => new Date(today) - new Date(date) <= 40 * DAY_MS));
-  if (Object.keys(kept).length) history[name] = kept;
-  else delete history[name];
+export function toSnapshotProject(data, fetchedAt, previous = {}) {
+  if (isNonPublic(data)) throw new Error('Non-public repository metadata is excluded');
+  if (!VALID_NAME.test(data.full_name || '') || integer(data.stargazers_count) === null) {
+    throw new Error('GitHub response lacks valid repository name or star count');
+  }
+  return {
+    ...previous, id: data.full_name, githubId: integer(data.id), fullName: data.full_name,
+    name: data.name || data.full_name.split('/')[1],
+    description: typeof data.description === 'string' ? data.description : '',
+    descriptionSource: 'github-rest', provenance: 'GitHub REST repository metadata',
+    htmlUrl: `https://github.com/${data.full_name}`,
+    language: typeof data.language === 'string' ? data.language : null,
+    stars: data.stargazers_count, forks: integer(data.forks_count),
+    openIssues: integer(data.open_issues_count), license: data.license?.spdx_id || null,
+    topics: Array.isArray(data.topics) ? data.topics.filter((topic) => typeof topic === 'string') : [],
+    createdAt: iso(data.created_at), pushedAt: iso(data.pushed_at), updatedAt: iso(data.updated_at),
+    contributors: null, // Repository metadata does not contain this count.
+    archived: data.archived === true, disabled: data.disabled === true,
+    fetchedAt, sampleDate: day(fetchedAt), availability: 'available', lastAttemptAt: fetchedAt,
+    nextRetryAt: null, lastError: null, source: 'github-rest', metadataSource: 'github-rest',
+  };
 }
 
-const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'github-pulse-seed-sync' };
-if (TOKEN) headers.Authorization = `Bearer ${TOKEN}`;
+export function buildUpdateQueue(projects, now) {
+  return projects.filter((repo) => VALID_NAME.test(repo.fullName || '') &&
+    (!repo.nextRetryAt || Date.parse(repo.nextRetryAt) <= Date.parse(now)))
+    .sort((a, b) => (Date.parse(a.fetchedAt) || 0) - (Date.parse(b.fetchedAt) || 0) ||
+      Number(Boolean(a.createdAt)) - Number(Boolean(b.createdAt)) ||
+      a.fullName.localeCompare(b.fullName));
+}
 
-const targets = Number.isFinite(LIMIT) ? seeds.slice(0, LIMIT) : seeds;
-const modified = new Set();
-const changes = [];
-const errors = [];
-let remaining = Infinity;
+export function discoveryQueries(now) {
+  return [7, 30, 90].map((days) => ({ days,
+    query: `created:>=${day(Date.parse(now) - days * DAY_MS)} stars:>=10 fork:false archived:false is:public` }));
+}
 
-for (let index = 0; index < targets.length; index += 1) {
-  if (remaining <= 1) {
-    console.log(`stopping at ${index}/${targets.length}: rate limit nearly exhausted, next run continues`);
-    break;
+// Injected I/O lets tests exercise resuming and rate limiting without network.
+export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
+  now = () => new Date().toISOString(), token = '', limit = 750, budget = 900,
+  discover = true, discoveryPages = 2, reserve = 5, maxRuntimeMs = 20 * 60_000 } = {}) {
+  if (!snapshot || !Array.isArray(snapshot.projects) || !snapshot.projects.length) {
+    throw new Error('Missing repository registry: src/data/github-snapshot.json');
   }
-  const seed = targets[index];
-  const [owner, repo] = seed[0].split('/');
-  try {
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
-    remaining = Number(response.headers.get('x-ratelimit-remaining') ?? remaining);
-    if (response.status === 404) {
-      errors.push(`${seed[0]}: not found (deleted or renamed)`);
-      continue;
+  const startedAt = iso(now());
+  if (!startedAt) throw new Error('Invalid collection time');
+  const repos = new Map(snapshot.projects.map((repo) => [repo.fullName.toLowerCase(), { ...repo }]));
+  let nextHistory = structuredClone(history);
+  const warnings = [];
+  const rates = structuredClone(snapshot.rateLimits || {});
+  let requests = 0, failures = 0, unavailable = 0;
+  let consecutiveFailures = 0;
+  const startedClock = Date.now();
+  let halted = Date.parse(snapshot.sync?.retryAfter) > Date.parse(startedAt);
+  let latestSuccess = null, retryAfter = halted ? snapshot.sync.retryAfter : null;
+  const refreshed = new Set();
+  const discovery = [];
+  const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'github-pulse-sync', 'X-GitHub-Api-Version': '2022-11-28' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const warn = (message) => { if (warnings.length < 100) warnings.push(message); };
+  const canRequest = (resource) => {
+    if (halted || requests >= budget || Date.now() - startedClock >= maxRuntimeMs) return false;
+    const rate = rates[resource];
+    return !(rate && rate.remaining <= reserve && Date.parse(rate.resetAt) > Date.parse(now()));
+  };
+  async function request(path, resource) {
+    if (!canRequest(resource)) return null;
+    requests += 1;
+    const response = await fetchImpl(`https://api.github.com${path}`, { headers, signal: AbortSignal.timeout(20_000) });
+    const remainingHeader = response.headers.get('x-ratelimit-remaining');
+    const resetHeader = response.headers.get('x-ratelimit-reset');
+    const bucket = response.headers.get('x-ratelimit-resource') || resource;
+    if (remainingHeader !== null && Number.isFinite(Number(remainingHeader))) {
+      rates[bucket] = { remaining: Number(remainingHeader),
+        resetAt: resetHeader && Number.isFinite(Number(resetHeader)) ? new Date(Number(resetHeader) * 1000).toISOString() : null };
     }
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    const prev = { stars: seed[5], forks: seed[6], issues: seed[10] };
-    seed[5] = data.stargazers_count ?? seed[5];
-    seed[6] = data.forks_count ?? seed[6];
-    seed[10] = data.open_issues_count ?? seed[10];
-    if (data.license?.spdx_id) seed[11] = data.license.spdx_id;
-    modified.add(index);
-
-    const log = (history[seed[0]] ||= {});
-    const firstToday = log[today];
-    log[today] = seed[5];
-    const deltaFrom = (targetDays) => {
-      const candidates = Object.entries(log)
-        .filter(([date, stars]) => date !== today && stars != null && (new Date(today) - new Date(date)) >= DAY_MS);
-      if (!candidates.length) return null;
-      const [, base] = candidates.sort((a, b) =>
-        Math.abs((new Date(today) - new Date(a[0])) / DAY_MS - targetDays)
-        - Math.abs((new Date(today) - new Date(b[0])) / DAY_MS - targetDays))[0];
-      return Math.max(0, seed[5] - base);
-    };
-    // First-ever run for a repo only records the baseline; deltas turn real afterwards.
-    if (firstToday !== undefined) seed[7] = Math.max(0, seed[5] - firstToday);
-    const week = deltaFrom(7);
-    const month = deltaFrom(30);
-    if (week !== null) seed[8] = week;
-    if (month !== null) seed[9] = month;
-
-    if (seed[5] !== prev.stars || seed[6] !== prev.forks || seed[10] !== prev.issues) {
-      changes.push(`${seed[0]}: ★${prev.stars}→${seed[5]}, forks ${prev.forks}→${seed[6]}, issues ${prev.issues}→${seed[10]}`);
+    if ([401, 403, 429].includes(response.status)) {
+      halted = true;
+      const retrySeconds = Number(response.headers.get('retry-after'));
+      retryAfter = retrySeconds > 0 ? new Date(Date.parse(now()) + retrySeconds * 1000).toISOString() : rates[bucket]?.resetAt || null;
+      warn(`GitHub HTTP ${response.status}; collection stopped${retryAfter ? ` until at least ${retryAfter}` : ''}.`);
     }
-  } catch (error) {
-    errors.push(`${seed[0]}: ${error.message}`);
+    return response;
+  }
+  function accept(data, requestedName, fetchedAt) {
+    const requestedKey = requestedName.toLowerCase();
+    const previous = repos.get(requestedKey) || {};
+    const project = toSnapshotProject(data, fetchedAt, previous);
+    const canonicalKey = project.fullName.toLowerCase();
+    // Redirected/renamed repositories retain their history under one name.
+    if (previous.fullName && previous.fullName !== project.fullName) {
+      nextHistory[project.fullName] = { ...nextHistory[previous.fullName], ...nextHistory[project.fullName] };
+      delete nextHistory[previous.fullName];
+    }
+    if (requestedKey !== canonicalKey) repos.delete(requestedKey);
+    repos.set(canonicalKey, project);
+    nextHistory = recordDailySample(nextHistory, project.fullName, project.stars, fetchedAt);
+    refreshed.add(canonicalKey);
+    consecutiveFailures = 0;
+    latestSuccess = fetchedAt;
+  }
+  if (discover) {
+    for (const { days, query } of discoveryQueries(startedAt)) {
+      const coverage = { days, query, totalCount: null, fetched: 0, pages: 0, incomplete: false, truncated: true };
+      discovery.push(coverage);
+      for (let page = 1; page <= discoveryPages; page += 1) {
+        if (!canRequest('search')) break;
+        try {
+          const params = new URLSearchParams({ q: query, sort: 'stars', order: 'desc', per_page: '100', page: String(page) });
+          const response = await request(`/search/repositories?${params}`, 'search');
+          if (!response?.ok) throw new Error(response ? `HTTP ${response.status}` : 'request budget exhausted');
+          const result = await response.json();
+          if (!Array.isArray(result.items)) throw new Error('Invalid repository search result');
+          consecutiveFailures = 0;
+          coverage.totalCount = integer(result.total_count);
+          coverage.incomplete ||= result.incomplete_results === true;
+          coverage.pages += 1;
+          const fetchedAt = iso(now());
+          for (const item of result.items) {
+            if (isNonPublic(item)) { warn('Non-public discovery result excluded.'); continue; }
+            accept(item, item.full_name, fetchedAt);
+          }
+          coverage.fetched += result.items.length;
+          coverage.truncated = coverage.incomplete || coverage.totalCount === null || coverage.fetched < coverage.totalCount;
+          if (result.items.length < 100 || coverage.fetched >= Math.min(coverage.totalCount ?? 1000, 1000)) break;
+        } catch (error) {
+          failures += 1;
+          consecutiveFailures += 1;
+          if (consecutiveFailures >= 5) { halted = true; warn('Five consecutive request failures; preserving successful samples and stopping.'); }
+          warn(`Discovery (${days} days, page ${page}): ${error.message}`);
+          break;
+        }
+      }
+    }
+  }
+  const eligible = buildUpdateQueue([...repos.values()], startedAt)
+    .filter((repo) => !refreshed.has(repo.fullName.toLowerCase()));
+  const queue = eligible.slice(0, limit);
+  for (const repo of queue) {
+    if (!canRequest('core')) break;
+    const attemptedAt = iso(now());
+    try {
+      const response = await request(`/repos/${repo.fullName.split('/').map(encodeURIComponent).join('/')}`, 'core');
+      if (response?.status === 404) {
+        consecutiveFailures = 0;
+        unavailable += 1;
+        repos.set(repo.fullName.toLowerCase(), { ...repo, availability: 'unavailable', lastAttemptAt: attemptedAt,
+          lastError: 'HTTP 404', nextRetryAt: new Date(Date.parse(attemptedAt) + 7 * DAY_MS).toISOString() });
+        warn(`${repo.fullName}: unavailable through the public API (HTTP 404).`);
+        continue;
+      }
+      if (!response?.ok) throw new Error(response ? `HTTP ${response.status}` : 'request budget exhausted');
+      const data = await response.json();
+      if (isNonPublic(data)) {
+        unavailable += 1;
+        repos.set(repo.fullName.toLowerCase(), { id: repo.fullName, fullName: repo.fullName,
+          name: repo.fullName.split('/')[1], stars: null, forks: null, openIssues: null,
+          description: '', language: null, license: null, topics: [], contributors: null,
+          createdAt: null, pushedAt: null, updatedAt: null, fetchedAt: null,
+          availability: 'unavailable', lastError: 'Repository is not public', lastAttemptAt: attemptedAt,
+          nextRetryAt: new Date(Date.parse(attemptedAt) + 7 * DAY_MS).toISOString() });
+        delete nextHistory[repo.fullName];
+        warn(`${repo.fullName}: non-public metadata excluded.`);
+        continue;
+      }
+      accept(data, repo.fullName, iso(now()));
+    } catch (error) {
+      failures += 1;
+      consecutiveFailures += 1;
+      if (consecutiveFailures >= 5) { halted = true; warn('Five consecutive request failures; preserving successful samples and stopping.'); }
+      repos.set(repo.fullName.toLowerCase(), { ...repo, lastAttemptAt: attemptedAt,
+        lastError: error.message, nextRetryAt: retryAfter || new Date(Date.parse(attemptedAt) + 3_600_000).toISOString() });
+      warn(`${repo.fullName}: ${error.message}`);
+    }
+  }
+  const projects = [...repos.values()].sort((a, b) => a.fullName.localeCompare(b.fullName));
+  const pending = projects.filter((repo) => !repo.fetchedAt && repo.availability !== 'unavailable').length;
+  const stoppedEarly = halted || requests >= budget || !canRequest('core') || (discover && !canRequest('search'));
+  if (stoppedEarly) warn('Collection stopped at a request/time budget or upstream error; later runs resume with the oldest successful samples first.');
+  if (!refreshed.size) warn('No repository metadata was collected; previous successful collection time is unchanged.');
+  const result = !refreshed.size ? 'failed' : failures || unavailable || stoppedEarly || pending || eligible.length > limit ? 'partial' : 'success';
+  return {
+    exitCode: refreshed.size ? 0 : 1,
+    snapshot: {
+      ...snapshot, schemaVersion: 1, source: 'cached', fetchedAt: latestSuccess || snapshot.fetchedAt || null,
+      projects, rateLimits: rates, warning: warnings.join(' '), warnings,
+      coverage: { ...snapshot.coverage, scope: 'tracked-repositories', exhaustive: false,
+        registered: projects.length, available: projects.filter((repo) => repo.availability === 'available').length,
+        sampledCount: projects.filter((repo) => integer(repo.stars) !== null && repo.availability === 'available').length,
+        metadataVerified: projects.filter((repo) => repo.createdAt && repo.availability === 'available').length,
+        unavailable: projects.filter((repo) => repo.availability === 'unavailable').length,
+        pending, fetchedThisRun: refreshed.size,
+        discovery: discover ? discovery : snapshot.coverage?.discovery || [],
+        discoveryAt: discover ? startedAt : snapshot.coverage?.discoveryAt || null,
+        note: 'Tracked repositories plus bounded, star-sorted 7/30/90-day discovery samples; not all GitHub repositories.' },
+      sync: { startedAt, result, requests, refreshed: refreshed.size, failures, unavailable, retryAfter },
+    }, history: nextHistory,
+  };
+}
+
+export function atomicWriteJson(path, value) {
+  const temporary = `${path}.${process.pid}.tmp`;
+  try {
+    writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+    renameSync(temporary, path);
+  } finally {
+    try { unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
 }
 
-// --- regenerate the block byte-identically for untouched lines (abort on drift)
-const jsString = (value) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/[\x00-\x1f]/g, ' ')}'`;
-const emitSeed = (seed) => `  [${jsString(seed[0])}, ${jsString(seed[1])}, ${jsString(seed[2])}, '${seed[3]}', ${jsString(seed[4])}, ${seed[5]}, ${seed[6]}, ${seed[7]}, ${seed[8]}, ${seed[9]}, ${seed[10]}, ${jsString(seed[11])}, [${seed[12].map(jsString).join(', ')}], ${jsString(seed[13])}],`;
-const originalLines = blockText.split(EOL);
-const nextLines = [];
-let cursor = 0;
-for (const line of originalLines) {
-  // comment / blank / opening-bracket lines pass through untouched
-  if (line === '[' || line.trim() === '' || line.trimStart().startsWith('//')) {
-    nextLines.push(line);
-    continue;
-  }
-  nextLines.push(emitSeed(seeds[cursor]));
-  if (!modified.has(cursor) && nextLines[nextLines.length - 1] !== line) {
-    throw new Error(`formatting drift on untouched seed #${cursor}:\n- ${line}\n+ ${nextLines[nextLines.length - 1]}\nrefusing to rewrite the file`);
-  }
-  cursor += 1;
+function resolveToken() {
+  if (process.env.GITHUB_TOKEN?.trim()) return process.env.GITHUB_TOKEN.trim();
+  try { return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
+  catch { return ''; }
 }
-if (cursor !== seeds.length) throw new Error(`line/seed mismatch: ${cursor} seeds consumed of ${seeds.length}`);
 
-let next = '';
-if (DRY) {
-  console.log(`\n[--dry] ${modified.size} repos would be re-baselined, ${changes.length} with changed stats:`);
-} else {
-  next = source.slice(0, open) + nextLines.join(EOL) + source.slice(close);
-  next = next.replace(/(真实数据快照 )\d{4}-\d{2}-\d{2}/, `$1${today}`);
-  const tmp = `${DATA_FILE}.tmp`;
-  writeFileSync(tmp, next);
-  renameSync(tmp, DATA_FILE);
-  writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2) + '\n');
-  console.log(`synced ${modified.size} repos, ${changes.length} with changed stats:`);
+export function parseArguments(args) {
+  const result = { dry: false, discover: true, limit: 750, budget: 900, discoveryPages: 2 };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--dry') result.dry = true;
+    else if (arg === '--discover') result.discover = true;
+    else if (arg === '--no-discover') result.discover = false;
+    else if (['--limit', '--budget', '--discovery-pages'].includes(arg)) {
+      const value = Number(args[++index]);
+      if (!Number.isSafeInteger(value) || value < 1) throw new Error(`${arg} requires a positive integer`);
+      result[{ '--limit': 'limit', '--budget': 'budget', '--discovery-pages': 'discoveryPages' }[arg]] = value;
+    } else throw new Error(`Unknown option: ${arg}`);
+  }
+  if (result.discoveryPages > 10) throw new Error('GitHub Search exposes at most 10 pages of 100 results');
+  return result;
 }
-changes.forEach((line) => console.log('  ' + line));
-if (errors.length) errors.forEach((line) => console.warn('  ! ' + line));
-console.log(`rate limit remaining: ${remaining === Infinity ? 'unknown' : remaining}${DRY ? ' (nothing written)' : ` | history: ${HISTORY_FILE}`}`);
-exitSoon(0);
 
-// Node on Git Bash can hit a libuv teardown assertion (UV_HANDLE_CLOSING) when
-// stdout is an MSYS pipe; exiting explicitly after a short flush grace avoids
-// a bogus non-zero exit code in scheduled runs.
-function exitSoon(code) {
-  setTimeout(() => process.exit(code), 100);
+async function main() {
+  const options = parseArguments(process.argv.slice(2));
+  const snapshotPath = join(ROOT, 'src/data/github-snapshot.json');
+  const historyPath = join(ROOT, 'src/data/star-history.json');
+  const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+  let history = {};
+  try { history = JSON.parse(readFileSync(historyPath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const token = resolveToken();
+  if (!token) console.log('No token: GitHub permits 60 unauthenticated core requests/hour; response headers control this run.');
+  const outcome = await syncData({ ...options, snapshot, history, token });
+  if (!options.dry) {
+    // Publish snapshot last so it cannot advertise samples missing from history.
+    atomicWriteJson(historyPath, outcome.history);
+    atomicWriteJson(snapshotPath, outcome.snapshot);
+  }
+  console.log(`${options.dry ? 'DRY RUN (no files written): ' : ''}${outcome.snapshot.sync.result}; ${outcome.snapshot.sync.refreshed} repositories collected, ${outcome.snapshot.sync.requests} requests.`);
+  for (const warning of outcome.snapshot.warnings) console.warn(`! ${warning}`);
+  process.exitCode = outcome.exitCode;
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => { console.error(`Sync failed: ${error.message}`); process.exitCode = 1; });
 }

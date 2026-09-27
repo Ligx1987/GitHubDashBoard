@@ -1,11 +1,14 @@
-{
+﻿{
   "name": "github-pulse-dashboard",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
-  "description": "A focused GitHub open source activity dashboard.",
+  "description": "GitHub public repository samples with verifiable star history.",
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "python -m http.server 4173",
-    "preview": "python -m http.server 4173"
+    "dev": "node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs",
+    "sync": "node scripts/sync-github-data.mjs",
+    "test": "node --test tests/*.test.mjs"
   }
 }

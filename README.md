@@ -1,60 +1,80 @@
-# GitHub Pulse
+﻿# GitHub Pulse
 
-一个面向开源工程发现的 GitHub 看板（纯前端，零依赖），包含：
+查看已收录公开仓库的真实计数、最近代码推送、新建工程，以及有历史基线的净涨星排行。零运行依赖，Node.js 20 或更新版本。
 
-- **总览指标**：追踪中的工程数、今日活跃工程、本周新增 Stars、生态活跃指数
-- **今日 / 本周 / 本月增长榜**：右上角时间范围可切换，列表按对应周期的 Star 增量排序
-- **近一周 Star 增长走势**：7 天柱状图，由数据层聚合生成，非写死占位
-- **分类探索**：8 个领域（AI/ML、开发者工具、Web/前端、基础设施、数据分析、移动开发、安全、效率工具），环形图 / 图例 / 分类聚焦卡均由数据驱动
-- **年度榜 · 各分类 Top 10**：按自然年筛选（2022-2026 年份 chips 可切换，默认当前年），选中分类时展示该分类当年的明细 Top 10，"全部"时按 8 个分类并排展示紧凑小榜单。创建时间为各工程真实创建日期，演示数据覆盖 2022-2026（2026 批次为真实新建工程快照）
-- **当年新增 · Top 10**：本周 / 本月 / 本季度（rolling 7/30/90 天）三个窗口的新建工程榜，按 Star 数排名；三个窗口时间段嵌套，但各榜独立取 Top 10，成员可能不同。演示数据的 2026 批次含 90 天内的新建工程，本月 / 本季度窗口有数据；本周窗口为空时展示解释与"接入 GitHub Token"引导，接入后即显示实时新建工程。想看涨星最快的工程，用增长榜的"今天 / 本周 / 本月"切换
-- **商机榜 · Top 10**：按"周增速+采用度+Fork 健康+活跃度+License"五维启发式评分排序，标出 BUSL/SSPL 等许可证风险，展示贡献者与最近提交时间
-- **搜索、分类筛选、暗色 / 亮色主题**（主题选择会记忆）、每 30 分钟自动后台同步、"x 分钟前"时间戳自动刷新
+## 运行
 
-## 本地运行
+Windows 可直接双击项目目录中的 `start-dashboard.cmd`，自动在后台启动服务并打开浏览器；重复点击会复用已运行的服务。关闭浏览器不会关闭服务，重启电脑后再次双击即可。启动日志保存在 `.scratch/dashboard.log` 与 `.scratch/dashboard-error.log`。
+
+也可在终端运行（需要保持该终端中的服务运行）：
 
 ```bash
 npm run dev
 ```
 
-然后打开 <http://localhost:4173>。
+打开 http://localhost:4173 。首屏读取保存的快照，随后自动请求 GitHub 公开 API，不必填 Token。浏览器每 30 分钟刷新一次；手动刷新、搜索、领域筛选、主题切换均可用。
 
-## 数据说明
+本地服务保持运行时每两小时自动执行一次持久化采集；启动时如果上次采集距今超过两小时，也会启动一轮。关闭服务后本地采集暂停，不会安装系统定时任务。设置 `GITHUB_PULSE_AUTOSYNC=0` 可关闭本地后台采集；不要同时手工启动另一个采集器写同一组文件。
 
-数据逻辑位于 `src/data/github-data.js`，分两层：
+浏览器刷新查询高星工程及近 7 / 30 / 90 天新建工程，各取按总 Stars 排序的前 100 个结果，合并进已收录集合。页面说明本次更新数量，逐仓库显示真实采样时间。搜索不是全站扫描，分类和榜单只对当前采样集合有效。
 
-1. **演示快照（默认）**：内置 1551 个代表性开源工程，含分类、Star/Fork、今日 / 近 7 天 / 近 30 天增量。创建时间为各工程的**真实创建日期**，因此 2022-2026 的年度榜反映真实历史分布；"立即更新"会做一次确定性的增量同步（模拟活跃度变化），每 30 分钟也会自动同步一次。2026 批次（1446 个）收录 2026-09-24 GitHub Search 快照中的全部已识别工程（按分类规则识别，未识别且不符合开发者工具特征的 22 个未收录，见仓库根目录 Excel），Stars/Forks/Issues 由 `scripts/sync-github-data.mjs` 定期回写为真实值，描述保留英文原文。其中含 90 天内新建的真实工程，因此本季度 / 本月新增榜在演示模式下有数据；本周窗口（7 天）仍为空，会显示解释文案和"接入 GitHub Token"引导按钮。
-2. **GitHub 实时适配器**：在侧栏"GitHub Token（可选）"输入框填入 Token（或控制台执行 `githubPulse.setToken('ghp_你的token')`），"立即更新"会改为调用 GitHub Search API 拉取实时数据（未配置时自动回退到演示同步）。新增榜（7 / 30 / 90 天窗口）与年度榜（自然年 + 分类）都使用仓库真实的 `created_at` 在客户端过滤，并额外用一条 `created:>日期` 查询专门拉取近 90 天创建的高星工程；拉取到的英文描述会**实时翻译成中文**（免费的 MyMemory 接口，免密钥；翻译结果缓存在 localStorage 里，不重复消耗每日配额；接口不可用时自动保留英文原文，不影响同步）。Token 只保存在你自己的浏览器 localStorage 中：
+Token 为可选项，只发往 GitHub，并保存在当前标签页的 sessionStorage；旧版 localStorage Token 会迁移后删除。也可在控制台执行 `githubPulse.setToken('')` 清除会话 Token。不要把 Token 写入仓库文件。
 
-   ```js
-   // 浏览器控制台执行一次即可
-   githubPulse.setToken('ghp_你的token')
-   ```
+## 数据与统计口径
 
-   注意：Search API 有速率限制（未认证 10 次/分钟，认证 30 次/分钟），看板默认只用 4 个查询（3 个宽泛话题 + 1 个近 90 天新建工程专用）。想换 DeepL、百度等翻译服务时，替换 `src/data/github-data.js` 里的 `translateText` 函数即可（签名为 `(text, { signal, store }) => Promise<string>`）。
+| 内容 | 口径 |
+| --- | --- |
+| 已收录工程 | 已保存快照与当前公开 API 样本的并集；404/不可公开访问项不参与榜单 |
+| Stars / Forks / Open Issues | GitHub API 原始计数；未知值显示 —，页面加载和刷新不生成模拟增量 |
+| 每日更新 | 最近推送时间 `pushed_at` 位于当前时间前 24 小时内；不以涨星代替代码更新 |
+| 日 / 周 / 月净增 | 当前 UTC 日成功采样的 Stars，减去精确前 1 / 7 / 30 个 UTC 日期最后保存的 Stars；包含取消收藏，允许负值 |
+| 净增时间精度 | 按日采样的差值，并非精确滚动 24/168/720 小时事件数；某日期基线缺失就显示“暂无基线”，不找最近日期凑数 |
+| 周 Top10 / 月 Top30 | 先分类与搜索，再按 7 / 30 天净增排序；只纳入具备完整所需基线的仓库 |
+| 7 日曲线 | 相邻 UTC 日期实际采样差，每根柱子标明覆盖数量；缺测留空，不同日期覆盖范围可能不同 |
+| 新建 / 年度榜 | API `created_at` 过滤，按采样时的总 Stars 排序；年度榜不是当年历史涨星榜 |
+| 分类 | 本项目根据 topics、名称、描述和语言推断；八个领域加未分类，不是 GitHub 官方分类 |
+| 商机研究分 | 自定义参考分；必要的增长、推送、计数、许可数据缺失则不评分；未知许可证不能当作宽松许可 |
+| 贡献者 | 仓库和搜索接口不含该计数，保持未知，取消按 Stars 推算 |
+| 描述翻译 | 默认保留原文。点击“翻译描述”才把当前筛选中的前 30 条（或已展开数量）描述发给 MyMemory；失败/超时保留原文 |
 
-## 自动跟进 GitHub 变化
+准确采集时刻缺失的旧记录显示快照日期，不伪造为“刚刚同步”。旧数据中无依据的创建日期、最近推送和贡献者等字段已清空；后续真实采集会补齐。原有单日历史无法恢复过去 7 / 30 天的完整涨幅，不能补造。
 
-按投入从小到大三种方式：
+未保存可追溯采集时刻的旧导入记录仅保留为待核验候选，不参加当前统计与榜单；API 成功采集后才纳入。候选数量在页面上单独披露，既不把它们当作已核验数据，也不凭记录不完整就断言仓库不存在。
 
-1. **看板内置实时模式（零改动）**：侧栏"GitHub Token（可选）"填入 Token（或控制台执行 `githubPulse.setToken('ghp_你的token')`），"立即更新"即切换为 GitHub 实时数据，之后**每 30 分钟自动后台同步**。注意：实时模式展示的是搜索查询命中的工程集（不是种子里的 1551 个），且 Search API 无历史增量数据，增长榜会退回按总 Stars 排序；Token 只存在浏览器 localStorage 中。
-2. **定时刷新演示种子**：`node scripts/sync-github-data.mjs` 逐个拉取 1551 个工程的当前 Stars/Forks/Issues 并回写 `src/data/github-data.js`；同时把每次结果记入 `src/data/star-history.json`，首次运行建立基线后，今日 / 近 7 天 / 近 30 天增量会逐步替换为真实差值（每天跑一次，连续跑满 7 / 30 天后周 / 月增量完全真实）。设置 `GITHUB_TOKEN` 环境变量可将 API 限额从约 60 提升到 5000 次/小时（脚本也会自动尝试 `gh auth token`）；没有 Token 时按小时预算部分更新，下次运行自动续跑。Windows 任务计划每天 09:00 执行（注意把 node 路径换成你机器上的实际路径）：
-   ```cmd
-   schtasks /Create /TN "GitHubDashBoard Sync" /TR "\"C:\Program Files\nodejs\node.exe\" \"E:\Project\GitHubDashBoard\scripts\sync-github-data.mjs\"" /SC DAILY /ST 09:00 /F
-   ```
-   常用参数：`--dry` 只打印不落盘，`--limit N` 只同步前 N 个工程（调试/试跑用）。
-3. **推送到 GitHub 后**：仓库已附带 `.github/workflows/sync-data.yml`，推送到 GitHub 后每天定时运行上述脚本并自动提交结果，无需自己的服务器（`workflow_dispatch` 支持手动触发）。
+同样缺少完整采集证据的 2026-09-24 旧历史已另存 `src/data/legacy-history.json`，不再作为有效涨星基线。有效历史从此次真实采集开始累积，避免旧候选核验后重新引入未经验证的差值。
 
-## 结构
+## 持久化采集
 
+```bash
+npm run sync
+# 只采集少量已收录仓库
+npm run sync -- --no-discover --limit 35 --budget 35
+# 查看结果但不保存文件
+npm run sync -- --dry --limit 5 --budget 10
 ```
-index.html            # 页面骨架（动态区域均为 JS 填充的容器）
-styles.css            # 暗色/亮色主题、响应式布局
-app.js                # 渲染与交互（指标、榜单、图表、同步循环）
-src/data/github-data.js  # 数据层：种子数据、分类规则、榜单聚合、实时适配器
-src/data/star-history.json  # 同步脚本记录的 Stars 历史（驱动真实增量）
-scripts/sync-github-data.mjs  # 种子数据定时同步脚本
-.github/workflows/sync-data.yml  # 推送 GitHub 后的每日自动同步
+
+采集器优先更新最久未成功采集的仓库；同等旧的记录优先补齐创建时间未知项。它按响应头限额停止，后续运行会继续未覆盖项。单仓库失败保留最后成功数据，404 项暂时退出榜单并延迟重试，全部失败返回非零退出码；失败尝试不会推进成功采集时间。
+
+默认同时用近 7 / 30 / 90 天查询发现新仓库，每个查询最多两页。`--discovery-pages N`、`--limit N`、`--budget N` 可调整；所有查询仅采集公开仓库。`--no-discover` 跳过发现阶段。快照和历史分别原子替换，先写历史再写快照。
+
+长期采集优先使用环境变量 `GITHUB_TOKEN`，未设置时也会尝试现有 `gh auth token`；凭据不写入快照或日志。GitHub 未认证 REST 通常只有 60 次/小时，个人 Token 通常为 5000 次/小时；GitHub Actions 内置 Token 通常为每仓库 1000 次/小时，以实际响应头为准。[官方限额说明](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+
+`.github/workflows/sync-data.yml` 配置每两小时分批采集（每轮最多 750 个已有仓库，总请求预算 800，另受 API 剩余额度约束）、保存 artifact 并提交 JSON。需要把工程推送至 GitHub 默认分支并启用 Actions；该配置文件本身不证明远端定时任务已经运行。部署静态网页时还需让网站部署流程使用最新提交，浏览器不会把 API 结果自动写回 Git 仓库。
+
+## 验证
+
+```bash
+npm test
 ```
 
-如需替换其他数据源，只需产出与 `getDashboardData()` 相同结构的数据（`projects` / `categories` / `weeklyTop10` / `monthlyTop10` / `quarterlyTop10` / `trendSeries` / `stats` / `lastUpdated`），渲染层无需改动。年度榜按 `createdAt` 的自然年与分类在客户端从 `projects` 直接计算，不需要额外字段。
+回归测试覆盖精确 UTC 基线、同日/跨日、负净增、缺失字段、分类排序、Top10/Top30、真实曲线、API 分页/限额/失败、公开性、续跑和原子保存。
+
+## 文件
+
+- `src/data/github-snapshot.json`：采样仓库、原始计数、元数据、逐仓库时间和采集覆盖说明。
+- `src/data/star-history.json`：每个仓库每个 UTC 日期的最后成功 Stars 样本；采集器保留约 45 天。
+- `src/data/history.js`：日采样净增与曲线。
+- `src/data/github-data.js`：分类、聚合、API 映射、榜单筛选与可选翻译。
+- `scripts/sync-github-data.mjs`：持久化采集。
+- `scripts/serve.mjs`：仅提供页面需要的静态文件，隐藏目录、凭据和脚本不可通过网页读取。
+- `DATA_SOURCE_AUDIT.md`：修复前的审计记录；当前行为以本 README 和实现为准。

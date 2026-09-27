@@ -1,434 +1,214 @@
-import {
-  getDashboardData,
-  refreshDashboardData,
-  snapshotFromProjects,
-  fetchGitHubProjects,
-  translateProjects,
-} from './src/data/github-data.js';
-
-const iconByCategory = { ai: '✦', 'developer-tools': '⌘', web: '◈', infra: '◌', data: '◫', mobile: '⌁', security: '⌑', productivity: '▣' };
-const avatarClasses = ['a', 'b', 'c', 'd', 'e'];
-const PERIODS = { today: '今日', week: '本周', month: '本月' };
-const PERIOD_FIELD = { today: 'todayStars', week: 'weekStars', month: 'monthStars' };
-const SYNC_INTERVAL_MINUTES = 30;
-const DAY_MS = 24 * 3600 * 1000;
-const toISODate = (time) => new Date(time).toISOString().slice(0, 10);
-// Broad live queries used when a GitHub token is configured; keep the list
-// small because the Search API is rate-limited. The single `created:` query
-// surfaces new repos for the whole rolling quarter; the 7/30/90-day windows
-// are filtered client-side from each repo's `createdAt`.
-const buildLiveQueries = (now = Date.now()) => [
-  'stars:>10000',
-  'topic:llm stars:>1000',
-  'topic:kubernetes stars:>1000',
-  `created:>${toISODate(now - 90 * DAY_MS)} stars:>100`,
-];
-
-let snapshot = getDashboardData();
-let activeCategory = 'all';
-let activePeriod = 'today';
-let activeWindow = 'week';
-const YEAR_CHOICES = [2022, 2023, 2024, 2025, 2026];
-let activeYear = Math.min(Math.max(new Date().getFullYear(), YEAR_CHOICES[0]), YEAR_CHOICES[YEAR_CHOICES.length - 1]);
-// 当年新增榜的三个窗口（rolling 7/30/90 天），统一 Top 10。
-// 演示数据全部使用真实创建日期，2026 批次中含 90 天内的工程，窗口为空时
-// 展示解释文案 + 接入 Token 的引导按钮。
-const NEW_WINDOWS = {
-  week: { list: 'weeklyTop10', field: 'weekStars', days: 7 },
-  month: { list: 'monthlyTop10', field: 'monthStars', days: 30 },
-  quarter: { list: 'quarterlyTop10', field: 'monthStars', days: 90 },
-};
-const TOKEN_CTA = '<button class="empty-cta" data-action="connect-token">接入 GitHub Token</button>';
-let toastTimer;
+﻿import { CATEGORY_META, assembleSnapshot, fetchGitHubProjects, loadDashboardData, translateProjects } from './src/data/github-data.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const formatNumber = (value) => new Intl.NumberFormat('en-US', { notation: value > 9999 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(value);
-const formatStars = (value) => value >= 1000 ? `${(value / 1000).toFixed(value >= 10000 ? 0 : 1)}k` : value.toLocaleString('en-US');
-const timeAgo = (iso) => {
-  const minutes = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (minutes < 60) return `${minutes} 分钟前`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} 小时前`;
-  return `${Math.round(hours / 24)} 天前`;
+const DAY = 86400000;
+const liveQueries = () => ['stars:>1000', ...[7, 30, 90].map((days) => `created:>=${new Date(Date.now() - days * DAY).toISOString().slice(0, 10)} stars:>10`)];
+const known = (value) => typeof value === 'number' && Number.isFinite(value);
+const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+const number = (value) => known(value) ? new Intl.NumberFormat('zh-CN').format(value) : '—';
+const delta = (value) => known(value) ? `${value > 0 ? '+' : ''}${number(value)}` : '暂无基线';
+const validDate = (value) => value && Number.isFinite(Date.parse(value));
+const timeAgo = (value) => {
+  if (!validDate(value)) return '采样时间未知';
+  const elapsed = Math.max(0, Date.now() - Date.parse(value));
+  return elapsed < 60000 ? '刚刚' : elapsed < 3600000 ? `${Math.floor(elapsed / 60000)} 分钟前` : elapsed < DAY ? `${Math.floor(elapsed / 3600000)} 小时前` : `${Math.floor(elapsed / DAY)} 天前`;
 };
-const getToken = () => localStorage.getItem('githubPulse.token') || window.GITHUB_PULSE_TOKEN || '';
+const safeUrl = (project) => /^[-\w.]+\/[-\w.]+$/.test(project.fullName || '') ? `https://github.com/${project.fullName}` : 'https://github.com/';
+const empty = (message, title = '暂无匹配工程') => `<div class="empty-state"><span class="empty-icon" aria-hidden="true">◷</span><strong class="empty-title">${esc(title)}</strong><span class="empty-copy">${esc(message)}</span></div>`;
+let snapshot = null;
+let category = 'all';
+let newDays = 7;
+let year = new Date().getUTCFullYear();
+let browseLimit = 30;
+let expandedActivity = false;
+let busy = false;
+let warning = '';
+let toastTimer;
+let liveCount = 0;
+let token = '';
+try {
+  // Migrate the old persistent token into this tab's session; never render its value.
+  token = sessionStorage.getItem('githubPulse.token') || localStorage.getItem('githubPulse.token') || '';
+  if (token) sessionStorage.setItem('githubPulse.token', token);
+  localStorage.removeItem('githubPulse.token');
+  if (localStorage.getItem('githubPulse.theme') === 'light') document.body.classList.add('light');
+} catch { /* Browser storage can be disabled. */ }
+$('#tokenInput').placeholder = token ? '本会话已配置 Token（可重新输入）' : '公开数据无需 Token';
 
-function projectMatches(project) {
-  if (activeCategory !== 'all' && project.category !== activeCategory) return false;
-  const query = $('#searchInput')?.value.trim().toLowerCase();
-  if (!query) return true;
-  return [project.fullName, project.name, project.description, project.language, project.categoryLabel, ...(project.topics || [])]
-    .join(' ').toLowerCase().includes(query);
+function projects() {
+  const query = $('#searchInput').value.trim().toLowerCase();
+  return (snapshot?.projects || []).filter((project) => project.availability === 'available')
+    .filter((project) => category === 'all' || project.category === category)
+    .filter((project) => !query || [project.fullName, project.name, project.description, project.originalDescription, project.language, ...(project.topics || [])].join(' ').toLowerCase().includes(query));
 }
-
-function avatarText(project) {
-  return project.fullName.split('/')[0].slice(0, 2).toUpperCase();
-}
-
-/* ------------------------------ metrics ------------------------------ */
-
-function renderMetrics() {
-  const stats = snapshot.stats;
-  $('#trackedCount').textContent = formatNumber(stats.projects);
-  $('#newToday').textContent = String(stats.activeToday);
-  $('#weeklyStars').textContent = formatStars(stats.weekStars);
-  $('#lastUpdated').textContent = timeAgo(snapshot.lastUpdated);
-  const date = new Date(snapshot.lastUpdated);
-  $('#footerUpdated').textContent = `今天 ${date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`;
-}
-
-/* --------------------------- category panel --------------------------- */
-
-function renderCategoryTabs() {
-  const tabs = [
-    { id: 'all', label: '全部', count: snapshot.stats.projects },
-    ...snapshot.categories.map((category) => ({ id: category.id, label: category.label, count: category.count })),
-  ];
-  $('.category-tabs').innerHTML = tabs.map((tab) => `
-    <button class="category-tab ${tab.id === activeCategory ? 'active' : ''}" data-category="${tab.id}">${tab.label} <span>${tab.count}</span></button>`).join('');
-  $$('.category-tab').forEach((button) => button.addEventListener('click', () => {
-    activeCategory = button.dataset.category;
-    renderAll();
-  }));
-}
-
-function renderCategoryVisual() {
-  const grouped = snapshot.categories.filter((category) => category.count > 0);
-  const total = snapshot.stats.projects;
-  let accumulator = 0;
-  const stops = grouped.map((category) => {
-    const from = (accumulator / total) * 100;
-    accumulator += category.count;
-    return `${category.color} ${from}% ${(accumulator / total) * 100}%`;
-  }).join(', ');
-  $('.donut').style.background = `conic-gradient(${stops})`;
-  $('.donut-center strong').textContent = formatNumber(total);
-
-  const top = grouped.slice().sort((left, right) => right.count - left.count).slice(0, 5);
-  const restCount = total - top.reduce((sum, category) => sum + category.count, 0);
-  const rows = top.map((category) => ({ label: category.label, count: category.count, color: category.color }));
-  if (restCount > 0) rows.push({ label: '其他', count: restCount, color: '#32435d' });
-  $('.legend').innerHTML = rows.map((row) => `
-    <div><i class="legend-dot" style="background:${row.color}"></i><span>${row.label}</span><strong>${row.count}</strong><em>${((row.count / total) * 100).toFixed(1)}%</em></div>`).join('');
-}
-
-function renderSpotlight() {
-  const totalWeek = snapshot.stats.weekStars || 1;
-  let badge = '全部领域';
-  let title;
-  let body;
-  let metaGrowth;
-  if (activeCategory === 'all') {
-    const leader = snapshot.categories.slice().sort((left, right) => right.weekStars - left.weekStars)[0];
-    badge = '全景';
-    title = `${leader.label}本周领跑`;
-    body = `过去 7 天，${leader.label}分类贡献了 <strong>${Math.round((leader.weekStars / totalWeek) * 100)}%</strong> 的新增 Stars。`;
-    metaGrowth = `+${formatStars(leader.weekStars)} 本周 Stars`;
-  } else {
-    const category = snapshot.categories.find((item) => item.id === activeCategory);
-    badge = category.label;
-    title = `${category.label}分类动态`;
-    body = `该分类下共有 <strong>${category.count}</strong> 个追踪中的工程，过去 7 天新增 Stars 占全站的 <strong>${Math.round((category.weekStars / totalWeek) * 100)}%</strong>。`;
-    metaGrowth = `+${formatStars(category.weekStars)} 本周 Stars`;
-  }
-  $('#spotlightCard').innerHTML = `
-    <div class="spotlight-top"><span class="spotlight-label">CATEGORY SPOTLIGHT</span><span class="spotlight-badge">${badge}</span></div>
-    <div class="spotlight-content"><div class="spotlight-icon">${activeCategory === 'all' ? '✦' : iconByCategory[activeCategory] || '◈'}</div>
-      <div><h3>${title}</h3><p>${body}</p><div class="spotlight-meta"><span>${snapshot.stats.projects} 个工程</span><span>·</span><span class="positive">${metaGrowth}</span></div></div></div>
-    <div class="spotlight-bar"><span style="width:${Math.max(8, Math.round(((activeCategory === 'all'
-      ? snapshot.categories.slice().sort((left, right) => right.weekStars - left.weekStars)[0].weekStars
-      : snapshot.categories.find((item) => item.id === activeCategory).weekStars) / totalWeek) * 100))}%"></span></div>`;
-}
-
-/* ------------------------- activity + trend chart ------------------------- */
-
-function renderActivity() {
-  const field = PERIOD_FIELD[activePeriod];
-  const periodLabel = PERIODS[activePeriod];
-  $('#activityTitle').textContent = `${periodLabel}增长最快`;
-  const list = snapshot.projects
-    .filter((project) => project[field] > 0)
-    .filter(projectMatches)
-    .sort((left, right) => right[field] - left[field])
-    .slice(0, 5);
-  $('#activityList').innerHTML = list.map((project, index) => `
-    <a class="activity-row" href="${project.htmlUrl}" target="_blank" rel="noopener noreferrer" data-id="${project.id}">
-      <div class="activity-badge ${index % 3 === 1 ? 'purple' : index % 3 === 2 ? 'green' : ''}">${iconByCategory[project.category] || '◈'}</div>
-      <div class="activity-info"><div class="activity-name"><span>${project.name}</span><span class="owner">${project.fullName.split('/')[0]}</span></div><div class="activity-desc">${project.description}</div></div>
-      <div class="activity-meta"><strong>+${formatStars(project[field])}</strong><span class="up">${periodLabel} Stars</span><span class="ago">${timeAgo(project.updatedAt)}</span></div>
-    </a>`).join('') || `<div class="empty-state">没有匹配的工程，换个关键词试试。</div>`;
-}
-
-function renderChart() {
-  const { labels, values } = snapshot.trendSeries;
-  const niceMax = Math.max(1000, Math.ceil(Math.max(...values, 1) / 1000) * 1000);
-  const tickCount = 4;
-  $('.y-axis').innerHTML = Array.from({ length: tickCount + 1 }, (_, index) => {
-    const value = (niceMax * (tickCount - index)) / tickCount;
-    return `<span>+${formatStars(Math.round(value))}</span>`;
-  }).join('');
-  $('.chart-labels').innerHTML = labels.map((label) => `<span>${label}</span>`).join('');
-  $('.chart-bars').innerHTML = values.map((value, index) => `
-    <div class="bar ${index === values.length - 1 ? 'today' : ''}" style="height:${Math.max(4, (value / niceMax) * 100)}%"><span>+${formatStars(value)}</span></div>`).join('');
-}
-
-/* ------------------------------ rankings ------------------------------ */
-
-const scoreClass = (score) => (score >= 75 ? '' : score >= 50 ? 'mid' : 'low');
-const scoreBadge = (project) => `<span class="score-badge ${scoreClass(project.opportunityScore)}" title="商机评分 ${project.opportunityScore}/100：周增速+采用度+Fork 健康+活跃度+License">商 ${project.opportunityScore}</span>`;
-const licenseChip = (project) => `<span class="license-chip ${project.licenseRisk === 'risky' ? 'risky' : ''}" title="开源许可证">${project.license}</span>`;
-const createdChip = (project) => {
-  if (!project.createdAt) return '';
-  const created = new Date(project.createdAt).getTime();
-  const days = Math.round((Date.now() - created) / DAY_MS);
-  if (!Number.isFinite(days) || days < 0) return '';
-  // 近三个月内的工程用相对时间，更早的用绝对年月（年度榜里全是老工程）。
-  const label = days > 90 ? `${new Date(created).toISOString().slice(0, 7)} 创建` : days === 0 ? '今天创建' : `${days} 天前创建`;
-  return `<span class="created-chip" title="仓库创建时间">${label}</span>`;
-};
-const langChip = (project) => `<span class="lang-chip" title="主要编程语言">${project.language}</span>`;
-
-function repoRow(project, index, field) {
-  return `<a class="repo-row" href="${project.htmlUrl}" target="_blank" rel="noopener noreferrer" data-id="${project.id}">
+const sorted = (list, field, limit) => list.filter((project) => known(project[field])).slice().sort((a, b) => b[field] - a[field] || (b.stars || 0) - (a.stars || 0) || a.fullName.localeCompare(b.fullName)).slice(0, limit);
+function row(project, index, field = 'stars') {
+  const growth = field === 'weekStars' || field === 'monthStars';
+  const created = validDate(project.createdAt) ? project.createdAt.slice(0, 10) : '创建日期待核验';
+  const sampled = validDate(project.fetchedAt) ? timeAgo(project.fetchedAt) : project.sampleDate ? `${project.sampleDate} 快照` : '采样时间未知';
+  const license = project.license && project.license !== 'NOASSERTION' ? project.license : '许可证未知';
+  const risk = project.licenseRisk === 'unknown' || project.licenseRisk === 'risky';
+  return `<a class="repo-row" href="${esc(safeUrl(project))}" target="_blank" rel="noopener noreferrer">
     <span class="repo-rank">${String(index + 1).padStart(2, '0')}</span>
-    <span class="repo-avatar ${avatarClasses[index % avatarClasses.length]}">${avatarText(project)}</span>
-    <div class="repo-details"><div class="repo-name"><strong>${project.name}</strong> <span>/ ${project.fullName.split('/')[0]}</span></div><div class="repo-desc">${project.description}</div></div>
-    <div class="repo-stats"><span class="stars">★ ${formatStars(project.stars)}</span><span class="forks">⑂ ${formatStars(project.forks)}</span><span class="delta">+${formatStars(project[field])}</span>${langChip(project)}${createdChip(project)}${scoreBadge(project)}${licenseChip(project)}</div>
+    <div class="repo-details"><div class="repo-name"><strong>${esc(project.fullName)}</strong></div><div class="repo-desc">${esc(project.description || '暂无描述')}</div><div class="repo-meta"><span class="lang-chip">${esc(project.language || '未知语言')}</span><span class="license-chip ${risk ? 'risky' : ''}">${esc(license)}</span></div><div class="repo-signals"><span class="created-date">创建于 ${esc(created)} · </span>采样于 ${esc(sampled)}${project.originalDescription ? ' · 机器翻译' : ''}</div></div>
+    <div class="repo-stats"><span class="stars" aria-label="${number(project.stars)} Stars"><span class="stars-icon" aria-hidden="true">☆</span>${number(project.stars)}</span><span class="forks" aria-label="${number(project.forks)} Forks">⑂ ${number(project.forks)}</span>${growth ? `<span class="delta ${project[field] < 0 ? 'negative' : ''}">${delta(project[field])}</span>` : ''}${field === 'opportunityScore' ? `<span class="score-badge">评分 ${number(project.opportunityScore)}</span>` : ''}</div>
   </a>`;
 }
-
-function oppRow(project, index) {
-  return `<a class="repo-row opp-row" href="${project.htmlUrl}" target="_blank" rel="noopener noreferrer" data-id="${project.id}">
-    <span class="repo-rank">${String(index + 1).padStart(2, '0')}</span>
-    <span class="repo-avatar ${avatarClasses[index % avatarClasses.length]}">${avatarText(project)}</span>
-    <div class="repo-details">
-      <div class="repo-name"><strong>${project.name}</strong> <span>/ ${project.fullName.split('/')[0]}</span></div>
-      <div class="repo-desc">${project.description}</div>
-      <div class="repo-signals">贡献者 ${formatStars(project.contributors)} · 最近提交 ${timeAgo(project.pushedAt)} · ${project.license}</div>
-    </div>
-    <div class="repo-stats"><span class="delta">+${formatStars(project.weekStars)}/周</span>${scoreBadge(project)}</div>
-  </a>`;
+function renderMetrics(list) {
+  const week = list.filter((p) => known(p.weekStars));
+  const pushes = list.filter((p) => validDate(p.pushedAt));
+  const recent = pushes.filter((p) => Date.now() - Date.parse(p.pushedAt) >= 0 && Date.now() - Date.parse(p.pushedAt) <= DAY);
+  const fresh = list.filter((p) => validDate(p.fetchedAt) && Date.now() - Date.parse(p.fetchedAt) >= 0 && Date.now() - Date.parse(p.fetchedAt) <= DAY);
+  $('#trackedCount').textContent = number(list.length);
+  $('#newToday').textContent = pushes.length ? number(recent.length) : '—';
+  $('#activityCoverage').textContent = `${pushes.length}/${list.length} 个仓库有已核验的推送时间`;
+  $('#weeklyStars').textContent = week.length ? delta(week.reduce((sum, p) => sum + p.weekStars, 0)) : '暂无基线';
+  $('#growthCoverage').textContent = `仅统计 ${week.length}/${list.length} 个具备 7 天基线的仓库`;
+  $('#freshCount').textContent = `${fresh.length}/${list.length}`;
+  const last = snapshot.lastUpdated || snapshot.fetchedAt;
+  $('#lastUpdated').textContent = last ? `${timeAgo(last)}采样` : '采样时间未记录';
+  $('#footerUpdated').textContent = validDate(last) ? new Date(last).toLocaleString('zh-CN', { hour12: false }) : '仅有历史日期，未记录准确时间';
+  $('#sourceLabel').textContent = busy ? '正在获取 GitHub 数据' : liveCount ? 'GitHub API · 部分样本已更新' : '已保存的 GitHub 快照';
+  const base = liveCount ? `本次成功获取 ${liveCount} 个仓库；其余保留已保存快照。` : '当前展示已保存快照，刷新后获取公开 API 样本。';
+  const notice = warning || (snapshot.warning ? '保存的快照包含未完成的采集批次；未更新项保留原采样状态。' : '');
+  const truncation = snapshot.coverage?.truncated ? '搜索只取各范围前 100 个结果。' : '';
+  const pending = snapshot.coverage?.unverified || 0;
+  $('#dataStatus').textContent = `${notice ? `${notice} ` : ''}${base}${truncation}${pending ? `另有 ${pending} 个旧导入候选待核验，暂不参与统计。` : ''} 周/月榜按相隔 7/30 个 UTC 日期的采样净增排名，并非精确到小时；历史不足不参与。`;
+  $('#dataStatus').classList.toggle('has-warning', !!notice);
+  $('#provenanceDetails').classList.toggle('has-warning', !!notice);
+  $('#provenanceSummary').textContent = notice ? '更新提示 · 查看数据说明' : '数据范围与统计口径';
 }
-
-// 空态引导：滚动到侧栏的 Token 输入框、聚焦并闪烁提示。
-function promptForToken() {
-  const input = $('#tokenInput');
-  if (!input) return;
-  input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  input.focus();
-  input.classList.remove('flash');
-  void input.offsetWidth;
-  input.classList.add('flash');
-  setTimeout(() => input.classList.remove('flash'), 1600);
+function renderActivity(list) {
+  const recent = list.filter((p) => validDate(p.pushedAt) && Date.now() - Date.parse(p.pushedAt) >= 0 && Date.now() - Date.parse(p.pushedAt) <= DAY).sort((a, b) => Date.parse(b.pushedAt) - Date.parse(a.pushedAt));
+  $('#activityList').innerHTML = recent.slice(0, expandedActivity ? recent.length : 5).map((p, i) => `<div class="activity-item">${row(p, i)}<span class="activity-time">最近推送 ${esc(timeAgo(p.pushedAt))}</span></div>`).join('') || empty('当前采样中没有已核验的近 24 小时代码更新；这不代表 GitHub 上没有工程更新。');
+  $('#activityExpand').textContent = expandedActivity ? '收起' : `查看全部 ${recent.length} 个`;
 }
-
-// 年度榜：按自然年从全量工程里筛（客户端计算，实时模式同样生效）。
-// 选中具体分类时渲染该分类当年的 Top 10 明细表；"全部"时渲染每个
-// 有数据分类的紧凑 Top 10 小列表网格。年份 chips 与全局分类切换都会
-// 触发重渲染。
-function renderYearly() {
-  $('#yearChips').innerHTML = YEAR_CHOICES.map((year) => `<button class="year-chip ${year === activeYear ? 'active' : ''}" data-year="${year}">${year}</button>`).join('');
-  $$('.year-chip').forEach((button) => button.addEventListener('click', () => {
-    activeYear = Number(button.dataset.year);
-    renderYearly();
-  }));
-  const yearProjects = snapshot.projects
-    .filter((project) => {
-      const created = new Date(project.createdAt).getTime();
-      return Number.isFinite(created) && new Date(created).getFullYear() === activeYear;
-    })
-    .filter(projectMatches);
-  if (activeCategory !== 'all') {
-    const meta = snapshot.categories.find((category) => category.id === activeCategory);
-    const list = yearProjects
-      .filter((project) => project.category === activeCategory)
-      .sort((left, right) => right.stars - left.stars)
-      .slice(0, 10);
-    const label = meta ? meta.label : activeCategory;
-    const emptyState = list.length ? '' : `<div class="empty-state">${getToken()
-      ? `${activeYear} 年「${label}」暂无收录工程（实时模式下稍后再试）。`
-      : `演示数据暂无 ${activeYear} 年「${label}」分类的工程 —— 接入 GitHub Token 同步实时数据${TOKEN_CTA}`}</div>`;
-    $('#yearlyBoard').innerHTML = list.length
-      ? `<div class="yearly-single-head">${activeYear} 年 · ${label} Top ${list.length}</div><div class="ranking-table">${list.map((project, index) => repoRow(project, index, 'weekStars')).join('')}</div>`
-      : emptyState;
-    $('#yearlyBoard .empty-cta')?.addEventListener('click', promptForToken);
-    return;
+function renderChart(list) {
+  const series = assembleSnapshot(list, { history: snapshot.history || {}, now: Date.now() }).trendSeries;
+  const values = series?.values || Array(7).fill(null);
+  const dates = series?.dates || series?.labels || [];
+  const counts = series?.coverage || [];
+  const scale = Math.max(1, ...values.filter(known).map(Math.abs));
+  $('#trendChart').innerHTML = values.map((value, i) => `<div class="observed-day"><span class="observed-number">${known(value) ? esc(delta(value)) : '—'}</span><div class="observed-track">${known(value) ? `<div class="observed-bar ${value < 0 ? 'negative' : ''}" style="height:${Math.max(2, Math.abs(value) / scale * 100)}%"></div>` : '<span class="missing-bar">缺测</span>'}</div><span>${esc(String(dates[i] || '').slice(-5))}</span><small>${number(counts[i] || 0)} 个样本</small></div>`).join('');
+  $('#trendNote').textContent = '逐日比较同一仓库相邻 UTC 日期的真实采样；负值为净减少。各日覆盖数量可能不同，缺测不补零。';
+}
+function renderCategories() {
+  const all = (snapshot?.projects || []).filter((p) => p.availability === 'available');
+  const groups = CATEGORY_META.map((meta) => ({ ...meta, count: all.filter((p) => p.category === meta.id).length }));
+  $('.category-tabs').innerHTML = [{ id: 'all', label: '全部', count: all.length }, ...groups].map((c) => `<button class="category-tab ${c.id === category ? 'active' : ''}" data-category="${esc(c.id)}" aria-pressed="${c.id === category}">${esc(c.label)} <span>${c.count}</span></button>`).join('');
+  let cursor = 0;
+  const stops = groups.filter((c) => c.count).map((c) => { const start = cursor; cursor += c.count / Math.max(1, all.length) * 100; return `${c.color} ${start}% ${cursor}%`; });
+  $('.donut').style.background = stops.length ? `conic-gradient(${stops.join(',')})` : 'var(--border)';
+  $('.donut-center strong').textContent = number(all.length);
+  $('.legend').innerHTML = groups.filter((c) => c.count).map((c) => `<div><i class="legend-dot" style="background:${c.color}"></i><span>${esc(c.label)}</span><strong>${c.count}</strong></div>`).join('');
+  const list = projects();
+  $('#spotlightCard').innerHTML = `<div class="spotlight-content"><h3>${esc(category === 'all' ? '全部领域' : CATEGORY_META.find((c) => c.id === category)?.label)} <span>当前筛选 <strong>${list.length}</strong> 个</span></h3><p>具备一周净增基线 <strong>${list.filter((p) => known(p.weekStars)).length}</strong> 个 · 筛选同步作用于下方各榜单</p></div>`;
+}
+function renderRankings(list) {
+  for (const [name, field, count] of [['weekly', 'weekStars', 10], ['monthly', 'monthStars', 30]]) {
+    const eligible = list.filter((p) => known(p[field]));
+    $(`#${name}Note`).textContent = `${eligible.length}/${list.length} 个仓库具备所需历史基线。按净增排序（含取消收藏），不是总 Stars 排名。`;
+    $(`#${name}Table`).innerHTML = sorted(list, field, count).map((p, i) => row(p, i, field)).join('') || empty(`持续采样满 ${count === 10 ? 7 : 30} 天后可计算真实净增；已有历史可直接导入。`, '历史数据积累中');
   }
-  const groups = snapshot.categories
-    .map((category) => ({
-      ...category,
-      projects: yearProjects.filter((project) => project.category === category.id).sort((left, right) => right.stars - left.stars).slice(0, 10),
-    }))
-    .filter((group) => group.projects.length > 0);
-  const emptyBoard = `<div class="empty-state">${getToken()
-    ? `${activeYear} 年暂无收录工程（实时模式下稍后再试）。`
-    : `演示数据暂无 ${activeYear} 年收录的工程 —— 接入 GitHub Token 同步实时数据${TOKEN_CTA}`}</div>`;
-  $('#yearlyBoard').innerHTML = groups.length ? `<div class="yearly-grid">${groups.map((group) => `
-    <div class="yearly-group">
-      <div class="yearly-group-head"><span class="legend-dot" style="background:${group.color}"></span><strong>${group.label}</strong><span>${group.projects.length} 个工程</span></div>
-      ${group.projects.map((project, index) => `<a class="yearly-row" href="${project.htmlUrl}" target="_blank" rel="noopener noreferrer" title="${project.fullName}"><span class="repo-rank">${String(index + 1).padStart(2, '0')}</span><span class="yearly-name">${project.name}</span><span class="yearly-stars">★ ${formatStars(project.stars)}</span></a>`).join('')}
-    </div>`).join('')}</div>` : emptyBoard;
-  $('#yearlyBoard .empty-cta')?.addEventListener('click', promptForToken);
+  const newest = list.filter((p) => validDate(p.createdAt) && Date.now() - Date.parse(p.createdAt) >= 0 && Date.now() - Date.parse(p.createdAt) <= newDays * DAY);
+  $('#newProjectsTable').innerHTML = sorted(newest, 'stars', 10).map((p, i) => row(p, i)).join('') || empty('当前筛选没有该时间范围内已核验的新建工程。');
+  $('#opportunityTable').innerHTML = sorted(list, 'opportunityScore', 10).map((p, i) => row(p, i, 'opportunityScore')).join('') || empty('研究评分所需的增长或活跃度数据不足，暂不排名。', '等待完整研究数据');
+  renderYearly(list);
+  const browse = list.slice().sort((a, b) => (known(b.stars) ? b.stars : -1) - (known(a.stars) ? a.stars : -1) || a.fullName.localeCompare(b.fullName)).slice(0, browseLimit);
+  $('#repositoryTable').innerHTML = browse.map((p, i) => row(p, i)).join('') || empty('没有符合筛选条件的已收录工程。');
+  $('#browseCount').textContent = `显示 ${browse.length} / ${list.length} 个`;
+  $('#loadMore').hidden = browse.length >= list.length;
 }
-
-// 当年新增榜：本周 / 本月 / 本季度（rolling 7/30/90 天）三个窗口，各取 Top 10。
-// 演示数据的 2026 批次含 90 天内的新工程，空窗口（如本周）给解释文案 + 接入 Token 引导。
-function renderNewProjects() {
-  const config = NEW_WINDOWS[activeWindow];
-  $$('.period-tab').forEach((button) => button.classList.toggle('active', button.dataset.window === activeWindow));
-  const list = snapshot[config.list].filter(projectMatches);
-  $('#newProjectsTable').innerHTML = list.length ? list.map((project, index) => repoRow(project, index, config.field)).join('') : `<div class="empty-state">${getToken()
-    ? '本窗口暂无新建工程（实时模式下稍后再试）。'
-    : `演示数据不含 ${config.days} 天内新建的真实工程 —— 接入 GitHub Token 后，此处展示实时新建工程${TOKEN_CTA}`}</div>`;
-  $('#newProjectsTable .empty-cta')?.addEventListener('click', promptForToken);
+function renderYearly(list) {
+  const years = Array.from(new Set([new Date().getUTCFullYear(), ...((snapshot?.projects || []).filter((p) => validDate(p.createdAt)).map((p) => new Date(p.createdAt).getUTCFullYear()))])).sort((a, b) => b - a);
+  $('#yearChips').innerHTML = `<label for="yearSelect">创建年份 </label><select id="yearSelect" aria-label="选择创建年份">${years.map((value) => `<option value="${value}" ${value === year ? 'selected' : ''}>${value} 年</option>`).join('')}</select>`;
+  const matches = list.filter((p) => validDate(p.createdAt) && new Date(p.createdAt).getUTCFullYear() === year);
+  const groups = CATEGORY_META.filter((c) => category === 'all' || category === c.id).map((c) => ({ ...c, rows: sorted(matches.filter((p) => p.category === c.id), 'stars', 10) })).filter((g) => g.rows.length);
+  $('#yearlyBoard').innerHTML = groups.length ? `<div class="yearly-grid">${groups.map((g) => `<div class="yearly-group"><div class="yearly-group-head"><strong>${esc(g.label)}</strong><span>${g.rows.length} 个</span></div>${g.rows.map((p, i) => `<a class="yearly-row" href="${esc(safeUrl(p))}" target="_blank" rel="noopener noreferrer"><span class="repo-rank">${i + 1}</span><span class="yearly-name">${esc(p.fullName)}</span><span class="yearly-stars">★ ${number(p.stars)}</span></a>`).join('')}</div>`).join('')}</div>` : empty(`${year} 年暂无符合筛选且创建日期已核验的工程。`);
 }
-
-function renderOpportunity() {
-  const opportunity = snapshot.opportunityTop10.filter(projectMatches);
-  $('#opportunityTable').innerHTML = opportunity.map(oppRow).join('') || `<div class="empty-state">当前分类暂无商机评分数据。</div>`;
-}
-
-/* ------------------------------ rendering ------------------------------ */
-
 function renderAll() {
-  renderMetrics();
-  renderCategoryTabs();
-  renderCategoryVisual();
-  renderSpotlight();
-  renderActivity();
-  renderChart();
-  renderYearly();
-  renderNewProjects();
-  renderOpportunity();
+  if (!snapshot) return;
+  snapshot = assembleSnapshot(snapshot.projects, { history: snapshot.history, fetchedAt: snapshot.lastUpdated, source: snapshot.source, coverage: snapshot.coverage, warning: snapshot.warning });
+  const list = projects();
+  renderMetrics(list); renderCategories(); renderActivity(list); renderChart(list); renderRankings(list);
 }
-
-/* ------------------------------ interaction ------------------------------ */
-
-function showToast(message) {
-  clearTimeout(toastTimer);
-  $('#toastMessage').textContent = message;
-  $('#toast').classList.add('show');
-  toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 2600);
+function toast(message) { clearTimeout(toastTimer); $('#toastMessage').textContent = message; $('#toast').classList.add('show'); toastTimer = setTimeout(() => $('#toast').classList.remove('show'), 4000); }
+function mergeRows(before, next) {
+  const map = new Map(before.map((p) => [p.fullName.toLowerCase(), p]));
+  const timestamp = (p) => Date.parse((p?.availability === 'unavailable' ? p.lastAttemptAt : null) || p?.fetchedAt || p?.sampleDate || '') || 0;
+  for (const p of next) { const key = p.fullName.toLowerCase(); if (!map.has(key) || timestamp(p) >= timestamp(map.get(key))) map.set(key, p); }
+  return [...map.values()];
 }
-
-function applySnapshot(next, message, { silent } = {}) {
-  snapshot = next;
-  renderAll();
-  if (!silent) showToast(message);
-}
-
-function simulateSync(message, options) {
-  applySnapshot(refreshDashboardData(snapshot), message, options);
-}
-
-async function refresh({ silent } = {}) {
-  const button = $('#refreshButton');
-  button.classList.add('loading');
-  const token = getToken();
-  let finished = false;
-  if (token) {
+async function refresh({ silent = false } = {}) {
+  if (busy) return;
+  busy = true; $('#refreshButton').disabled = true; $('#refreshButton').classList.add('loading');
+  const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 35000);
+  try {
     try {
-      const projects = await fetchGitHubProjects({ token, queries: buildLiveQueries() });
-      let message = '已同步 GitHub 实时数据';
-      try {
-        const { translated, total } = await translateProjects(projects);
-        if (total > 0) message += ` · ${translated}/${total} 条描述已译为中文`;
-      } catch (error) {
-        console.warn('Description translation skipped:', error);
+      const saved = await loadDashboardData({ signal: controller.signal });
+      if (!snapshot) snapshot = saved;
+      else {
+        const rows = mergeRows(snapshot.projects, saved.projects);
+        const fetchedAt = [snapshot.lastUpdated, saved.lastUpdated].filter(validDate).sort().at(-1) || null;
+        snapshot = assembleSnapshot(rows, { history: saved.history, fetchedAt, source: snapshot.source, coverage: snapshot.coverage, warning: saved.warning });
       }
-      const next = snapshotFromProjects(projects);
-      next.tick = (snapshot.tick || 0) + 1;
-      finished = true;
-      applySnapshot(next, message, { silent });
-    } catch (error) {
-      console.warn('Live sync failed, falling back to demo sync:', error);
-    }
-  }
-  if (!finished) simulateSync(token ? '实时接口不可用，已回退到演示同步' : '数据已更新 · 已同步最新变化', { silent });
-  button.classList.remove('loading');
-}
-
-function setupEvents() {
-  $('#refreshButton').addEventListener('click', () => refresh());
-  $('#searchInput').addEventListener('input', renderAll);
-  $('#searchInput').addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      const first = $('#newProjectsTable .repo-row');
-      if (first) first.click();
-    }
-  });
-  document.addEventListener('keydown', (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-      event.preventDefault();
-      $('#searchInput').focus();
-    }
-  });
-  $$('.period-tab').forEach((button) => button.addEventListener('click', () => {
-    activeWindow = button.dataset.window;
-    renderNewProjects();
-  }));
-  // 侧栏 Token 输入框：失焦或回车即保存（走 githubPulse.setToken 同一通道）。
-  const saveToken = () => window.githubPulse.setToken($('#tokenInput').value.trim());
-  $('#tokenInput').addEventListener('change', saveToken);
-  $('#tokenInput').addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') saveToken();
-  });
-  $$('.text-button').forEach((button) => button.addEventListener('click', () => {
-    if (button.dataset.action === 'view-all') $('#rankings').scrollIntoView({ behavior: 'smooth' });
-  }));
-  $$('.saved-group .nav-item').forEach((item) => item.addEventListener('click', () => {
-    if (item.dataset.category) activeCategory = item.dataset.category;
-    if (item.dataset.search !== undefined) {
-      $('#searchInput').value = item.dataset.search;
-      activeCategory = 'all';
-    }
+    } catch (error) { if (!snapshot) snapshot = assembleSnapshot([], { warning: error.message }); }
     renderAll();
-    $('#rising').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }));
-  $('#themeToggle').addEventListener('click', () => {
-    const light = document.body.classList.toggle('light');
-    $('#themeToggle').textContent = light ? '☾' : '☼';
-    localStorage.setItem('githubPulse.theme', light ? 'light' : 'dark');
+    const rows = await fetchGitHubProjects({ token, queries: liveQueries(), maxPages: 1, signal: controller.signal });
+    if (!rows.length) throw new Error('GitHub 未返回可用仓库');
+    const history = snapshot?.history || {};
+    const next = assembleSnapshot(mergeRows(snapshot?.projects || [], rows), { history, source: 'live-sample', fetchedAt: new Date().toISOString(), coverage: rows.coverage || {} });
+    next.history = history;
+    snapshot = next;
+    liveCount = rows.length;
+    warning = rows.coverage?.warning || '';
+    renderAll();
+    if (!silent) toast(`已获取 ${rows.length} 个公开仓库，历史不足的指标保持未知。`);
+  } catch (error) {
+    warning = `更新未完成：${error.name === 'AbortError' ? '请求超时' : error.message}。保留最近可用快照。`;
+    if (!silent) toast(warning);
+    if (!snapshot) $('#dataStatus').textContent = warning;
+  } finally {
+    clearTimeout(timeout); busy = false; $('#refreshButton').disabled = false; $('#refreshButton').classList.remove('loading'); renderAll();
+  }
+}
+function setToken(value) { token = String(value || '').trim(); try { if (token) sessionStorage.setItem('githubPulse.token', token); else sessionStorage.removeItem('githubPulse.token'); } catch {} }
+$('#refreshButton').addEventListener('click', () => { if ($('#tokenInput').value) { setToken($('#tokenInput').value); $('#tokenInput').value = ''; $('#tokenInput').placeholder = '本会话已配置 Token'; } refresh(); });
+$('#tokenInput').addEventListener('change', (event) => setToken(event.target.value));
+$('#searchInput').addEventListener('input', () => { browseLimit = 30; renderAll(); });
+$('#searchInput').addEventListener('keydown', (event) => { if (event.key === 'Enter') $('#repositoryTable a')?.click(); });
+$('#loadMore').addEventListener('click', () => { browseLimit += 30; renderRankings(projects()); });
+$('#activityExpand').addEventListener('click', () => { expandedActivity = !expandedActivity; renderActivity(projects()); });
+$('.category-tabs').addEventListener('click', (event) => { const button = event.target.closest('[data-category]'); if (button) { category = button.dataset.category; browseLimit = 30; renderAll(); } });
+$('.saved-group').addEventListener('click', (event) => { const button = event.target.closest('a'); if (!button) return; category = button.dataset.category || 'all'; $('#searchInput').value = button.dataset.search || ''; browseLimit = 30; renderAll(); });
+$('.period-tabs').addEventListener('click', (event) => { const button = event.target.closest('[data-days]'); if (button) { newDays = Number(button.dataset.days); $$('.period-tab').forEach((b) => b.classList.toggle('active', b === button)); renderRankings(projects()); } });
+$('#yearChips').addEventListener('change', (event) => { year = Number(event.target.value); renderYearly(projects()); });
+$('#themeToggle').addEventListener('click', () => { const light = document.body.classList.toggle('light'); try { localStorage.setItem('githubPulse.theme', light ? 'light' : 'dark'); } catch {} });
+function syncNavigation() {
+  const labels = { overview: '工程总览', rising: '每日更新', rankings: '涨星榜单', directory: '工程目录' };
+  const hash = window.location?.hash.slice(1);
+  const view = labels[hash] ? hash : 'overview';
+  $$('.nav-item[data-view]').forEach((item) => {
+    const active = item.dataset.view === view;
+    item.classList.toggle('active', active);
+    if (active) item.setAttribute('aria-current', 'location'); else item.removeAttribute('aria-current');
   });
-  $$('.range-button').forEach((button) => button.addEventListener('click', () => {
-    $$('.range-button').forEach((item) => item.classList.remove('active'));
-    button.classList.add('active');
-    activePeriod = button.dataset.range;
-    renderActivity();
-  }));
-  $$('.nav-item[data-view]').forEach((item) => item.addEventListener('click', () => {
-    $$('.nav-item[data-view]').forEach((nav) => nav.classList.remove('active'));
-    item.classList.add('active');
-  }));
+  $('.breadcrumb strong').textContent = labels[view];
 }
-
-/* --------------------------------- boot --------------------------------- */
-
-if (localStorage.getItem('githubPulse.theme') === 'light') {
-  document.body.classList.add('light');
-  $('#themeToggle').textContent = '☾';
-}
-
-// 回填已保存的 Token（localStorage），实时模式恢复无缝。
-const savedToken = localStorage.getItem('githubPulse.token');
-if (savedToken && $('#tokenInput')) $('#tokenInput').value = savedToken;
-
-renderAll();
-setupEvents();
-
-// The UI promises a sync every 30 minutes; keep that promise with a silent
-// background refresh plus a periodic "x 分钟前" refresh of the timestamp.
-setInterval(() => refresh({ silent: true }), SYNC_INTERVAL_MINUTES * 60 * 1000);
-setInterval(() => { $('#lastUpdated').textContent = timeAgo(snapshot.lastUpdated); }, 45 * 1000);
-
-// Integration surface for a future backend or the browser console:
-//   githubPulse.setToken('<ghp_...>')  -> 后续“立即更新”走 GitHub 实时数据
-window.githubPulse = {
-  getSnapshot: () => snapshot,
-  refresh,
-  setToken: (token) => {
-    if (token) localStorage.setItem('githubPulse.token', token);
-    else localStorage.removeItem('githubPulse.token');
-  },
-};
+window.addEventListener?.('hashchange', syncNavigation);
+syncNavigation();
+document.addEventListener('keydown', (event) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#searchInput').focus(); } });
+$('#translateButton').addEventListener('click', async () => {
+  if (!snapshot) return;
+  const button = $('#translateButton'); button.disabled = true;
+  const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 20000);
+  try { const result = await translateProjects(projects().slice(0, browseLimit), { signal: controller.signal }); renderAll(); toast(`已翻译 ${result.translated}/${result.total} 条描述（MyMemory）；未成功的保留原文。`); }
+  catch { toast('翻译服务暂不可用，保留原文。'); }
+  finally { clearTimeout(timeout); button.disabled = false; }
+});
+window.githubPulse = { getSnapshot: () => snapshot, refresh, setToken };
+try { snapshot = await loadDashboardData(); renderAll(); } catch (error) { warning = `快照加载失败：${error.message}`; }
+refresh({ silent: true });
+setInterval(() => { if (!document.hidden) refresh({ silent: true }); }, 30 * 60000);
+setInterval(() => { if (snapshot && !busy) renderAll(); }, 60000);
