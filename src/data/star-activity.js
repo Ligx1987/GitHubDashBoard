@@ -3,6 +3,12 @@
 const DAY = 86400000;
 const NAME = /^[\w.-]+\/[\w.-]+$/;
 const count = value => Number.isSafeInteger(value) && value >= 0;
+// Low-star repositories whose record is still young yield their lane slot to
+// higher-star projects; with the one-day boundary grace their boards stay
+// valid until the next pass, so the tail effectively refreshes every other
+// day. Hot repositories (weekAdded >= 100) outrank this demotion.
+const LOW_STAR_STARS = 1000;
+const LOW_STAR_RECORD_MAX_AGE_MS = 36 * 3600000;
 export const emptyStarActivity = () => ({ schemaVersion: 1, repositories: {}, status: {} });
 
 export function validateStarWeeks(payload) {
@@ -97,7 +103,12 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
     const added = summarizeStarActivity(cached, { now: start, createdAt: p.createdAt }).weekAdded;
     return Number(added !== null && added >= 100);
   };
-  const byPriority = (a, b) => hot(b) - hot(a) || (Date.parse(result.repositories[a.fullName]?.fetchedAt) || 0) - (Date.parse(result.repositories[b.fullName]?.fetchedAt) || 0) || (b.stars || 0) - (a.stars || 0);
+  const demoted = p => {
+    if (!Number.isFinite(p.stars) || p.stars >= LOW_STAR_STARS) return false;
+    const fetched = Date.parse(result.repositories[p.fullName]?.fetchedAt);
+    return Number.isFinite(fetched) && start - fetched < LOW_STAR_RECORD_MAX_AGE_MS;
+  };
+  const byPriority = (a, b) => hot(b) - hot(a) || Number(demoted(a)) - Number(demoted(b)) || (Date.parse(result.repositories[a.fullName]?.fetchedAt) || 0) - (Date.parse(result.repositories[b.fullName]?.fetchedAt) || 0) || (b.stars || 0) - (a.stars || 0);
   // New repositories and established ones refresh in separate lanes, merged
   // 1:1: new-project boards need fresh cohorts, but the surge board also needs
   // established breakouts — a new-first queue spent the whole daily allowance

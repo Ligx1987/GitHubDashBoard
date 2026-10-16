@@ -121,6 +121,20 @@ test('history refresh keeps hot repositories ahead of the cold tail', async () =
   assert.match(called[0], /a\/hot/);
 });
 
+test('history refresh defers recently sampled low-star repositories behind higher-star ones', async () => {
+  // Both records are fresh and neither is hot; the 500-star project yields to
+  // the 5000-star one, but is deferred rather than skipped (limit 2 gets both).
+  const cache = { repositories: { 'a/low': record(1), 'a/high': record(1) } };
+  const called = [];
+  const fetchImpl = async url => { called.push(url); return ok(weeks()); };
+  await refreshStarActivity([project('a/low', { stars: 500 }), project('a/high', { stars: 5000 })], cache,
+    { now: () => NOW, ttlMs: 0, limit: 1, fetchImpl });
+  assert.match(called[0], /a\/high/);
+  await refreshStarActivity([project('a/low', { stars: 500 }), project('a/high', { stars: 5000 })], cache,
+    { now: () => NOW, ttlMs: 0, limit: 2, fetchImpl });
+  assert.equal(called.length, 3);
+});
+
 test('history 404 cools the repository down instead of aborting the whole batch', async () => {
   const calls = [];
   const fetchImpl = async url => { calls.push(url); return url.includes('gone') ? new Response('{}', { status: 404 }) : ok(weeks()); };
