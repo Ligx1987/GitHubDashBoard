@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+GitHub Pulse（GitHub 看板）：zero-dependency Node.js ≥20 ESM project. A static dashboard of sampled public GitHub repositories with verifiable star history. UI text, comments, and docs are in Chinese; keep it that way. `README.md` is the authoritative spec for statistics semantics — when code and README disagree, treat the README as the requirement.
+
+## Commands
+
+```bash
+npm run dev            # static server on http://localhost:4173 (scripts/serve.mjs); also spawns background collection every 2h
+npm test               # node --test tests/*.test.mjs
+node --test tests/data.test.mjs          # single test file
+node --test --test-name-pattern "..." tests/data.test.mjs   # single test
+npm run sync           # persistent collector (scripts/sync-github-data.mjs)
+npm run sync -- --dry --limit 5 --budget 10   # preview without writing files
+```
+
+Note: on 2026-10-20 GitHub Desktop auto-stashed a large uncommitted redesign (official star-history boards, classification v2, persisted translations, docs/) as `stash@{0}`; the code was restored from that stash the same day. If anything looks missing again, check `git stash list` before assuming a revert.
+
+## Architecture
+
+Data flows one way: collector → JSON files → browser.
+
+- `scripts/sync-github-data.mjs` — CLI collector. Calls GitHub Search/REST, maintains a priority update queue (hot repos ≥100 weekly adds first, low-star tail rotates ~every other day), optional `--harvest` star-band discovery, description translation (Google → MyMemory), `.sync.lock` file lock, and atomic writes: history first, then snapshot.
+- `scripts/serve.mjs` — static file server with an explicit allowlist of servable paths (credentials, scripts, and dotfiles are not web-readable). While running it triggers the collector every 2h (disable with `GITHUB_PULSE_AUTOSYNC=0`).
+- `src/data/github-data.js` — browser-side data layer: keyword-based category classification, snapshot assembly, ranking (`selectProjects`), GitHub API mapping (`projectFromGitHub`), bounded Search sampling (`fetchGitHubProjects`), on-demand translation.
+- `src/data/history.js` — UTC-day net growth: `calculateGrowth` compares today's sample to the exact UTC date 1/7/30 days back in `star-history.json`.
+- `src/data/star-activity.js` — GitHub's official star-history endpoint (`/stargazers/history`, API version `2026-03-10`): validates weekly payloads, aggregates 3/7/30 complete-day additions, manages the browser-side cache with rate-limit/404 cooldown handling.
+- `app.js` + `index.html` — UI; renders the snapshot, refreshes via live Search API calls (browser token optional, sessionStorage only).
+- `.github/workflows/sync-data.yml` — every 2h runs the collector and commits the JSON data files.
+
+Persisted data: `src/data/github-snapshot.json` (repo metadata + last counts), `src/data/star-history.json` (last successful star count per repo per UTC day, ~45 days), `src/data/star-activity.json` (official daily additions). `src/data/legacy-history.json` is quarantined pre-2026-09-25 data — do not use it as a growth baseline.
+
+## Core invariants (tests enforce these)
+
+- **Never synthesize data.** Unknown counts/dates are `null`, never zero-filled; missing baselines display "暂无基线", not nearest-date substitution. Unstarred-before-creation days are the only legitimate inferred zeros.
+- **Availability lifecycle**: records without a traceable API sampling timestamp (`fetchedAt`) stay `unverified` candidates, excluded from all rankings; only a successful API response promotes them to `available`; 404s become `unavailable`.
+- **Exact UTC-date baselines**: growth deltas compare against the exact date 1/7/30 days prior; day-boundary handling for official history follows the API's week timestamps, not UTC midnight assumptions.
+- **Only repos created within the rolling last 3 years** are kept; the collector prunes aged-out repos and their history each run.
+- Only public repositories, enforced at both collection and API-mapping layers.

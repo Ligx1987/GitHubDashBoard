@@ -1,11 +1,11 @@
-﻿import { createServer } from 'node:http';
+import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const port = Number(process.env.PORT || 4173);
-const publicFiles = new Set(['index.html', 'help.html', 'app.js', 'styles.css', 'favicon.svg', 'src/data/github-data.js', 'src/data/history.js', 'src/data/github-snapshot.json', 'src/data/star-history.json']);
+const publicFiles = new Set(['index.html', 'help.html', 'app.js', 'styles.css', 'favicon.svg', 'src/data/github-data.js', 'src/data/history.js', 'src/data/star-activity.js', 'src/data/star-activity.json', 'src/data/github-snapshot.json', 'src/data/star-history.json']);
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json; charset=utf-8' };
 let collecting = false;
 const collectionInterval = 2 * 60 * 60 * 1000;

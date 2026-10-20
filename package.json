@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "github-pulse-dashboard",
   "private": true,
   "version": "1.1.0",
@@ -9,6 +9,7 @@
     "dev": "node scripts/serve.mjs",
     "preview": "node scripts/serve.mjs",
     "sync": "node scripts/sync-github-data.mjs",
+    "sync:history": "node scripts/sync-github-data.mjs --history-only",
     "test": "node --test tests/*.test.mjs"
   }
 }

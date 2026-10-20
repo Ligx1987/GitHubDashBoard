@@ -37,13 +37,14 @@ jobs:
           path: |
             src/data/github-snapshot.json
             src/data/star-history.json
+            src/data/star-activity.json
           retention-days: 7
       - name: Commit and push collected data
         if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/github-snapshot.json src/data/star-history.json
+          git add src/data/github-snapshot.json src/data/star-history.json src/data/star-activity.json
           if git diff --cached --quiet; then
             echo "No data changed."
             exit 0

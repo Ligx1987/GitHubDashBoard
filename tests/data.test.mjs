@@ -4,14 +4,74 @@ import { readFile } from 'node:fs/promises';
 import { calculateGrowth, buildTrendSeries } from '../src/data/history.js';
 import {
   assembleSnapshot, selectProjects, licenseRisk, scoreOpportunity, projectFromGitHub,
-  fetchGitHubProjects, loadDashboardData, translateProjects,
+  fetchGitHubProjects, loadDashboardData, translateProjects, translateWithProvider,
+  classifyRepository, CATEGORY_VERSION,
 } from '../src/data/github-data.js';
 
 const NOW = Date.parse('2026-09-28T12:00:00Z');
 const fixture = (fullName, extra = {}) => ({
-  fullName, stars: 120, forks: 15, openIssues: 2, license: 'MIT', category: 'web',
+  fullName, stars: 120, forks: 15, openIssues: 2, license: 'MIT', category: 'web', categoryVersion: CATEGORY_VERSION,
   fetchedAt: '2026-09-28T11:00:00Z', pushedAt: '2026-09-28T10:00:00Z',
   createdAt: '2026-09-25T00:00:00Z', contributors: null, ...extra,
+});
+
+test('classification uses domain evidence instead of broad first-match keywords', () => {
+  assert.equal(classifyRepository({
+    fullName: 'storytold/photocraft', name: 'photocraft', language: 'Rust',
+    description: 'An open-source photo editor written in pure Rust',
+    topics: ['art', 'image-editing', 'photo-editing'],
+  }), 'creative');
+  assert.equal(classifyRepository({
+    fullName: 'apple/container', name: 'container', language: 'Swift',
+    description: 'A tool for creating and running Linux containers using lightweight virtual machines on a Mac',
+    topics: [],
+  }), 'infra');
+  assert.equal(classifyRepository({
+    fullName: 'deepseek-ai/DeepSeek-V3', name: 'DeepSeek-V3', language: 'Python',
+    description: '', topics: [],
+  }), 'ai');
+  assert.equal(classifyRepository({
+    fullName: 'krahets/hello-algo', name: 'hello-algo', language: 'Java',
+    description: '动画图解的数据结构与算法教程，提供多种语言代码实现',
+    topics: ['algorithm', 'data-structures', 'tutorial'],
+  }), 'knowledge');
+  assert.equal(classifyRepository({
+    fullName: 'storytold/wordcraft', name: 'wordcraft', language: 'Rust',
+    description: 'An open-source, clean-room reimplementation of Microsoft Word in pure Rust',
+    topics: [],
+  }), 'productivity');
+  assert.notEqual(classifyRepository({
+    fullName: 'ARahim3/DigUp', name: 'DigUp', language: 'Swift',
+    description: "Search your Mac by what's in your files: photos, PDFs, recordings, videos and code. On-device, built on Google DeepMind's EmbeddingGemma 2.",
+    topics: ['swift', 'macos', 'semantic-search'],
+  }), 'mobile');
+  assert.equal(classifyRepository({
+    fullName: 'cdyforever/how-to-live-better', name: 'how-to-live-better', language: 'HTML',
+    description: '《高性价比人生指南》全书 528 条的在线单页阅读版：手机可读、可搜索、零依赖、支持离线',
+    topics: [],
+  }), 'knowledge');
+  assert.equal(classifyRepository({
+    fullName: 'xai-org/grok-1', name: 'grok-1', language: 'Python',
+    description: 'Grok open release', topics: [],
+  }), 'ai');
+});
+
+test('assembly recalculates stale legacy categories', () => {
+  const snapshot = assembleSnapshot([fixture('a/photo', {
+    category: 'developer-tools', categoryVersion: 1, name: 'photocraft', language: 'Rust',
+    description: 'An open-source photo editor written in pure Rust',
+    topics: ['art', 'image-editing', 'photo-editing'],
+  })], { now: NOW });
+  assert.equal(snapshot.projects[0].category, 'creative');
+});
+
+test('secondary classification labels participate in search', () => {
+  const snapshot = assembleSnapshot([fixture('morluto/rea', {
+    category: 'mobile', categoryVersion: 1, name: 'rea', language: 'TypeScript',
+    description: 'Reverse engineer anything with agents, from app behavior down to native binaries.',
+    topics: ['agent-skills', 'ai-agents', 'binary-analysis', 'claude-code', 'cli', 'developer-tools', 'llm', 'mcp', 'reverse-engineering', 'static-analysis'],
+  })], { now: NOW });
+  assert.equal(selectProjects(snapshot, { query: '安全' })[0]?.fullName, 'morluto/rea');
 });
 
 test('growth requires exact UTC 1/7/30-day baselines, including negative net changes', () => {
@@ -51,8 +111,8 @@ test('assembly ignores legacy growth, missing dates and stale endpoints', () => 
   assert.deepEqual(snapshot.coverage.growth, { today: 0, week: 1, month: 0 });
   assert.equal(snapshot.stats.projects, 2);
   assert.equal(snapshot.coverage.unverified, 1);
-  assert.deepEqual(snapshot.weeklyTop10.map((project) => project.fullName), ['a/current']);
-  assert.deepEqual(snapshot.monthlyTop30, []);
+  assert.deepEqual(snapshot.weeklyNetTop10.map((project) => project.fullName), ['a/current']);
+  assert.deepEqual(snapshot.monthlyNetTop30, []);
 });
 
 test('legacy candidates stay out of statistics and rankings until a real API observation promotes them', () => {
@@ -101,11 +161,11 @@ test('weekly and monthly growth ranks have the correct metric and list sizes', (
   const projects = Array.from({ length: 35 }, (_, index) => fixture(`a/repo-${index}`, { stars: 1000 + index }));
   const history = Object.fromEntries(projects.map((project, index) => [project.fullName, { '2026-09-21': 1000, '2026-08-29': 1000 + 2 * index }]));
   const snapshot = assembleSnapshot(projects, { now: NOW, history });
-  assert.equal(snapshot.weeklyTop10.length, 10);
-  assert.equal(snapshot.weeklyTop10[0].fullName, 'a/repo-34');
-  assert.equal(snapshot.monthlyTop30.length, 30);
-  assert.equal(snapshot.monthlyTop30[0].fullName, 'a/repo-0');
-  assert.equal(snapshot.monthlyTop30[29].monthStars, -29);
+  assert.equal(snapshot.weeklyNetTop10.length, 10);
+  assert.equal(snapshot.weeklyNetTop10[0].fullName, 'a/repo-34');
+  assert.equal(snapshot.monthlyNetTop30.length, 30);
+  assert.equal(snapshot.monthlyNetTop30[0].fullName, 'a/repo-0');
+  assert.equal(snapshot.monthlyNetTop30[29].monthStars, -29);
 });
 
 test('trend uses actual consecutive daily samples with explicit partial coverage', () => {
@@ -122,9 +182,9 @@ test('unknown licenses and incomplete inputs never get invented opportunity scor
   assert.equal(licenseRisk('MPL-2.0'), 'copyleft');
   assert.equal(licenseRisk('MIT'), 'permissive');
   assert.equal(licenseRisk('BUSL-1.1'), 'risky');
-  assert.equal(scoreOpportunity(fixture('a/repo', { weekStars: null }), NOW), null);
-  assert.equal(scoreOpportunity(fixture('a/repo', { weekStars: 10, license: 'NOASSERTION' }), NOW), null);
-  const score = scoreOpportunity(fixture('a/repo', { weekStars: 10 }), NOW);
+  assert.equal(scoreOpportunity(fixture('a/repo', { weekAdded: null }), NOW), null);
+  assert.equal(scoreOpportunity(fixture('a/repo', { weekAdded: 10, license: 'NOASSERTION' }), NOW), null);
+  const score = scoreOpportunity(fixture('a/repo', { weekAdded: 10 }), NOW);
   assert.ok(Number.isFinite(score) && score >= 0 && score <= 100);
 });
 
@@ -205,6 +265,28 @@ test('loading saved data uses persisted sampling times and preserves original hi
   assert.equal(snapshot.projects[0].weekStars, null);
   assert.equal(snapshot.history['a/one']['2026-09-24'], 120);
   assert.equal(snapshot.warning, 'historical sample');
+});
+
+test('translation prefers Google and reports the provider that served the text', async (t) => {
+  const seen = [];
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    seen.push(String(url));
+    if (String(url).includes('translate.googleapis.com')) {
+      return new Response(JSON.stringify([[['开发工具', 'Developer tool', null, null, 10], ['套件', ' suite', null, null, 10]], null, 'en']), { status: 200 });
+    }
+    return new Response('{}', { status: 503 });
+  });
+  const result = await translateWithProvider('Developer tool suite');
+  assert.deepEqual(result, { text: '开发工具套件', provider: 'google' });
+  assert.equal(seen.length, 1); // No MyMemory fallback request once Google answers.
+});
+
+test('translation falls back to MyMemory when Google is unavailable', async (t) => {
+  t.mock.method(globalThis, 'fetch', async (url) => String(url).includes('translate.googleapis.com')
+    ? new Response('{}', { status: 429 })
+    : new Response(JSON.stringify({ responseStatus: 200, responseData: { translatedText: '开发工具' } }), { status: 200 }));
+  const result = await translateWithProvider('Developer tool');
+  assert.deepEqual(result, { text: '开发工具', provider: 'mymemory' });
 });
 
 test('explicit translation preserves source and leaves text untouched on service error', async (t) => {

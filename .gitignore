@@ -1,3 +1,6 @@
 # local investigation workspace and generated reports
 .scratch/
 *.xlsx
+
+# transient collector mutex
+src/data/.sync.lock

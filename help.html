@@ -1,18 +1,42 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>数据口径与使用说明 · GitHub Pulse</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./styles.css"><style>body{padding:32px 20px}main{max-width:840px;margin:auto;font-size:16px;line-height:1.8}h1{font-size:28px}h2{font-size:20px;margin-top:32px}a{color:#62d59b}code{color:#8ecbff}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #32435d;padding:12px;vertical-align:top}p,li{color:#a5b5c9}</style></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>数据口径与使用说明 · GitHub Pulse</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./styles.css"><style>body{padding:32px 20px}main{max-width:840px;margin:auto;font-size:16px;line-height:1.8}h1{font-size:28px}h2{font-size:20px;margin-top:32px}a{color:#62d59b}code{color:#8ecbff}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #32435d;padding:12px;vertical-align:top}p,li{color:#a5b5c9}.token-form{margin:16px 0;padding:16px;border:1px solid #32435d;border-radius:10px}.token-form label{display:block;font-size:14px;margin-bottom:10px}.token-row{display:flex;gap:8px}.token-row input{flex:1;min-width:0;background:#0d1117;border:1px solid #32435d;border-radius:7px;color:#e6edf3;padding:9px;font-size:13px}.token-row button{background:#1c2733;border:1px solid #32435d;border-radius:7px;color:#e6edf3;padding:9px 14px;font-size:13px;cursor:pointer}.token-row button:hover{border-color:#62d59b}.token-note{font-size:12px;margin:10px 0 0}</style></head>
 <body><main><a href="./index.html">← 返回看板</a><h1>数据口径与使用说明</h1><p>看板记录已收录公开仓库的真实采样。覆盖范围有限，无法代表全部 GitHub 工程；每个仓库的采样时间可能不同。</p>
 <h2>开始使用</h2><p>运行 <code>npm run dev</code>，打开 <code>http://localhost:4173</code>。页面先读取保存的快照，再自动请求公开 GitHub 数据，之后每 30 分钟刷新。无需 Token 即可使用；限额不足时保留最近快照并显示原因。</p><p>搜索和领域筛选会先作用于全部已收录仓库，再分别计算各个 Top 榜。点击仓库行可打开 GitHub。Ctrl/⌘ + K 聚焦搜索，回车打开搜索结果中的首个已收录工程。</p>
 <h2>每项数字是什么意思</h2><table><tr><th>区域</th><th>统计口径</th></tr>
 <tr><td>已收录工程</td><td>公开采样集合，不是 GitHub 全站总数。404 或不可公开访问的仓库不参与榜单。</td></tr>
 <tr><td>每日更新</td><td>GitHub 最近推送时间位于过去 24 小时；不把新增 Star 当作代码更新。</td></tr>
-<tr><td>周 Top10、月 Top30</td><td>当前 UTC 日采样的 Stars 减去前 7 / 30 个 UTC 日期的最后保存值。按日采样，不是精确到小时的滚动窗口；取消收藏会产生负净增。</td></tr>
+<tr><td>一周 / 一月飙升榜</td><td>对全部已收录工程按最近 7 / 30 个完整统计日的官方新增 Stars 排名，各取 Top30，不限创建时间；创建已久的工程近期爆发同样入榜。🚀 表示本周新增达到上周 3 倍以上（上周为零且本周达到最低量级视为新爆发）。日界不一致或历史缺失的工程计入待补，不补零。</td></tr>
+<tr><td>三日 Top10、每周 Top10、每月 Top30</td><td>仅统计最近 3 / 7 / 30 个完整统计日内新建的工程，按相同窗口的官方新增 Stars 排序。创建时间使用 GitHub created_at，不以首次收录代替。日界按接口返回，各榜采用共同日界；当前未结束统计日内新建的工程下一统计日再纳入。同一工程可进入多个榜，缺少历史不补零。</td></tr>
 <tr><td>暂无基线 / —</td><td>缺少真实历史或对应字段，不能计算；不代表涨星为 0，也不会显示模拟值。</td></tr>
-<tr><td>7 日曲线</td><td>相邻 UTC 日期的真实 Stars 差，标明每日覆盖的仓库数。缺测留空，不同日期样本范围可能不同。</td></tr>
-<tr><td>新建及年度榜</td><td>按 GitHub 仓库创建日期筛选、按采样时总 Stars 排序。年度榜不是某个历史年度内的涨星榜。</td></tr>
-<tr><td>分类</td><td>基于 topics、名称、描述、语言的自定义规则，可有误差；未命中显示“未分类”。</td></tr>
-<tr><td>商机研究</td><td>本项目的参考分，不是官方评价或商业授权判断。必要数据不足时不评分；未知许可证单独标注。</td></tr>
+<tr><td>7 日曲线</td><td>默认显示 GitHub 官方最近 7 个完整统计日的新增 Stars，仅汇总日界一致且历史完整的工程。切换本地净增后显示相邻 UTC 日期的总 Stars 差。缺测留空。</td></tr>
+<tr><td>近三年总星榜</td><td>仅收录近三年创建的工程（滚动窗口）：当前 UTC 年及窗口内此前年份按创建年份分组，每年各取 Top30；按当前累计总 Stars 排序，不是该年新增或年底总 Stars。领域和搜索先筛选再排名，当前年默认展开，其余年份可折叠。</td></tr>
+<tr><td>辅助分析</td><td>趋势和顶部增长指标可切换本地净增，计算精确 UTC 日期的 Stars 采样差，包含取消收藏。三个新建工程主榜始终使用官方新增，切换辅助分析不会改变主榜。</td></tr>
+<tr><td>分类</td><td>基于 topics、描述、名称、语言的加权规则；主分类用于筛选，行内最多显示三个次标签，次标签也参与搜索。语言只是弱证据，规则可有误差；未命中显示“未分类”。</td></tr>
+<tr><td>中文描述</td><td>采集器每轮自动将一批工程描述机翻为中文并持久化（Google 翻译优先、MyMemory 兜底，按官方一周新增 Star 降序，飙升榜最先获得中文），页面默认显示中文，悬停可查看英文原文；原文变更后自动重译，翻译失败保留原文。</td></tr>
+<tr><td>商机研究</td><td>本项目的参考分，增速项使用官方一周新增 Stars；不是官方评价或商业授权判断。必要数据不足时不评分；未知许可证单独标注。</td></tr>
 <tr><td>采样新鲜度</td><td>最近 24 小时成功采集的仓库数。缺少可追溯采集时刻的旧导入记录仅保留为待核验候选，暂不参加当前榜单。</td></tr></table>
-<h2>让数据持续累积</h2><p>浏览器刷新仅更新页面内存。本地服务运行时每两小时自动采集并保存元数据与每日 Stars 历史；关闭本地服务后采集暂停。也可手动运行 <code>npm run sync</code>。首次运行只能建立基线，真实周/月涨幅需要相应日期的历史记录。</p><p>采集器按最旧成功时间分批更新，自动发现近期新建仓库；遇到限额会停止，下一轮继续未覆盖项。部分失败保留可用数据，全部失败会报告失败。项目附带每两小时采集的 GitHub Actions 配置，需要推送至 GitHub 并启用工作流才会执行；静态网站还须部署最新数据文件。</p>
-<h2>Token 与翻译</h2><p>可选 GitHub Token 只发往 GitHub、保存在当前标签页会话中。它提高请求额度，但不能生成缺失的历史。不要将 Token 写入工程文件或截图。控制台 <code>githubPulse.setToken('')</code> 可清除它。</p><p>描述默认保留 GitHub 原文。点击“翻译描述”会把当前筛选中的前 30 条（或已展开数量）描述发送至 MyMemory，结果标注“机器翻译”。失败或超时保留原文，不阻塞数据同步；翻译可能不准确。</p>
-<h2>为什么与 GitHub 页面不一样</h2><p>旧快照和当前 GitHub 值存在时间差；搜索只取高星工程及近 7 / 30 / 90 天新建范围的前 100 个结果。界面会披露更新数量和采样范围，因此空榜不能推断 GitHub 没有符合条件的仓库。</p><p>更多部署、采集命令和回归测试说明见工程内 README.md。</p></main></body></html>
+<h2>让数据持续累积</h2><p>浏览器刷新更新页面，并将成功取得的官方历史缓存到本地浏览器。本地服务运行时每两小时自动采集并保存元数据与每日 Stars 历史；关闭本地服务后采集暂停。也可手动运行 <code>npm run sync</code>。默认榜单可直接读取 GitHub 已有历史；只有本地净增模式需要对应日期的快照。可运行 <code>npm run sync:history</code> 单独补齐官方历史；遇到限额时显示错误并保留缓存，可配置 Token 后重试。</p><p>采集器按优先级分批更新：近期涨星较多（上周官方新增达到 100）的工程和最近推送临近 24 小时边界的工程优先，其余按最旧成功时间轮转。发现通道除近期新建与年度候选外，还按星数分层查询最近一周有推送的活跃仓库，新候选在同一轮内试探官方历史，确认增长后自动进入榜单。遇到限额会停止，下一轮继续未覆盖项。部分失败保留可用数据，全部失败会报告失败。项目附带每两小时采集的 GitHub Actions 配置，需要推送至 GitHub 并启用工作流才会执行；静态网站还须部署最新数据文件。</p>
+<h2>Token 与翻译</h2><p>可选 GitHub Token 只发往 GitHub、保存在当前标签页会话中。它提高请求额度，可用于读取官方历史；它不会补造接口缺失的记录。不要将 Token 写入工程文件或截图。控制台 <code>githubPulse.setToken('')</code> 可清除它。</p><div class="token-form"><label for="helpTokenInput">GitHub 连接设置</label><div class="token-row"><input id="helpTokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="公开数据无需 Token"><button id="helpTokenSave" type="button">保存</button><button id="helpTokenClear" type="button">清除</button></div><p class="token-note">保存在当前标签页会话；保存后返回看板点击“刷新数据”生效。<span id="helpTokenStatus"></span></p></div><p>描述默认保留 GitHub 原文。点击“翻译描述”会把当前筛选中的前 30 条（或已展开数量）描述发送至 MyMemory，结果标注“机器翻译”。失败或超时保留原文，不阻塞数据同步；翻译可能不准确。</p>
+<h2>为什么与 GitHub 页面不一样</h2><p>旧快照和当前 GitHub 值存在时间差；浏览器每批取 3 / 7 / 30 天新建候选及一个年度各前 100 项，四个年度分批轮换。候选按总 Stars 搜索，取得历史后才按窗口新增排名。页面披露历史覆盖与待补数量，榜单不足时显示实际数量，不代表 GitHub 没有其他符合条件的工程。工程收录范围限定为近三年创建（滚动窗口），超龄工程每轮采集时自动移除。</p><p>更多部署、采集命令和回归测试说明见工程内 README.md。</p></main><script>
+(function () {
+  var KEY = 'githubPulse.token';
+  var input = document.getElementById('helpTokenInput');
+  var status = document.getElementById('helpTokenStatus');
+  function configured() {
+    try { return !!sessionStorage.getItem(KEY); } catch { return false; }
+  }
+  function paint() { input.placeholder = configured() ? '本会话已配置 Token（可重新输入）' : '公开数据无需 Token'; }
+  document.getElementById('helpTokenSave').addEventListener('click', function () {
+    var value = input.value.trim();
+    if (!value) { status.textContent = ' 请先输入 Token。'; return; }
+    try { sessionStorage.setItem(KEY, value); } catch { status.textContent = ' 浏览器存储不可用。'; return; }
+    input.value = ''; paint(); status.textContent = ' 已保存到本会话。';
+  });
+  document.getElementById('helpTokenClear').addEventListener('click', function () {
+    try { sessionStorage.removeItem(KEY); } catch {}
+    input.value = ''; paint(); status.textContent = ' 已清除。';
+  });
+  paint();
+})();
+</script></body></html>

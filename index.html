@@ -4,67 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#111315" />
-  <meta name="description" content="GitHub Pulse：查看已收录公开仓库的真实快照、代码更新与历史净涨星排行。" />
-  <title>GitHub Pulse · 工程看板</title>
+  <meta name="description" content="GitHub Pulse：追踪近期最火的开源工程——飙升榜、新建工程榜与真实涨星历史。" />
+  <title>GitHub Pulse · 近期什么火</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
 <div class="app-shell">
   <aside class="sidebar" aria-label="主导航">
-    <a class="brand" href="#overview" aria-label="GitHub Pulse 总览"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">GitHub <em>Pulse</em></div><div class="brand-caption">OPEN SOURCE OBSERVATORY</div></div></a>
+    <a class="brand" href="#surging" aria-label="GitHub Pulse 飙升榜"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">GitHub <em>Pulse</em></div><div class="brand-caption">OPEN SOURCE OBSERVATORY</div></div></a>
     <nav class="nav-group">
       <div class="nav-label">工作空间</div>
-      <a href="#overview" class="nav-item active" data-view="overview" aria-current="location"><span class="nav-icon" aria-hidden="true">◫</span>工程总览<span class="nav-end">01</span></a>
-      <a href="#rising" class="nav-item" data-view="rising"><span class="nav-icon" aria-hidden="true">↗</span>每日更新<span class="nav-end">02</span></a>
-      <a href="#rankings" class="nav-item" data-view="rankings"><span class="nav-icon" aria-hidden="true">≋</span>涨星榜单<span class="nav-end">03</span></a>
+      <a href="#surging" class="nav-item active" data-view="surging" aria-current="location"><span class="nav-icon" aria-hidden="true">🚀</span>飙升榜<span class="nav-end">01</span></a>
+      <a href="#rankings" class="nav-item" data-view="rankings"><span class="nav-icon" aria-hidden="true">≋</span>新建工程榜<span class="nav-end">02</span></a>
+      <a href="#trend" class="nav-item" data-view="trend"><span class="nav-icon" aria-hidden="true">↗</span>一周趋势<span class="nav-end">03</span></a>
       <a href="#directory" class="nav-item" data-view="directory"><span class="nav-icon" aria-hidden="true">⌘</span>工程目录<span class="nav-end">04</span></a>
-    </nav>
-    <nav class="nav-group saved-group">
-      <div class="nav-label">快捷探索</div>
-      <a href="#categories" class="nav-item" data-category="ai"><i class="nav-color purple"></i>AI & 机器学习</a>
-      <a href="#categories" class="nav-item" data-category="web"><i class="nav-color blue"></i>Web & 前端</a>
-      <a href="#rankings" class="nav-item" data-search="rust"><i class="nav-color orange"></i>Rust 工程</a>
+      <a href="#more" class="nav-item" data-view="more"><span class="nav-icon" aria-hidden="true">◷</span>更多视角<span class="nav-end">05</span></a>
     </nav>
     <div class="sidebar-footer">
-      <div class="sync-card"><span class="sync-symbol" aria-hidden="true">↻</span><div><strong>持续观察开源变化</strong><span>页面每 30 分钟刷新</span></div></div>
-      <details class="token-settings"><summary>GitHub 连接设置<span aria-hidden="true">＋</span></summary><div class="token-box"><label for="tokenInput">GitHub Token（可选）</label><input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="公开数据无需 Token" /><span class="token-hint">只用于 GitHub 请求，保存在当前标签页会话。输入后点击刷新数据。</span></div></details>
+      <div class="sync-card"><span class="sync-symbol" aria-hidden="true">↻</span><div><strong>持续观察开源变化</strong><span id="sidebarUpdated">最近采样 —</span></div></div>
       <div class="sidebar-links"><a href="./help.html"><span aria-hidden="true">ⓘ</span> 数据口径与使用说明 <span aria-hidden="true">↗</span></a></div>
       <div class="sidebar-caption">BUILT FOR THE CURIOUS.</div>
     </div>
   </aside>
   <main class="main-content">
     <header class="topbar">
-      <div class="breadcrumb"><span class="breadcrumb-icon" aria-hidden="true">◈</span><span>工作空间</span><span class="slash">/</span><strong>工程总览</strong></div>
+      <div class="breadcrumb"><span class="breadcrumb-icon" aria-hidden="true">◈</span><span>工作空间</span><span class="slash">/</span><strong>飙升榜</strong></div>
       <div class="topbar-actions"><label class="search-box" aria-label="搜索工程"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="searchInput" type="search" aria-label="搜索工程" placeholder="搜索工程、语言或组织…" autocomplete="off" /><kbd>⌘ K</kbd></label><button class="icon-button theme-toggle" id="themeToggle" aria-label="切换主题" title="切换主题"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4 19 5"/></svg></button></div>
     </header>
     <div class="content-wrap">
-      <section class="hero-row" id="overview"><div><div class="section-kicker">YOUR OPEN SOURCE RADAR</div><h1>发现开源的<span>下一站。</span></h1><p class="hero-subtitle">追踪代码更新，发现新项目，让值得关注的工程浮出水面。</p></div><div class="hero-actions"><button class="secondary-button" id="translateButton">文 <span>翻译描述</span></button><button class="refresh-button" id="refreshButton"><span class="refresh-icon" aria-hidden="true">↻</span>刷新数据</button></div></section>
+      <section class="hero-row hero-slim"><div><div class="section-kicker">YOUR OPEN SOURCE RADAR</div><p class="hero-subtitle">最近什么火，一眼看到。追踪真实涨星，发现值得关注的工程。</p></div><div class="hero-actions"><button class="secondary-button" id="translateButton">文 <span>翻译描述</span></button><button class="refresh-button" id="refreshButton"><span class="refresh-icon" aria-hidden="true">↻</span>刷新数据</button></div></section>
       <div class="provenance-bar"><div class="source-status"><span class="source-mark" aria-hidden="true">◉</span><span id="sourceLabel">正在读取快照</span><span class="source-divider">/</span><span id="lastUpdated">—</span></div><details class="provenance-details" id="provenanceDetails"><summary><span id="provenanceSummary">数据范围与统计口径</span> <span aria-hidden="true">⌄</span></summary><div id="dataStatus" class="data-status" role="status">正在加载真实采样数据…</div></details></div>
       <section class="metrics-grid" aria-label="关键指标">
         <article class="metric-card metric-main"><div class="metric-header"><span class="metric-label">已核验公开工程</span><span class="metric-symbol" aria-hidden="true">◫</span></div><div class="metric-value-row"><strong id="trackedCount">—</strong><span class="metric-unit">个工程</span></div><div class="metric-foot">当前采样集合 · 非全站总数</div></article>
         <article class="metric-card"><div class="metric-header"><span class="metric-label">近 24 小时代码更新</span><span class="metric-symbol" aria-hidden="true">↗</span></div><div class="metric-value-row"><strong id="newToday">—</strong><span class="metric-unit">个工程</span></div><div class="metric-foot" id="activityCoverage">按最近推送时间统计</div></article>
-        <article class="metric-card"><div class="metric-header"><span class="metric-label">近 7 天净增 Stars</span><span class="metric-symbol" aria-hidden="true">☆</span></div><div class="metric-value-row"><strong id="weeklyStars">—</strong></div><div class="metric-foot" id="growthCoverage">等待历史基线</div></article>
-        <article class="metric-card"><div class="metric-header"><span class="metric-label">采样新鲜度</span><span class="metric-symbol" aria-hidden="true">◷</span></div><div class="metric-value-row"><strong id="freshCount">—</strong></div><div class="metric-foot">24 小时内成功采样 / 已核验</div></article>
+        <article class="metric-card"><div class="metric-header"><span class="metric-label" id="growthMetricLabel">近 7 个完整日新增 Stars</span><span class="metric-symbol" aria-hidden="true">☆</span></div><div class="metric-value-row"><strong id="weeklyStars">—</strong></div><div class="metric-foot" id="growthCoverage">等待历史基线</div></article>
       </section>
-      <section class="filter-strip" id="categories" aria-label="领域筛选"><div class="filter-label"><span aria-hidden="true">☷</span> 探索领域</div><div class="category-tabs" role="group" aria-label="分类筛选"></div></section>
+      <section class="filter-strip" id="categories" aria-label="领域筛选"><div class="filter-label"><span aria-hidden="true">☷</span> 探索领域</div><div class="category-tabs" id="categoryTabs" role="group" aria-label="分类筛选"></div></section>
+      <div class="section-heading" id="surging"><div><span class="section-number">01</span><h2>近期飙升榜</h2></div><span>不限创建时间 · 官方新增 Stars</span></div>
+      <section class="panel ranking-panel surge-panel" aria-label="近期飙升排行榜"><div class="panel-heading"><div class="ranking-title"><span class="rank-symbol" aria-hidden="true">🚀</span><div><h2>谁在快速涨星</h2><span class="panel-subtitle" id="surgeSubtitle">近 7 个完整统计日 · 新增 Stars</span></div></div><div class="category-tabs board-tabs" id="surgeTabs" role="group" aria-label="飙升榜周期"><button class="category-tab active" data-days="7" aria-pressed="true">7 日</button><button class="category-tab" data-days="30" aria-pressed="false">30 日</button></div></div><div class="ranking-table" id="surgeBoardTable"></div><p class="panel-note" id="surgeNote"></p><p class="panel-note history-status" id="historyStatus" role="status">正在读取 GitHub 官方历史缓存…</p></section>
       <section class="main-grid">
-        <article class="panel activity-panel" id="rising"><div class="panel-heading"><div><span class="panel-eyebrow">RECENT ACTIVITY</span><h2>代码正在发生变化<span class="heading-tag">24h</span></h2></div><button class="text-button" id="activityExpand">查看全部</button></div><div class="activity-list" id="activityList"></div></article>
-        <article class="panel trend-panel"><div class="panel-heading"><div><span class="panel-eyebrow">STAR MOMENTUM</span><h2>一周净增走势</h2></div><span class="period-label">UTC · 7 天</span></div><div id="trendChart" class="observed-chart"></div><p class="panel-note" id="trendNote">相邻日期真实采样；缺测留空。</p></article>
-        <article class="panel category-panel"><div class="panel-heading"><div><span class="panel-eyebrow">THE OPEN SOURCE MIX</span><h2>领域分布</h2></div><span class="period-label">全部已核验样本</span></div><div class="category-body"><div class="category-visual"><div class="donut"><div class="donut-center"><strong>—</strong><span>个工程</span></div></div><div class="legend"></div></div><div class="spotlight" id="spotlightCard"></div></div><p class="panel-note">按主题与描述自动分类，可能存在误差。</p></article>
+        <article class="panel ranking-panel growth-panel" id="rankings"><div class="panel-heading"><div class="ranking-title"><span class="rank-symbol violet" aria-hidden="true">↗</span><div><h2>新建工程榜</h2><span class="panel-subtitle" id="newSubtitle">近 7 个完整统计日新建 · 新增 Stars</span></div></div><div class="category-tabs board-tabs" id="newTabs" role="group" aria-label="新建榜周期"><button class="category-tab" data-days="3" aria-pressed="false">3 日</button><button class="category-tab active" data-days="7" aria-pressed="true">7 日</button><button class="category-tab" data-days="30" aria-pressed="false">30 日</button></div></div><div class="ranking-table" id="newBoardTable"></div><p class="panel-note" id="newNote"></p></article>
+        <article class="panel trend-panel" id="trend"><div class="panel-heading"><div><span class="panel-eyebrow">STAR MOMENTUM</span><h2 id="trendTitle">一周新增走势</h2></div><label class="growth-mode">辅助分析 <select id="growthMode" aria-label="辅助分析统计口径"><option value="added">官方新增 Stars</option><option value="net">本地净增 Stars</option></select></label></div><div id="trendChart" class="observed-chart"></div><span class="period-label trend-period" id="trendPeriod">GitHub 统计日</span><p class="panel-note" id="trendNote">相邻日期真实采样；缺测留空。</p></article>
       </section>
-      <div class="section-heading" id="rankings"><div><span class="section-number">01</span><h2>涨星排行榜</h2></div><span>看见持续增长的项目</span></div>
-      <section class="rankings-grid">
-        <article class="panel ranking-panel growth-panel"><div class="panel-heading"><div class="ranking-title"><span class="rank-symbol" aria-hidden="true">↗</span><div><h2>一周涨星榜</h2><span class="panel-subtitle">过去 7 天 · 净增 Stars</span></div></div><span class="top-badge">TOP 10</span></div><div class="ranking-table" id="weeklyTable"></div><p class="panel-note" id="weeklyNote"></p></article>
-        <article class="panel ranking-panel growth-panel"><div class="panel-heading"><div class="ranking-title"><span class="rank-symbol violet" aria-hidden="true">☆</span><div><h2>月度涨星榜</h2><span class="panel-subtitle">过去 30 天 · 净增 Stars</span></div></div><span class="top-badge">TOP 30</span></div><div class="ranking-table" id="monthlyTable"></div><p class="panel-note" id="monthlyNote"></p></article>
-      </section>
-      <div class="section-heading"><div><span class="section-number">02</span><h2>发现与研究</h2></div><span>从新项目到长期价值</span></div>
-      <section class="discovery-grid">
-        <article class="panel ranking-panel new-panel"><div class="panel-heading"><div><span class="panel-eyebrow">JUST GETTING STARTED</span><h2>近期新建 <span class="heading-tag">Top 10</span></h2></div><div class="period-tabs" role="group" aria-label="新建时间范围"><button class="period-tab active" data-days="7">7 天</button><button class="period-tab" data-days="30">30 天</button><button class="period-tab" data-days="90">90 天</button></div></div><p class="panel-note">按创建日期筛选，以当前采样的总 Stars 排序。</p><div class="ranking-table" id="newProjectsTable"></div></article>
-        <article class="panel ranking-panel opportunity-panel"><div class="panel-heading"><div><span class="panel-eyebrow">RESEARCH SIGNALS</span><h2>商机研究 <span class="heading-tag">Top 10</span></h2></div></div><p class="panel-note">结合增速、采用度与活跃度的参考分，所需数据齐全才参与。</p><div class="ranking-table" id="opportunityTable"></div><div class="research-note"><span aria-hidden="true">ⓘ</span><p>评分仅供研究参考。未知许可证单独标注，不能据此推断商业授权。</p></div></article>
-      </section>
-      <details class="panel yearly-panel"><summary class="panel-heading"><div class="ranking-title"><span class="rank-symbol neutral" aria-hidden="true">◷</span><div><h2>按年份探索工程</h2><span class="panel-subtitle">各分类 Top 10 · 按仓库创建年份</span></div></div><span class="details-action">展开探索 <span aria-hidden="true">＋</span></span></summary><div class="yearly-content"><div class="yearly-toolbar"><p class="panel-note">按当前总 Stars 排序，不是该年份的历史涨星榜。</p><div class="year-chips" id="yearChips" role="group" aria-label="选择年份"></div></div><div class="yearly-board" id="yearlyBoard"></div></div></details>
-      <section class="panel repository-panel" id="directory"><div class="panel-heading"><div><span class="panel-eyebrow">PROJECT DIRECTORY</span><h2>全部已核验工程</h2></div><span id="browseCount" class="metric-period"></span></div><div class="table-guide"><span>仓库 / 描述</span><span>Stars / Forks</span></div><div class="ranking-table" id="repositoryTable"></div><div class="load-more-wrap"><button class="secondary-button" id="loadMore">再显示 30 个 <span aria-hidden="true">↓</span></button></div></section>
+      <section class="panel repository-panel" id="directory"><div class="panel-heading"><div><span class="panel-eyebrow">PROJECT DIRECTORY</span><h2>工程目录</h2></div><div class="panel-heading-side"><span class="scope-badge" title="创建时间早于三年滚动窗口的工程会自动移除">仅收录近三年创建的工程</span><span id="browseCount" class="metric-period"></span></div></div><p class="panel-note">默认按近一周官方新增 Stars 排序；未知增长的按总 Stars 兜底。搜索与领域筛选同步作用于本目录和上方榜单。</p><div class="table-guide"><span>仓库 / 描述</span><span>Stars / Forks / 周新增</span></div><div class="ranking-table" id="repositoryTable"></div><div class="load-more-wrap"><button class="secondary-button" id="loadMore">再显示 30 个 <span aria-hidden="true">↓</span></button></div></section>
+      <div class="section-heading" id="more"><div><span class="section-number">02</span><h2>更多视角</h2></div><span>年度总星 · 商机评分 · 每日更新</span></div>
+      <details class="panel more-panel" id="morePanel"><summary class="more-summary">展开更多视角（年度总星榜、商机研究、每日更新）<span aria-hidden="true">⌄</span></summary>
+        <div class="more-body">
+          <section class="yearly-panel" aria-label="近三年总星排行榜"><div class="panel-heading"><div><span class="panel-eyebrow">STARS BY CREATION YEAR</span><h2>每年新建工程总星榜</h2></div></div><p class="panel-note">仅收录近三年创建的工程：当前 UTC 年及滚动窗口内的此前年份，每年独立排名；按最近成功采样的累计 Stars 排序。领域与搜索筛选后重新排名。</p><div class="yearly-content"><div class="yearly-board" id="yearlyBoard"></div></div></section>
+          <section class="ranking-panel opportunity-panel"><div class="panel-heading"><div><span class="panel-eyebrow">RESEARCH SIGNALS</span><h2>商机研究 <span class="heading-tag">Top 10</span></h2></div></div><p class="panel-note">结合官方一周新增 Stars、采用度与活跃度的参考分，所需数据齐全才参与。</p><div class="ranking-table" id="opportunityTable"></div><div class="research-note"><span aria-hidden="true">ⓘ</span><p>评分仅供研究参考。未知许可证单独标注，不能据此推断商业授权。</p></div></section>
+          <section class="activity-panel" aria-label="每日更新"><div class="panel-heading"><div><span class="panel-eyebrow">RECENT ACTIVITY</span><h2>代码正在发生变化<span class="heading-tag">24h</span></h2></div><button class="text-button" id="activityExpand">查看全部</button></div><div class="activity-list" id="activityList"></div></section>
+        </div>
+      </details>
       <footer class="page-footer"><span>GitHub Pulse <span class="footer-separator">/</span> GitHub REST API · 已采样公开仓库 <span class="footer-separator">/</span> <a href="./help.html">使用说明 ↗</a></span><span>最近成功采样 <strong id="footerUpdated">—</strong></span></footer>
     </div>
   </main>
