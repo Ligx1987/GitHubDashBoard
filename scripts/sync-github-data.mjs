@@ -25,8 +25,19 @@ export function recordDailySample(history, fullName, stars, sampledAt) {
       Date.parse(date) >= cutoff && Date.parse(date) <= Date.parse(day(sampledAt))));
     if (Object.keys(kept).length) next[name] = kept;
   }
+  // Case variants of the same repository (e.g. after an owner rename) are one
+  // repo: fold them into the canonical current casing instead of keeping
+  // duplicate keys that strict JSON parsers reject.
+  const lower = fullName.toLowerCase();
+  let record = {};
+  for (const name of Object.keys(next)) {
+    if (name.toLowerCase() === lower) {
+      record = { ...record, ...next[name] };
+      delete next[name];
+    }
+  }
   // Only today's last sample changes. Earlier UTC days remain fixed baselines.
-  next[fullName] = { ...next[fullName], [day(sampledAt)]: stars };
+  next[fullName] = { ...record, [day(sampledAt)]: stars };
   return next;
 }
 
@@ -157,7 +168,12 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   now = () => new Date().toISOString(), token = '', limit = 750, budget = 900,
   discover = true, discoveryPages = 2, reserve = 5, maxRuntimeMs = 20 * 60_000, activity = null,
   harvest = false, harvestMinStars = 1000, harvestMaxStars = null, harvestDelayMs = 2200 } = {}) {
-  if (!snapshot || !Array.isArray(snapshot.projects) || !snapshot.projects.length) {
+  if (!snapshot || !Array.isArray(snapshot.projects)) {
+    throw new Error('Missing repository registry: src/data/github-snapshot.json');
+  }
+  // An empty registry is valid only when discovery (or harvest) can seed it;
+  // a bare refresh of nothing is a misconfiguration.
+  if (!snapshot.projects.length && !discover && !harvest) {
     throw new Error('Missing repository registry: src/data/github-snapshot.json');
   }
   const startedAt = iso(now());
@@ -490,7 +506,11 @@ async function runSync(options) {
   const snapshotPath = join(ROOT, 'src/data/github-snapshot.json');
   const historyPath = join(ROOT, 'src/data/star-history.json');
   const activityPath = join(ROOT, 'src/data/star-activity.json');
-  const snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8'));
+  // Data files are local-only (gitignored); a fresh checkout or CI runner
+  // starts from an empty registry and rebuilds through discovery.
+  let snapshot = { schemaVersion: 1, projects: [] };
+  try { snapshot = JSON.parse(readFileSync(snapshotPath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (!Array.isArray(snapshot.projects)) snapshot.projects = [];
   let history = {};
   try { history = JSON.parse(readFileSync(historyPath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const token = resolveToken();

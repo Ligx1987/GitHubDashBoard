@@ -36,6 +36,16 @@ test('UTC rollover uses yesterday, preserves negative growth, and never invents 
   assert.deepEqual(calculateGrowth(next['owner/repo'], 98, '2026-09-29'), { todayStars: 3, weekStars: null, monthStars: null });
 });
 
+test('case-variant history keys fold into the canonical current casing', () => {
+  const old = {
+    'aidanpark/openclaw-android': { '2026-10-18': 10 },
+    'AidanPark/openclaw-android': { '2026-10-19': 12 },
+  };
+  const next = recordDailySample(old, 'AidanPark/openclaw-android', 15, '2026-10-20T01:00:00Z');
+  assert.deepEqual(Object.keys(next), ['AidanPark/openclaw-android']);
+  assert.deepEqual(next['AidanPark/openclaw-android'], { '2026-10-18': 10, '2026-10-19': 12, '2026-10-20': 15 });
+});
+
 test('metadata comes only from REST, including creation timestamp and unknown contributor count', () => {
   const actual = toSnapshotProject({ ...repository('vuejs/core'), created_at: '2018-06-12T13:49:36Z' }, NOW, { createdAt: '2013-07-29', contributors: 999, descriptionSource: 'legacy-editorial' });
   assert.equal(actual.createdAt, '2018-06-12T13:49:36.000Z');

@@ -55,7 +55,7 @@ Token 为可选项，只发往 GitHub，并保存在当前标签页的 sessionSt
 
 未保存可追溯采集时刻的旧导入记录仅保留为待核验候选，不参加当前统计与榜单；API 成功采集后才纳入。候选数量在页面上单独披露，既不把它们当作已核验数据，也不凭记录不完整就断言仓库不存在。
 
-同样缺少完整采集证据的 2026-09-24 旧历史已另存 `src/data/legacy-history.json`，不再作为有效涨星基线。合并远端采集提交时，保留 2026-09-25 起由采集器成功请求后写入的每日 Stars 记录；同日冲突优先保留与本地带时间戳元数据一致的采样。旧版内嵌模拟涨幅不导入，避免重新引入未经验证的差值。
+同样缺少完整采集证据的 2026-09-24 旧历史已另存 `src/data/legacy-history.json`，不再作为有效涨星基线。旧版内嵌模拟涨幅不导入，避免重新引入未经验证的差值。
 
 ## 持久化采集
 
@@ -77,7 +77,7 @@ npm run sync -- --dry --limit 5 --budget 10
 
 长期采集优先使用环境变量 `GITHUB_TOKEN`，未设置时也会尝试现有 `gh auth token`；凭据不写入快照或日志。GitHub 未认证 REST 通常只有 60 次/小时，个人 Token 通常为 5000 次/小时；GitHub Actions 内置 Token 通常为每仓库 1000 次/小时，以实际响应头为准。[官方限额说明](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
 
-`.github/workflows/sync-data.yml` 配置每两小时分批采集（每轮最多 750 个已有仓库，总请求预算 800，另受 API 剩余额度约束）、保存 artifact 并提交 JSON。需要把工程推送至 GitHub 默认分支并启用 Actions；该配置文件本身不证明远端定时任务已经运行。部署静态网页时还需让网站部署流程使用最新提交，浏览器不会把 API 结果自动写回 Git 仓库。
+`.github/workflows/sync-data.yml` 配置每两小时分批采集（每轮最多 750 个已有仓库，总请求预算 800，另受 API 剩余额度约束）。采集数据不再提交进 Git 仓库：每轮先下载上一轮发布的滚动 artifact `github-data-latest` 恢复数据，采集后再以同名 artifact 发布（保留 30 天），仓库不再承担大体积 JSON 的合并与膨胀。浏览器不会把 API 结果自动写回磁盘文件；本机数据以本地采集为准。
 
 ## 验证
 
@@ -89,10 +89,10 @@ npm test
 
 ## 文件
 
-- `src/data/github-snapshot.json`：采样仓库、原始计数、元数据、逐仓库时间和采集覆盖说明。
-- `src/data/star-history.json`：每个仓库每个 UTC 日期的最后成功 Stars 样本；采集器保留约 45 天。
+- `src/data/github-snapshot.json`：采样仓库、原始计数、元数据、逐仓库时间和采集覆盖说明。本地生成，不纳入 Git 跟踪。
+- `src/data/star-history.json`：每个仓库每个 UTC 日期的最后成功 Stars 样本；采集器保留约 45 天。本地生成，不纳入 Git 跟踪。
+- `src/data/star-activity.js` / `star-activity.json`：GitHub 官方日新增历史、聚合、缓存与限额回退。JSON 为本地生成，不纳入 Git 跟踪。
 - `src/data/history.js`：日采样净增与曲线。
-- `src/data/star-activity.js` / `star-activity.json`：GitHub 官方日新增历史、聚合、缓存与限额回退。
 - `src/data/github-data.js`：分类、聚合、API 映射、榜单筛选与可选翻译。
 - `scripts/sync-github-data.mjs`：持久化采集。
 - `scripts/serve.mjs`：仅提供页面需要的静态文件，隐藏目录、凭据和脚本不可通过网页读取。

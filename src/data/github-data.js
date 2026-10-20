@@ -1,6 +1,7 @@
 import { DAY_MS, utcDate, validStarCount, calculateGrowth, buildTrendSeries } from './history.js';
 import { emptyStarActivity, summarizeStarActivity, buildAddedTrend } from './star-activity.js';
 export { refreshStarActivity, mergeStarActivity, emptyStarActivity, buildAddedTrend } from './star-activity.js';
+export { buildTrendSeries } from './history.js';
 
 /** Dashboard categories are weighted local rules, not GitHub's classifications. */
 export const CATEGORY_VERSION = 2;
@@ -247,10 +248,24 @@ export function selectProjects(snapshot, {
     .slice(0, Math.max(0, limit)).map((project, index) => ({ ...project, rank: index + 1 }));
 }
 
-/** Use one API day boundary across all three boards, independent of filters. */
+/**
+ * Use one API day boundary across all three boards, independent of filters.
+ * The boundary is the modal (most common) window end, not the maximum: one
+ * record with an abnormally fresh anchor must not push every other repository
+ * into "pending". Ties resolve to the latest end.
+ */
 export function growthWindowEnd(snapshot) {
-  return snapshot.projects.filter(p => p.availability === 'available' && p.activityWindowEnd)
-    .map(p => p.activityWindowEnd).sort().at(-1) || null;
+  const counts = new Map();
+  for (const project of snapshot.projects) {
+    if (project.availability !== 'available' || !project.activityWindowEnd) continue;
+    counts.set(project.activityWindowEnd, (counts.get(project.activityWindowEnd) || 0) + 1);
+  }
+  let best = null;
+  let bestCount = 0;
+  for (const [end, count] of counts) {
+    if (count > bestCount || (count === bestCount && end > best)) { best = end; bestCount = count; }
+  }
+  return best;
 }
 
 /**
@@ -538,6 +553,7 @@ export async function translateProjects(projects, { signal, concurrency = 3 } = 
   const pending = projects.filter((project) => project.description && !/[一-龥]/.test(project.description));
   let index = 0;
   let translated = 0;
+  const providers = { google: 0, mymemory: 0 };
   let serviceFailed = false;
   await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), 4, pending.length) }, async () => {
     while (index < pending.length && !signal?.aborted && !serviceFailed) {
@@ -548,7 +564,7 @@ export async function translateProjects(projects, { signal, concurrency = 3 } = 
         project.originalDescription = original;
         project.description = description;
         project.translationSource = `${provider === 'google' ? 'Google 翻译' : 'MyMemory'} (user requested)`;
-        translated += description !== original ? 1 : 0;
+        if (description !== original) { translated += 1; if (provider !== 'none') providers[provider] = (providers[provider] || 0) + 1; }
       } catch {
         // Preserve the original and avoid exhausting a provider that is down
         // or quota-limited with hundreds of repeated requests.
@@ -556,5 +572,5 @@ export async function translateProjects(projects, { signal, concurrency = 3 } = 
       }
     }
   }));
-  return { translated, total: pending.length };
+  return { translated, total: pending.length, providers };
 }

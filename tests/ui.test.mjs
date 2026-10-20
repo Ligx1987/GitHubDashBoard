@@ -69,7 +69,7 @@ async function startApp({ projects, history = {}, starActivity = officialHistory
     ...data, document, window, sessionStorage: storage, localStorage: storage,
     loadDashboardData: (...args) => loadSaved(...args), fetchGitHubProjects: (...args) => fetchLive(...args),
     refreshStarActivity: async (_projects, cache) => cache,
-    AbortController, setTimeout: () => 1, clearTimeout() {}, setInterval: () => 1,
+    AbortController, setTimeout: (fn, ms) => setTimeout(fn, ms)?.unref?.() ?? 1, clearTimeout: (id) => clearTimeout(id), setInterval: () => 1,
   });
   await vm.runInContext(`(async () => { ${source}\n })()`, context, { filename: 'app.js' });
   await nextTurn(); // Let the application's initial automatic refresh settle.
@@ -248,6 +248,7 @@ test('repository rows expose primary and secondary classification labels', async
   assert.ok(html.includes('开发者工具'));
   ui.get('#searchInput').value = '安全';
   await ui.get('#searchInput').emit('input');
+  await new Promise((resolve) => setTimeout(resolve, 250)); // search input is debounced
   assert.equal(ui.get('#trackedCount').textContent, '1');
   assert.ok(ui.get('#repositoryTable').innerHTML.includes('morluto/rea'));
 });

@@ -1,4 +1,4 @@
-import { CATEGORY_META, NEW_GROWTH_BOARDS, SURGE_BOARDS, selectNewProjectGrowth, selectSurgeProjects, selectYearlyTop30, discoverySearchPlan, assembleSnapshot, fetchGitHubProjects, loadDashboardData, translateProjects, refreshStarActivity, mergeStarActivity, emptyStarActivity, buildAddedTrend } from './src/data/github-data.js';
+import { CATEGORY_META, NEW_GROWTH_BOARDS, SURGE_BOARDS, selectNewProjectGrowth, selectSurgeProjects, selectYearlyTop30, discoverySearchPlan, assembleSnapshot, fetchGitHubProjects, loadDashboardData, translateProjects, refreshStarActivity, mergeStarActivity, emptyStarActivity, buildAddedTrend, buildTrendSeries } from './src/data/github-data.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -108,7 +108,9 @@ function renderActivity(list) {
   $('#activityExpand').textContent = expandedActivity ? '收起' : `查看全部 ${recent.length} 个`;
 }
 function renderChart(list) {
-  const series = growthMode === 'added' ? buildAddedTrend(list) : assembleSnapshot(list, { history: snapshot.history || {}, now: Date.now() }).trendSeries;
+  // The net-growth view only needs the trend series, not a full re-assembly
+  // (normalize + classify + every board) of the filtered list.
+  const series = growthMode === 'added' ? buildAddedTrend(list) : buildTrendSeries(list, snapshot.history || {}, Date.now());
   const values = series?.values || Array(7).fill(null);
   const dates = series?.dates || series?.labels || [];
   const counts = series?.coverage || [];
@@ -223,7 +225,8 @@ $('#refreshButton').addEventListener('click', () => {
   try { const stored = sessionStorage.getItem('githubPulse.token') || ''; if (stored !== token) setToken(stored); } catch { /* storage disabled */ }
   refresh();
 });
-$('#searchInput').addEventListener('input', () => { browseLimit = 30; renderAll(); });
+let searchTimer;
+$('#searchInput').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { browseLimit = 30; renderAll(); }, 150); });
 $('#searchInput').addEventListener('keydown', (event) => { if (event.key === 'Enter') $('#repositoryTable a')?.click(); });
 $('#loadMore').addEventListener('click', () => { browseLimit += 30; renderRankings(projects()); });
 $('#activityExpand').addEventListener('click', () => { expandedActivity = !expandedActivity; renderActivity(projects()); });
@@ -245,12 +248,16 @@ function syncNavigation() {
 }
 window.addEventListener?.('hashchange', syncNavigation);
 syncNavigation();
+const isMac = typeof navigator !== 'undefined' && /mac/i.test(navigator.platform || '');
+if (!isMac) $('#searchKbd').textContent = 'Ctrl K';
 document.addEventListener('keydown', (event) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); $('#searchInput').focus(); } });
 $('#translateButton').addEventListener('click', async () => {
   if (!snapshot) return;
   const button = $('#translateButton'); button.disabled = true;
   const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 20000);
-  try { const result = await translateProjects(projects().slice(0, browseLimit), { signal: controller.signal }); renderAll(); toast(`已翻译 ${result.translated}/${result.total} 条描述（MyMemory）；未成功的保留原文。`); }
+  try { const result = await translateProjects(projects().slice(0, browseLimit), { signal: controller.signal }); renderAll();
+    const used = Object.entries(result.providers || {}).filter(([, n]) => n).map(([name]) => name === 'google' ? 'Google 翻译' : 'MyMemory');
+    toast(`已翻译 ${result.translated}/${result.total} 条描述${used.length ? `（${used.join('、')}）` : ''}；未成功的保留原文。`); }
   catch { toast('翻译服务暂不可用，保留原文。'); }
   finally { clearTimeout(timeout); button.disabled = false; }
 });

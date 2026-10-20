@@ -4,3 +4,11 @@
 
 # transient collector mutex
 src/data/.sync.lock
+
+# live collected data: local-only, shared via Actions artifacts instead of git
+# commits (keeps the repo small and JSON merges out of pull/push)
+src/data/github-snapshot.json
+src/data/star-history.json
+src/data/star-activity.json
+src/data/*.bak
+

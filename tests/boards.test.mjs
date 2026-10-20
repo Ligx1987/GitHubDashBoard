@@ -164,6 +164,21 @@ test('limited discovery runs resume untouched cohorts instead of repeatedly coll
   assert.equal(called.length, 2);
 });
 
+test('a single record with a fresher day boundary does not push the majority into pending', () => {
+  const rows = [project('a'), project('b'), project('outlier')];
+  const records = {
+    'test/a': activity(rows[0], 1),
+    'test/b': activity(rows[1], 2),
+    'test/outlier': activity(rows[2], 9, 8 * 3600000), // newer anchor than the rest
+  };
+  const data = snapshot(rows, records);
+  const board = data.surgeBoards[0];
+  assert.equal(board.windowEnd, iso(END)); // modal boundary wins over the newer outlier
+  assert.equal(board.coverage.eligible, 2);
+  assert.equal(board.coverage.pending, 1);
+  assert.deepEqual(board.projects.map(p => p.fullName), ['test/b', 'test/a']);
+});
+
 test('history budget prioritizes newly created candidates over an older high-star repository', async () => {
   const rows = [project('old', 365, { stars: 999999 }), project('new')];
   const called = [];

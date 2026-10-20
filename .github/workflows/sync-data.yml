@@ -3,13 +3,19 @@ name: sync-github-data
 # Actions GITHUB_TOKEN normally has 1,000 core requests/hour per repository.
 # Batches resume by oldest fetchedAt. Actual response headers control the quota;
 # search has its own budget. No job waits for a quota window to reset.
+#
+# Collected data is NOT committed to the repository. It is exchanged through a
+# rolling artifact ("github-data-latest"): each run restores the previous run's
+# data, collects a fresh batch on top, and uploads the result. The repository
+# stays free of large JSON churn, and local checkouts never merge data files.
 on:
   schedule:
     - cron: "17 */2 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 concurrency:
   group: github-data-sync
@@ -24,30 +30,33 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+      - name: Restore data from the latest artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p src/data
+          artifact_id=$(gh api "repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            --jq '[.artifacts[] | select(.name=="github-data-latest" and (.expired|not)) | .id] | max // empty')
+          if [ -n "$artifact_id" ]; then
+            gh api "repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" > data.zip
+            unzip -o data.zip -d .
+            rm data.zip
+            echo "Restored artifact $artifact_id"
+          else
+            echo "No previous artifact; starting from an empty registry"
+          fi
       - name: Collect a bounded batch and discover new repositories
         id: collect
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/sync-github-data.mjs --discover --limit 750 --budget 800 --discovery-pages 2
-      - name: Save collection artifacts
+      - name: Publish data as the latest artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: github-data-${{ github.run_id }}
+          name: github-data-latest
           path: |
             src/data/github-snapshot.json
             src/data/star-history.json
             src/data/star-activity.json
-          retention-days: 7
-      - name: Commit and push collected data
-        if: success()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/github-snapshot.json src/data/star-history.json src/data/star-activity.json
-          if git diff --cached --quiet; then
-            echo "No data changed."
-            exit 0
-          fi
-          git commit -m "chore: collect GitHub metadata and star history [skip ci]"
-          git push
+          retention-days: 30
