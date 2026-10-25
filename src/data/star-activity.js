@@ -3,10 +3,7 @@
 const DAY = 86400000;
 const NAME = /^[\w.-]+\/[\w.-]+$/;
 const count = value => Number.isSafeInteger(value) && value >= 0;
-// Low-star repositories whose record is still young yield their lane slot to
-// higher-star projects; with the one-day boundary grace their boards stay
-// valid until the next pass, so the tail effectively refreshes every other
-// day. Hot repositories (weekAdded >= 100) outrank this demotion.
+// 低星工程轮转更新；缓存保留实际完整日截止时间，不推进未采到的日期。
 const LOW_STAR_STARS = 1000;
 const LOW_STAR_RECORD_MAX_AGE_MS = 36 * 3600000;
 export const emptyStarActivity = () => ({ schemaVersion: 1, repositories: {}, status: {} });
@@ -34,14 +31,11 @@ export function summarizeStarActivity(record, { now = Date.now(), createdAt = nu
   let weeks;
   try { weeks = validateStarWeeks(record.weeks); } catch { return unknown; }
   const anchor = weeks[0].week * 1000;
-  if (anchor > fetched || now - anchor >= 7 * DAY) return unknown;
-  // Preserve the API's day boundary, including a non-UTC offset. Never claim
-  // exact rolling hours or infer missing days. Records fetched after the
-  // PREVIOUS day boundary still qualify: their final window day may miss a
-  // few late-night hours, but expiring them at 00:00 UTC knocked every
-  // early-morning batch out of the boards each day.
-  const end = anchor + Math.floor((now - anchor) / DAY) * DAY;
-  if (fetched < end - DAY) return unknown;
+  if (anchor > fetched) return unknown;
+  // 周日接口可能仍以刚结束的一周开头；不要求存在尚无数据的新周。
+  // 同时只使用采样时已结束的统计日，排除缓存中未结束日的占位零或部分计数。
+  const end = Math.min(anchor + 7 * DAY, anchor + Math.floor((Math.min(now, fetched) - anchor) / DAY) * DAY);
+  if (now - end >= 7 * DAY) return unknown;
   const values = new Map();
   for (const week of weeks) week.days.forEach((value, i) => values.set(week.week * 1000 + i * DAY, value));
   const created = Date.parse(createdAt);
@@ -113,7 +107,9 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
   // 1:1: new-project boards need fresh cohorts, but the surge board also needs
   // established breakouts — a new-first queue spent the whole daily allowance
   // on young repositories and emptied the surge board of anything >31 days.
-  const recentLane = pool.filter(recent).sort(byPriority);
+  // 三日新建榜需要自己的覆盖，不能一直排在月内已有历史的热门工程之后。
+  const threeDayCandidate = p => Number(Date.parse(p.createdAt) >= start - 3 * DAY && Date.parse(p.createdAt) < Math.floor(start / DAY) * DAY);
+  const recentLane = pool.filter(recent).sort((a, b) => threeDayCandidate(b) - threeDayCandidate(a) || byPriority(a, b));
   const establishedLane = pool.filter(p => !recent(p)).sort(byPriority);
   const queue = [];
   for (let i = 0; i < Math.max(recentLane.length, establishedLane.length); i++) {

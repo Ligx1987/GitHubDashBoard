@@ -179,6 +179,16 @@ test('a single record with a fresher day boundary does not push the majority int
   assert.deepEqual(board.projects.map(p => p.fullName), ['test/b', 'test/a']);
 });
 
+test('fresh complete history takes precedence over a larger cohort of older cached windows', () => {
+  const rows = [project('old-a'), project('old-b'), project('fresh')];
+  const records = Object.fromEntries(rows.map((p, i) => [p.fullName, i < 2
+    ? { ...activity(p, i + 1, -7 * DAY), fetchedAt: iso(NOW - DAY) }
+    : activity(p, 3)]));
+  const data = snapshot(rows, records);
+  assert.equal(data.surgeBoards[0].windowEnd, iso(END));
+  assert.deepEqual(data.surgeBoards[0].projects.map(p => p.fullName), ['test/fresh']);
+});
+
 test('history budget prioritizes newly created candidates over an older high-star repository', async () => {
   const rows = [project('old', 365, { stars: 999999 }), project('new')];
   const called = [];

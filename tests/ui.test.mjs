@@ -14,6 +14,7 @@ const source = (await readFile(new URL('../app.js', import.meta.url), 'utf8'))
 function element() {
   const classes = new Set();
   const handlers = new Map();
+  const attributes = new Map();
   return {
     innerHTML: '', textContent: '', value: '', style: {}, dataset: {}, hidden: false,
     classList: {
@@ -22,6 +23,8 @@ function element() {
       toggle(name, force = !classes.has(name)) { force ? classes.add(name) : classes.delete(name); return force; },
     },
     addEventListener(name, callback) { handlers.set(name, callback); },
+    setAttribute(name, value) { attributes.set(name, value); },
+    getAttribute(name) { return attributes.get(name); },
     async emit(name, event = {}) { return handlers.get(name)?.({ target: this, ...event }); },
     focus() {}, click() {},
   };
@@ -57,7 +60,7 @@ function officialHistory(projects) {
   }])), status: {} };
 }
 
-async function startApp({ projects, history = {}, starActivity = officialHistory(projects), mode = 'added', liveFetch = async () => { throw new Error('offline test'); } }) {
+async function startApp({ projects, history = {}, starActivity = officialHistory(projects), liveFetch = async () => { throw new Error('offline test'); } }) {
   const elements = new Map();
   const get = (selector) => { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); };
   const document = { body: element(), hidden: false, querySelector: get, querySelectorAll: () => [], addEventListener() {} };
@@ -74,13 +77,12 @@ async function startApp({ projects, history = {}, starActivity = officialHistory
   await vm.runInContext(`(async () => { ${source}\n })()`, context, { filename: 'app.js' });
   await nextTurn(); // Let the application's initial automatic refresh settle.
   // The original regressions below explicitly exercise the retained net mode.
-  if (mode === 'net') await get('#growthMode').emit('change', { target: { value: 'net' } });
   assert.equal(get('#refreshButton').disabled, false);
   return { get, app: window.githubPulse, setFetch: (fetcher) => { fetchLive = fetcher; }, setLoad: (loader) => { loadSaved = loader; } };
 }
 const rowCount = (html) => (html.match(/class="repo-row"/g) || []).length;
 
-test('default UI renders surge board and tabbed new-project board; auxiliary net mode never changes them', async () => {
+test('default UI renders expandable surge and new-project boards', async () => {
   const { projects } = fixtures(35);
   const now = Date.now();
   const date = new Date(now); date.setUTCHours(0, 0, 0, 0);
@@ -90,22 +92,28 @@ test('default UI renders surge board and tabbed new-project board; auxiliary net
     weeks: Array.from({ length: 6 }, (_, offset) => ({ week: (anchor - offset * 7 * 86400000) / 1000, total: 7 * (i + 1), days: Array(7).fill(i + 1) })),
   }])), status: {} };
   const ui = await startApp({ projects, starActivity, mode: 'added' });
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 5);
+  assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 5);
+  await ui.get('#surgeExpand').emit('click');
+  await ui.get('#newExpand').emit('click');
   assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 30);
   assert.ok(ui.get('#surgeBoardTable').innerHTML.includes('test/web-34'));
   assert.match(ui.get('#surgeNote').textContent, /GitHub 官方历史/);
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 10); // default 7-day tab
   assert.match(ui.get('#newNote').textContent, /GitHub 官方历史/);
   await ui.get('#newTabs').emit('click', { target: { closest: () => ({ dataset: { days: '30' } }) } });
+  assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 5);
+  await ui.get('#newExpand').emit('click');
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 30);
   assert.ok(ui.get('#newBoardTable').innerHTML.includes('test/web-34'));
   assert.ok(!ui.get('#newBoardTable').innerHTML.includes('test/web-0<'));
   await ui.get('#newTabs').emit('click', { target: { closest: () => ({ dataset: { days: '3' } }) } });
+  await ui.get('#newExpand').emit('click');
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 10);
   await ui.get('#surgeTabs').emit('click', { target: { closest: () => ({ dataset: { days: '30' } }) } });
+  await ui.get('#surgeExpand').emit('click');
   assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 30);
-  await ui.get('#growthMode').emit('change', { target: { value: 'net' } });
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 10);
-  assert.match(ui.get('#trendTitle').textContent, /净增/);
   assert.match(ui.get('#newNote').textContent, /GitHub 官方历史/);
 });
 
@@ -138,7 +146,7 @@ test('UI renders four annual Top30 sections and excludes old fast-growing projec
   // The surge board has no creation window: an old project with fresh growth belongs there.
   assert.ok(ui.get('#surgeBoardTable').innerHTML.includes('test/old-0'));
   const html = ui.get('#yearlyBoard').innerHTML;
-  assert.equal((html.match(/<details /g) || []).length, 4);
+  assert.equal((html.match(/<details class="yearly-group"/g) || []).length, 4);
   assert.equal(rowCount(html), 60);
   assert.ok(html.includes(`data-year="${year - 3}"`));
   assert.ok(!html.includes(`data-year="${year - 4}"`));
@@ -181,19 +189,19 @@ test('external descriptions remain escaped text in every repository row', async 
   }
 });
 
-test('monthly new-project tab uses additions while auxiliary chart retains negative net changes', async () => {
+test('monthly new-project tab uses official additions across period changes', async () => {
   const ui = await startApp(fixtures(35));
   await ui.get('#newTabs').emit('click', { target: { closest: () => ({ dataset: { days: '30' } }) } });
+  await ui.get('#newExpand').emit('click');
   const html = ui.get('#newBoardTable').innerHTML;
   assert.equal(rowCount(html), 30);
   assert.ok(html.includes('test/web-34'));
   assert.ok(html.includes('test/web-29'));
   assert.ok(!html.includes('test/web-0<'));
   assert.ok(!html.includes('negative'));
-  await ui.get('#growthMode').emit('change', { target: { value: 'net' } });
-  assert.match(ui.get('#trendNote').textContent, /负值为净减少/);
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 30);
   await ui.get('#newTabs').emit('click', { target: { closest: () => ({ dataset: { days: '7' } }) } });
+  await ui.get('#newExpand').emit('click');
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 10);
 });
 
@@ -202,6 +210,7 @@ test('category filtering precedes top-N selection even when global leaders are a
   const ai = fixtures(12, { category: 'ai', prefix: 'ai', baseStars: 100000 });
   const ui = await startApp({ projects: [...ai.projects, ...web.projects], history: { ...ai.history, ...web.history } });
   await ui.get('#categoryTabs').emit('click', { target: { closest: () => ({ dataset: { category: 'web' } }) } });
+  await ui.get('#newExpand').emit('click');
   assert.equal(ui.get('#trackedCount').textContent, '12');
   assert.equal(rowCount(ui.get('#newBoardTable').innerHTML), 10);
   assert.ok(ui.get('#newBoardTable').innerHTML.includes('test/web-11'));
@@ -266,4 +275,56 @@ test('unknown Stars remain browsable and a newer unavailable observation removes
   assert.equal(ui.get('#trackedCount').textContent, '1');
   assert.equal(rowCount(ui.get('#repositoryTable').innerHTML), 1);
   assert.ok(!ui.get('#repositoryTable').innerHTML.includes('test/web-0'));
+});
+
+test('board expansion survives refresh, collapses explicitly and resets when filtering', async () => {
+  const ui = await startApp(fixtures(35));
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 5);
+  assert.equal(ui.get('#surgeExpand').getAttribute('aria-expanded'), 'false');
+  await ui.get('#surgeExpand').emit('click');
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 30);
+  assert.equal(ui.get('#surgeExpand').getAttribute('aria-expanded'), 'true');
+  await ui.app.refresh({ silent: true });
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 30);
+  await ui.get('#surgeExpand').emit('click');
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 5);
+  await ui.get('#surgeExpand').emit('click');
+  await ui.get('#categoryTabs').emit('click', { target: { closest: () => ({ dataset: { category: 'web' } }) } });
+  assert.equal(rowCount(ui.get('#surgeBoardTable').innerHTML), 5);
+});
+
+test('directory pages retain global ordering and rank numbers, and filters return to page one', async () => {
+  const ui = await startApp(fixtures(35));
+  const pageOne = ui.get('#repositoryTable').innerHTML;
+  assert.equal(rowCount(pageOne), 15);
+  assert.ok(pageOne.includes('test/web-34'));
+  assert.equal(ui.get('#previousPage').disabled, true);
+  await ui.get('#loadMore').emit('click');
+  const pageTwo = ui.get('#repositoryTable').innerHTML;
+  assert.equal(rowCount(pageTwo), 15);
+  assert.ok(pageTwo.includes('test/web-19'));
+  assert.ok(!pageTwo.includes('test/web-34<'));
+  assert.ok(pageTwo.includes('class="repo-rank">16'));
+  await ui.get('#loadMore').emit('click');
+  assert.equal(rowCount(ui.get('#repositoryTable').innerHTML), 5);
+  assert.equal(ui.get('#loadMore').disabled, true);
+  await ui.get('#previousPage').emit('click');
+  assert.equal(ui.get('#pageStatus').textContent, '第 2 / 3 页');
+  await ui.get('#categoryTabs').emit('click', { target: { closest: () => ({ dataset: { category: 'web' } }) } });
+  assert.equal(ui.get('#pageStatus').textContent, '第 1 / 3 页');
+  ui.get('#searchInput').value = 'does-not-exist';
+  await ui.get('#searchInput').emit('input');
+  await new Promise(resolve => setTimeout(resolve, 200));
+  assert.equal(rowCount(ui.get('#repositoryTable').innerHTML), 0);
+  assert.equal(ui.get('#loadMore').hidden, true);
+});
+
+test('removed trend view has no chart, navigation or mode controls', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  assert.ok(!html.includes('id="trend"'));
+  assert.ok(!html.includes('href="#trend"'));
+  assert.ok(!html.includes('growthMode'));
+  const ui = await startApp(fixtures());
+  assert.match(ui.get('#growthMetricLabel').textContent, /一周新增 Stars.*截至/);
+  assert.notEqual(ui.get('#weeklyStars').textContent, '待获取');
 });

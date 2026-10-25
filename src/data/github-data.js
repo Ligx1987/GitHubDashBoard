@@ -250,14 +250,17 @@ export function selectProjects(snapshot, {
 
 /**
  * Use one API day boundary across all three boards, independent of filters.
- * The boundary is the modal (most common) window end, not the maximum: one
- * record with an abnormally fresh anchor must not push every other repository
- * into "pending". Ties resolve to the latest end.
+ * 优先最近的完整统计日期，同一天内采用多数记录的日界，避免不同偏移混排。
+ * 缓存过旧时保留实际截止时间，不能让更早的大批记录压过新采到的历史。
  */
 export function growthWindowEnd(snapshot) {
   const counts = new Map();
+  let latestDate = -Infinity;
   for (const project of snapshot.projects) {
     if (project.availability !== 'available' || !project.activityWindowEnd) continue;
+    const date = Math.floor(Date.parse(project.activityWindowEnd) / DAY_MS);
+    if (date < latestDate) continue;
+    if (date > latestDate) { counts.clear(); latestDate = date; }
     counts.set(project.activityWindowEnd, (counts.get(project.activityWindowEnd) || 0) + 1);
   }
   let best = null;

@@ -11,6 +11,27 @@ const record = (value = 3, extra = {}) => ({ source: 'github-star-history', fetc
 const project = (fullName = 'a/repo', extra = {}) => ({ fullName, availability: 'available', stars: 999, fetchedAt: new Date(NOW).toISOString(), createdAt: '2020-01-01T00:00:00Z', ...extra });
 const ok = body => new Response(JSON.stringify(body), { status: 200 });
 
+test('Sunday rollover accepts a completed previous week without requiring an empty new-week row', async () => {
+  const sunday = Date.parse('2026-10-25T02:00:00Z');
+  const priorWeek = Date.parse('2026-10-18T00:00:00Z');
+  const payload = weeks(3, priorWeek);
+  const result = await refreshStarActivity([project()], undefined, { now: () => sunday, fetchImpl: async () => ok(payload) });
+  assert.equal(result.status.updated, 1);
+  const added = summarizeStarActivity(result.repositories['a/repo'], { now: sunday });
+  assert.equal(added.weekAdded, 21);
+  assert.equal(added.activityWindowEnd, '2026-10-25T00:00:00.000Z');
+});
+
+test('cached Saturday partial data retains its last complete cutoff when Sunday arrives', () => {
+  const priorWeek = Date.parse('2026-10-18T00:00:00Z');
+  const payload = weeks(3, priorWeek);
+  payload[0].days[6] = 9000; payload[0].total += 8997;
+  const cached = { source: 'github-star-history', fetchedAt: '2026-10-24T02:00:00Z', weeks: payload };
+  const added = summarizeStarActivity(cached, { now: Date.parse('2026-10-25T02:00:00Z') });
+  assert.equal(added.weekAdded, 21);
+  assert.equal(added.activityWindowEnd, '2026-10-24T00:00:00.000Z');
+});
+
 test('official history immediately provides 7/30 complete-day growth without local baselines', () => {
   const snapshot = assembleSnapshot([project()], { now: NOW, starActivity: { repositories: { 'a/repo': record() } } });
   assert.equal(snapshot.projects[0].weekAdded, 21);
@@ -45,7 +66,9 @@ test('a missing old week disables month only; absent values are never filled wit
   const result = summarizeStarActivity(record(3, { weeks: rows }), { now: NOW });
   assert.equal(result.weekAdded, 21);
   assert.equal(result.monthAdded, null);
-  assert.equal(summarizeStarActivity(record(3, { weeks: weeks().slice(1) }), { now: NOW }).weekAdded, null);
+  const delayed = summarizeStarActivity(record(3, { weeks: weeks().slice(1) }), { now: NOW });
+  assert.equal(delayed.weekAdded, 21);
+  assert.equal(delayed.activityWindowEnd, '2026-09-27T00:00:00.000Z');
 });
 
 test('zero activity is valid; a new repo can have zero days only before verified creation', () => {
@@ -55,13 +78,10 @@ test('zero activity is valid; a new repo can have zero days only before verified
   assert.equal(summarizeStarActivity(fresh, { now: NOW }).monthAdded, null);
 });
 
-test('stale cache beyond the grace day and future samples cannot pretend to be current', () => {
-  // Record fetched 2026-09-28T12:00Z. One day later it still qualifies: the
-  // previous-boundary grace keeps overnight/early-morning batches on the
-  // boards (its final window day may miss a few late-night hours). Two days
-  // later it is stale and drops out.
+test('cached observations retain their complete cutoff, expire after seven days, and reject future samples', () => {
   assert.equal(summarizeStarActivity(record(), { now: NOW + DAY }).weekAdded, 21);
-  assert.equal(summarizeStarActivity(record(), { now: NOW + 2 * DAY }).weekAdded, null);
+  assert.equal(summarizeStarActivity(record(), { now: NOW + DAY }).activityWindowEnd, '2026-09-28T00:00:00.000Z');
+  assert.equal(summarizeStarActivity(record(), { now: NOW + 7 * DAY }).weekAdded, null);
   assert.equal(summarizeStarActivity(record(), { now: NOW - 1 }).weekAdded, null);
   const unavailable = assembleSnapshot([project('a/repo', { availability: 'unavailable' })], { now: NOW, starActivity: { repositories: { 'a/repo': record() } } });
   assert.equal(unavailable.weeklyTop10.length, 0);
@@ -119,6 +139,17 @@ test('history refresh keeps hot repositories ahead of the cold tail', async () =
     fetchImpl: async url => { called.push(url); return ok(weeks()); } });
   assert.equal(called.length, 1);
   assert.match(called[0], /a\/hot/);
+});
+
+test('new three-day candidates are not starved by older hot repositories in the recent lane', async () => {
+  const fresh = project('a/new-three-day', { createdAt: '2026-09-27T10:00:00Z' });
+  const older = project('a/hot-monthly', { createdAt: '2026-09-10T00:00:00Z' });
+  const called = [];
+  await refreshStarActivity([older, fresh], { repositories: { 'a/hot-monthly': record(20) } }, {
+    now: () => NOW, ttlMs: 0, limit: 1,
+    fetchImpl: async url => { called.push(url); return ok(weeks()); },
+  });
+  assert.match(called[0], /a\/new-three-day/);
 });
 
 test('history refresh defers recently sampled low-star repositories behind higher-star ones', async () => {
