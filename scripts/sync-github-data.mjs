@@ -557,7 +557,7 @@ export function releaseSyncLock(path) {
   });
 }
 
-function resolveToken() {
+export function resolveToken() {
   if (process.env.GITHUB_TOKEN?.trim()) return process.env.GITHUB_TOKEN.trim();
   try { return execFileSync('gh', ['auth', 'token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
   catch { return ''; }
@@ -592,13 +592,15 @@ async function main() {
     return;
   }
   try {
-    await runSync(options);
+    const result = await runSync(options);
+    process.exitCode = result.exitCode;
   } finally {
     if (!options.dry) releaseSyncLock(lockPath);
   }
 }
 
-async function runSync(options) {
+export async function runSync(options) {
+  const remaining = maximum => Math.max(0, Math.min(maximum, (options.deadlineAt ?? Infinity) - Date.now()));
   const snapshotPath = join(ROOT, 'src/data/github-snapshot.json');
   const historyPath = join(ROOT, 'src/data/star-history.json');
   const activityPath = join(ROOT, 'src/data/star-activity.json');
@@ -619,26 +621,27 @@ async function runSync(options) {
   activity = reconciled.starActivity;
   const activityBefore = activity;
   activity = await refreshStarActivity(snapshot.projects, activity, { token,
-    limit: Math.min(options.limit, options.historyOnly ? options.budget : Math.floor(options.budget / 3)), maxRuntimeMs: 5 * 60_000 });
+    limit: Math.min(options.limit, options.historyOnly ? options.budget : Math.floor(options.budget / 3)), maxRuntimeMs: remaining(5 * 60_000) });
   const activityRequests = activity.status.attemptedAt === activityBefore.status?.attemptedAt ? 0 : activity.status.requests || 0;
   if (!options.dry) atomicWriteJson(activityPath, activity);
   console.log(`Official star history: ${activityRequests} requests; ${activity.status.message || 'cache ready'}`);
   if (options.historyOnly) {
     if (!options.dry) { atomicWriteJson(historyPath, history); atomicWriteJson(snapshotPath, snapshot); }
-    process.exitCode = activity.status.failures && !activity.status.updated ? 1 : 0;
-    return;
+    return { requests: activityRequests, exitCode: activity.status.failures && !activity.status.updated ? 1 : 0 };
   }
-  const outcome = await syncData({ ...options, budget: Math.max(0, options.budget - activityRequests), snapshot, history, token, activity });
+  const outcome = await syncData({ ...options, maxRuntimeMs: remaining(options.maxRuntimeMs ?? 20 * 60_000), budget: Math.max(0, options.budget - activityRequests), snapshot, history, token, activity });
   activity = outcome.starActivity;
   if (!options.dry) atomicWriteJson(activityPath, activity);
   // Probe official history for newly discovered candidates (fresh cohorts and
   // the surge channel) with whatever request budget remains, so a promising
   // repository can enter the boards in this run instead of the next one.
   const probeBudget = Math.min(Math.max(0, options.budget - activityRequests - outcome.snapshot.sync.requests), 120);
-  if (probeBudget > 0) {
-    const probed = await refreshStarActivity(outcome.snapshot.projects, activity, { token, limit: probeBudget, maxRuntimeMs: 2 * 60_000 });
+  let probeRequests = 0;
+  if (probeBudget > 0 && remaining(2 * 60_000) > 0) {
+    const probed = await refreshStarActivity(outcome.snapshot.projects, activity, { token, limit: probeBudget, maxRuntimeMs: remaining(2 * 60_000) });
     if (probed.status.attemptedAt !== activity.status?.attemptedAt) {
       activity = probed;
+      probeRequests = probed.status.requests || 0;
       if (!options.dry) atomicWriteJson(activityPath, activity);
       console.log(`Candidate history probes: ${probed.status.requests || 0} requests, ${probed.status.updated || 0} repositories updated.`);
     }
@@ -647,7 +650,8 @@ async function runSync(options) {
   // hottest repositories first; service failures pause until the next run.
   let translation = { translated: 0, pending: 0, stopped: false };
   if (options.translate) {
-    translation = await translateDescriptions(outcome.snapshot.projects, { limit: options.translateLimit, activity, retranslate: options.retranslate, delayMs: options.translateDelay });
+    const translateLimit = Math.min(options.translateLimit, Math.max(0, Math.floor((remaining(Infinity) - 30000) / (5100 + (options.translateDelay || 0)))));
+    translation = await translateDescriptions(outcome.snapshot.projects, { limit: translateLimit, activity, retranslate: options.retranslate, delayMs: options.translateDelay });
     if (translation.stopped) console.warn('! Description translation paused (service quota or outage); originals kept for the next run.');
   }
   if (!options.dry) {
@@ -664,7 +668,7 @@ async function runSync(options) {
   }
   console.log(`${options.dry ? 'DRY RUN (no files written): ' : ''}${outcome.snapshot.sync.result}; ${outcome.snapshot.sync.refreshed} repositories collected, ${outcome.snapshot.sync.requests} requests; ${translation.translated} descriptions translated (${translation.pending} pending).`);
   for (const warning of outcome.snapshot.warnings) console.warn(`! ${warning}`);
-  process.exitCode = outcome.exitCode;
+  return { requests: activityRequests + outcome.snapshot.sync.requests + probeRequests, exitCode: outcome.exitCode, result: outcome.snapshot.sync.result };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

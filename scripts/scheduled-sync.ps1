@@ -13,18 +13,18 @@ if (-not $env:GITHUB_TOKEN) {
 }
 $nodePath = (Get-Command node -ErrorAction Stop).Source
 $fullBatch = $ScheduledTime.Hour -ge 5 -and $ScheduledTime.Hour -le 8
-$collectorArgs = @((Join-Path $PSScriptRoot 'sync-github-data.mjs'))
+$collectorArgs = @((Join-Path $PSScriptRoot 'sync-scheduled.mjs'))
 if ($fullBatch) {
-    $collectorArgs += @('--limit', '3000', '--budget', '4600', '--discovery-pages', '2')
+    $collectorArgs += @('--profile', 'full')
     if ($ScheduledTime.DayOfWeek -eq [DayOfWeek]::Monday -and $ScheduledTime.Hour -eq 6) {
-        $collectorArgs += @('--harvest', '--harvest-min', '1000')
+        $collectorArgs += @('--harvest')
     }
 } else {
-    $collectorArgs += @('--no-discover', '--limit', '300', '--budget', '450')
+    $collectorArgs += @('--profile', 'hot')
 }
-$collectorArgs += @('--translate-limit', '250')
+$collectorArgs += @('--budget', '4600', '--translate-limit', '250')
 if ($PlanOnly) {
-    [PSCustomObject]@{Time=$ScheduledTime.ToString('HH:mm'); FullBatch=$fullBatch; Node=$nodePath; Arguments=$collectorArgs; TokenAvailable=[bool]$env:GITHUB_TOKEN} | ConvertTo-Json -Compress
+    [PSCustomObject]@{Time=$ScheduledTime.ToString('HH:mm'); FullBatch=$fullBatch; HistoryBackfill=$true; Node=$nodePath; Arguments=$collectorArgs; TokenAvailable=[bool]$env:GITHUB_TOKEN} | ConvertTo-Json -Compress
     exit 0
 }
 if ($VerifyConnection) {
