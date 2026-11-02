@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { atomicWriteJson, acquireSyncLock, releaseSyncLock, buildUpdateQueue, discoveryQueries, parseArguments,
@@ -10,7 +10,8 @@ import { CATEGORY_VERSION } from '../src/data/github-data.js';
 
 const NOW = '2026-09-28T08:00:00.000Z';
 const OLD = '2026-09-24T08:00:00.000Z';
-const repository = (name, stars = 120) => ({ id: 123, full_name: name, name: name.split('/')[1],
+const fixtureIds = new Map();
+const repository = (name, stars = 120) => ({ id: fixtureIds.get(name) || (fixtureIds.set(name, fixtureIds.size + 1), fixtureIds.get(name)), full_name: name, name: name.split('/')[1],
   private: false, visibility: 'public', description: 'Actual description', stargazers_count: stars,
   forks_count: 20, open_issues_count: 3, license: { spdx_id: 'MIT' }, topics: ['tools'],
   language: 'JavaScript', created_at: '2024-06-12T13:49:36Z',
@@ -67,6 +68,16 @@ test('metadata refresh stores current classification and secondary domain tags',
   assert.equal(actual.categoryVersion, CATEGORY_VERSION);
   assert.ok(actual.categoryTags.includes('security'));
   assert.ok(actual.categoryTags.includes('developer-tools'));
+});
+
+test('元数据缺 ID 保留已知身份，不同有效 ID 不继承本地注解', () => {
+  const previous = { githubId: 999, description: 'Actual description', descriptionZh: '旧译文', categoryOverride: 'tools' };
+  const missingId = { ...repository('owner/repo'), id: undefined };
+  assert.equal(toSnapshotProject(missingId, NOW, previous).githubId, 999);
+  const replacement = toSnapshotProject({ ...repository('owner/repo'), id: 1000 }, NOW, previous);
+  assert.equal(replacement.githubId, 1000);
+  assert.equal(replacement.descriptionZh, null);
+  assert.equal(replacement.categoryOverride, undefined);
 });
 
 test('successive limited runs resume at the oldest successful sample instead of restarting', async () => {
@@ -293,6 +304,28 @@ test('redirected repository names merge history and remove stale registry aliase
   assert.equal(result.history['owner/old'], undefined);
 });
 
+test('Search 发现同 ID 新名时立即去重并迁移两类历史', async () => {
+  const old = { ...project('owner/old', OLD), githubId: 999, description: 'Actual description', descriptionZh: '已有译文' };
+  const cachedActivity = { schemaVersion: 1, repositories: { 'owner/old': { source: 'github-star-history', fetchedAt: OLD, weeks: [] } }, status: {} };
+  const result = await syncData(options(registry([old]), { discover: true, limit: 0, budget: 1,
+    history: { 'owner/old': { '2026-09-27': 100 } }, activity: cachedActivity,
+    fetchImpl: async () => response({ total_count: 1, items: [{ ...repository('owner/new'), id: 999 }] }) }));
+  assert.deepEqual(result.snapshot.projects.map(p => p.fullName), ['owner/new']);
+  assert.equal(result.snapshot.projects[0].descriptionZh, '已有译文');
+  assert.equal(result.history['owner/new']['2026-09-27'], 100);
+  assert.equal(result.history['owner/old'], undefined);
+  assert.equal(result.starActivity.repositories['owner/new'].fetchedAt, OLD);
+  assert.equal(result.starActivity.repositories['owner/old'], undefined);
+});
+
+test('采集启动在无请求预算时也修复已存在的同 ID 双记录', async () => {
+  const result = await syncData(options(registry([
+    { ...project('owner/old', OLD), githubId: 999 }, { ...project('owner/new', NOW), githubId: 999 },
+  ]), { limit: 0, budget: 0, history: { 'owner/old': { '2026-09-27': 100 } } }));
+  assert.deepEqual(result.snapshot.projects.map(p => p.fullName), ['owner/new']);
+  assert.equal(result.history['owner/new']['2026-09-27'], 100);
+});
+
 test('atomic JSON publication leaves a complete replacement and no temporary file', () => {
   const directory = mkdtempSync(join(tmpdir(), 'github-sync-test-'));
   try {
@@ -424,17 +457,43 @@ test('sync prunes repositories that aged out of the rolling three-year scope', a
   assert.equal(result.history['owner/fresh']['2026-09-27'], 100);
 });
 
-test('sync lock rejects concurrent collectors, takes over stale locks, and releases cleanly', () => {
+test('sync lock rejects live collectors beyond the old TTL and releases only its own claim', () => {
   const directory = mkdtempSync(join(tmpdir(), 'github-sync-lock-'));
   try {
     const lockPath = join(directory, 'sync.lock');
     assert.equal(acquireSyncLock(lockPath, { now: () => '2026-09-28T08:00:00.000Z' }), true);
     assert.equal(acquireSyncLock(lockPath, { now: () => '2026-09-28T08:05:00.000Z' }), false); // held by another run
-    assert.equal(acquireSyncLock(lockPath, { now: () => '2026-09-28T08:45:00.000Z' }), true); // stale: previous holder died
+    assert.equal(acquireSyncLock(lockPath, { now: () => '2026-09-28T08:45:00.000Z', isProcessAlive: () => true }), false);
     releaseSyncLock(lockPath);
     assert.equal(acquireSyncLock(lockPath, { now: () => '2026-09-28T08:46:00.000Z' }), true);
     releaseSyncLock(lockPath);
     assert.deepEqual(readdirSync(directory), []);
+  } finally { rmSync(directory, { recursive: true }); }
+});
+
+test('sync lock recovers a dead legacy holder but never releases a replacement owner', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'github-sync-lock-'));
+  try {
+    const lockPath = join(directory, 'sync.lock');
+    writeFileSync(lockPath, JSON.stringify({ pid: 999999, acquiredAt: OLD }));
+    assert.equal(acquireSyncLock(lockPath, { now: () => NOW, isProcessAlive: () => false }), true);
+    assert.ok(JSON.parse(readFileSync(lockPath, 'utf8')).owner);
+    writeFileSync(lockPath, JSON.stringify({ pid: 222, acquiredAt: NOW, owner: 'replacement' }));
+    assert.equal(releaseSyncLock(lockPath), false);
+    assert.equal(JSON.parse(readFileSync(lockPath, 'utf8')).owner, 'replacement');
+  } finally { rmSync(directory, { recursive: true }); }
+});
+
+test('接管前重新检查锁，避免删除并发替换的活跃持有者', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'github-sync-lock-'));
+  try {
+    const lockPath = join(directory, 'sync.lock');
+    writeFileSync(lockPath, JSON.stringify({ pid: 999999, acquiredAt: OLD }));
+    assert.equal(acquireSyncLock(lockPath, { now: () => NOW, isProcessAlive: () => {
+      writeFileSync(lockPath, JSON.stringify({ pid: 222, acquiredAt: NOW, owner: 'concurrent' }));
+      return false;
+    } }), false);
+    assert.equal(JSON.parse(readFileSync(lockPath, 'utf8')).owner, 'concurrent');
   } finally { rmSync(directory, { recursive: true }); }
 });
 

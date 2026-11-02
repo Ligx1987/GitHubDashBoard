@@ -39,7 +39,8 @@ jobs:
             --jq '[.artifacts[] | select(.name=="github-data-latest" and (.expired|not)) | .id] | max // empty')
           if [ -n "$artifact_id" ]; then
             gh api "repos/${{ github.repository }}/actions/artifacts/${artifact_id}/zip" > data.zip
-            unzip -o data.zip -d .
+            unzip -o data.zip -d src/data
+            node scripts/validate-data-artifact.mjs src/data
             rm data.zip
             echo "Restored artifact $artifact_id"
           else
@@ -50,11 +51,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/sync-github-data.mjs --discover --limit 750 --budget 800 --discovery-pages 2
+      - name: Validate recoverable data
+        id: validate
+        if: ${{ !cancelled() && (steps.collect.outcome == 'success' || steps.collect.outcome == 'failure') }}
+        run: |
+          node scripts/validate-data-artifact.mjs src/data
+          echo "valid=true" >> "$GITHUB_OUTPUT"
       - name: Publish data as the latest artifact
-        if: success()
+        if: ${{ !cancelled() && steps.validate.outputs.valid == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: github-data-latest
+          if-no-files-found: error
           path: |
             src/data/github-snapshot.json
             src/data/star-history.json

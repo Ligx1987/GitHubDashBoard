@@ -2,10 +2,12 @@
 // Never rewrite source code or synthesize missing counts or dates.
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { emptyStarActivity, refreshStarActivity, summarizeStarActivity } from '../src/data/star-activity.js';
 import { discoverySearchPlan, classifyRepositoryDetails, translateWithProvider, withinScope, scopeCutoffMs } from '../src/data/github-data.js';
+import { reconcileRepositoryState } from '../src/data/repository-state.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DAY_MS = 86_400_000;
@@ -46,6 +48,7 @@ export function toSnapshotProject(data, fetchedAt, previous = {}) {
   if (!VALID_NAME.test(data.full_name || '') || integer(data.stargazers_count) === null) {
     throw new Error('GitHub response lacks valid repository name or star count');
   }
+  if (integer(data.id) && integer(previous.githubId) && data.id !== previous.githubId) previous = {};
   const description = typeof data.description === 'string' ? data.description : '';
   const language = typeof data.language === 'string' ? data.language : null;
   const topics = Array.isArray(data.topics) ? data.topics.filter((topic) => typeof topic === 'string') : [];
@@ -54,7 +57,7 @@ export function toSnapshotProject(data, fetchedAt, previous = {}) {
   // keeps it so the Chinese description survives routine metadata refreshes.
   const keepTranslation = description === (previous.description || '');
   return {
-    ...previous, id: data.full_name, githubId: integer(data.id), fullName: data.full_name,
+    ...previous, id: data.full_name, githubId: integer(data.id) || integer(previous.githubId), fullName: data.full_name,
     name: data.name || data.full_name.split('/')[1],
     description,
     descriptionZh: keepTranslation ? previous.descriptionZh ?? null : null,
@@ -178,8 +181,11 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   }
   const startedAt = iso(now());
   if (!startedAt) throw new Error('Invalid collection time');
-  const repos = new Map(snapshot.projects.map((repo) => [repo.fullName.toLowerCase(), { ...repo }]));
-  let nextHistory = structuredClone(history);
+  const initialState = reconcileRepositoryState(snapshot.projects, { history, starActivity: activity || emptyStarActivity(), now: Date.parse(startedAt) });
+  const repos = new Map(initialState.projects.map(repo => [repo.fullName.toLowerCase(), repo]));
+  const ids = new Map(initialState.projects.filter(repo => integer(repo.githubId)).map(repo => [repo.githubId, repo]));
+  let nextHistory = initialState.history;
+  const nextActivity = initialState.starActivity;
   // Product scope is a rolling three-year creation window: every run prunes
   // repositories that have aged out, together with their star history.
   const scopeNow = Date.parse(startedAt);
@@ -187,6 +193,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   for (const [key, repo] of [...repos.entries()]) {
     if (repo.availability === 'available' && repo.createdAt && !withinScope(repo.createdAt, scopeNow)) {
       repos.delete(key);
+      if (repo.githubId) ids.delete(repo.githubId);
       delete nextHistory[repo.fullName];
       pruned += 1;
     }
@@ -235,16 +242,47 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   }
   function accept(data, requestedName, fetchedAt) {
     const requestedKey = requestedName.toLowerCase();
-    const previous = repos.get(requestedKey) || {};
+    const incomingId = integer(data.id);
+    const requested = repos.get(requestedKey);
+    const existing = repos.get(String(data.full_name).toLowerCase());
+    const compatible = repo => repo && (!incomingId || !integer(repo.githubId) || repo.githubId === incomingId);
+    const previous = ids.get(incomingId) || (compatible(requested) ? requested : null) || (compatible(existing) ? existing : null) || {};
     const project = toSnapshotProject(data, fetchedAt, previous);
     const canonicalKey = project.fullName.toLowerCase();
-    // Redirected/renamed repositories retain their history under one name.
-    if (previous.fullName && previous.fullName !== project.fullName) {
-      nextHistory[project.fullName] = { ...nextHistory[previous.fullName], ...nextHistory[project.fullName] };
-      delete nextHistory[previous.fullName];
+    // Search 也可能先观察到改名；用稳定 ID 合并，而非等旧名称单仓库请求重定向。
+    const related = [...new Set([previous.fullName ? previous : null, requested, existing].filter(Boolean))];
+    const namedRows = related.map(repo => repo === previous && !integer(repo.githubId) && incomingId
+      ? { ...repo, githubId: incomingId } : repo);
+    const names = new Set([...related, project].flatMap(repo => [repo.fullName, ...(repo.repositoryAliases || [])]));
+    const selectNames = entries => Object.fromEntries([...names].filter(name => Object.hasOwn(entries || {}, name)).map(name => [name, entries[name]]));
+    const state = reconcileRepositoryState([...namedRows, project], {
+      now: Date.parse(fetchedAt),
+      history: selectNames(nextHistory),
+      starActivity: { schemaVersion: 1, repositories: selectNames(nextActivity.repositories), status: {
+        historyUnavailable: selectNames(nextActivity.status.historyUnavailable),
+        historyAttempts: selectNames(nextActivity.status.historyAttempts),
+      } },
+    });
+    for (const repo of related) {
+      repos.delete(repo.fullName.toLowerCase());
+      if (repo.githubId) ids.delete(repo.githubId);
+      refreshed.delete(repo.fullName.toLowerCase());
     }
-    if (requestedKey !== canonicalKey) repos.delete(requestedKey);
-    repos.set(canonicalKey, project);
+    for (const name of names) {
+      delete nextHistory[name];
+      delete nextActivity.repositories[name];
+      delete nextActivity.status.historyUnavailable?.[name];
+      delete nextActivity.status.historyAttempts?.[name];
+    }
+    Object.assign(nextHistory, state.history);
+    Object.assign(nextActivity.repositories, state.starActivity.repositories);
+    for (const field of ['historyUnavailable', 'historyAttempts']) {
+      nextActivity.status[field] = { ...nextActivity.status[field], ...state.starActivity.status[field] };
+    }
+    for (const repo of state.projects) {
+      repos.set(repo.fullName.toLowerCase(), repo);
+      if (repo.githubId) ids.set(repo.githubId, repo);
+    }
     nextHistory = recordDailySample(nextHistory, project.fullName, project.stars, fetchedAt);
     refreshed.add(canonicalKey);
     consecutiveFailures = 0;
@@ -361,7 +399,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
       }
     }
   }
-  const eligible = buildUpdateQueue([...repos.values()], startedAt, { activity })
+  const eligible = buildUpdateQueue([...repos.values()], startedAt, { activity: nextActivity })
     .filter((repo) => !refreshed.has(repo.fullName.toLowerCase()));
   const queue = eligible.slice(0, limit);
   for (const repo of queue) {
@@ -381,7 +419,9 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
       const data = await response.json();
       if (isNonPublic(data)) {
         unavailable += 1;
-        repos.set(repo.fullName.toLowerCase(), { id: repo.fullName, fullName: repo.fullName,
+        repos.set(repo.fullName.toLowerCase(), { id: repo.fullName, fullName: repo.fullName, githubId: repo.githubId ?? null,
+          repositoryAliases: repo.repositoryAliases || [],
+          repositoryAliasExclusions: repo.repositoryAliasExclusions || [],
           name: repo.fullName.split('/')[1], stars: null, forks: null, openIssues: null,
           description: '', language: null, license: null, topics: [], contributors: null,
           createdAt: null, pushedAt: null, updatedAt: null, fetchedAt: null,
@@ -423,7 +463,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
         harvest: harvest ? harvestCoverage : snapshot.coverage?.harvest || null,
         note: 'Tracked repositories are limited to a rolling three-year creation window; star-sorted discovery is not a global growth ranking.' },
       sync: { startedAt, result, requests, refreshed: refreshed.size, failures, unavailable, retryAfter },
-    }, history: nextHistory,
+    }, history: nextHistory, starActivity: nextActivity,
   };
 }
 
@@ -437,28 +477,84 @@ export function atomicWriteJson(path, value) {
   }
 }
 
-/**
- * Mutual exclusion between the dev server's auto-collection and scheduled
- * runs: both spawn this script against the same JSON files, and the last
- * writer wins. A lock younger than LOCK_TTL_MS blocks a second collector;
- * older locks are treated as crashed holders and taken over.
- */
-const LOCK_TTL_MS = 30 * 60_000;
-export function acquireSyncLock(path, { now = () => new Date().toISOString() } = {}) {
-  const claim = () => {
-    writeFileSync(path, JSON.stringify({ pid: process.pid, acquiredAt: now() }), { encoding: 'utf8', flag: 'wx' });
-  };
-  try { claim(); return true; } catch (error) { if (error.code !== 'EEXIST') throw error; }
-  try {
-    const held = JSON.parse(readFileSync(path, 'utf8'));
-    if (Date.parse(now()) - Date.parse(held.acquiredAt) < LOCK_TTL_MS) return false;
-    unlinkSync(path); // Stale lock: the previous collector died mid-run.
-    claim();
-    return true;
-  } catch { return false; }
+const ownedLocks = new Map();
+function processIsAlive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return true; // 无法证实已退出时保持互斥。
+  try { process.kill(pid, 0); return true; }
+  catch (error) { return error.code !== 'ESRCH'; }
 }
+
+// 短暂的文件操作也互斥：避免两个进程同时检查死锁后删除对方刚取得的锁。
+function withSyncGuard(path, isProcessAlive, operation) {
+  const guardPath = `${path}.guard`;
+  const guard = JSON.stringify({ pid: process.pid, owner: randomUUID() });
+  const claimGuard = () => writeFileSync(guardPath, guard, { encoding: 'utf8', flag: 'wx' });
+  try {
+    try { claimGuard(); }
+    catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const previous = readFileSync(guardPath, 'utf8');
+      const held = JSON.parse(previous);
+      if (isProcessAlive(held.pid) || readFileSync(guardPath, 'utf8') !== previous) return false;
+      unlinkSync(guardPath);
+      claimGuard();
+    }
+  } catch (error) {
+    if (['EEXIST', 'ENOENT'].includes(error.code) || error instanceof SyntaxError) return false;
+    throw error;
+  }
+  try { return operation(); }
+  finally {
+    try { if (readFileSync(guardPath, 'utf8') === guard) unlinkSync(guardPath); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+}
+
+export function acquireSyncLock(path, { now = () => new Date().toISOString(), isProcessAlive = processIsAlive } = {}) {
+  const absolute = resolve(path);
+  return withSyncGuard(absolute, isProcessAlive, () => {
+    const owner = randomUUID();
+    const claim = () => {
+      writeFileSync(absolute, JSON.stringify({ pid: process.pid, acquiredAt: now(), owner }), { encoding: 'utf8', flag: 'wx' });
+      ownedLocks.set(absolute, owner);
+      return true;
+    };
+    try { return claim(); }
+    catch (error) { if (error.code !== 'EEXIST') throw error; }
+    try {
+      const previous = readFileSync(absolute, 'utf8');
+      const held = JSON.parse(previous);
+      // 兼容旧版只有 pid/acquiredAt 的锁；运行再久也不能接管仍存活的进程。
+      if (isProcessAlive(held.pid) || readFileSync(absolute, 'utf8') !== previous) return false;
+      unlinkSync(absolute);
+      return claim();
+    } catch (error) {
+      if (['ENOENT', 'EEXIST'].includes(error.code) || error instanceof SyntaxError) return false;
+      throw error;
+    }
+  });
+}
+
 export function releaseSyncLock(path) {
-  try { unlinkSync(path); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const absolute = resolve(path);
+  const owner = ownedLocks.get(absolute);
+  if (!owner) return false;
+  return withSyncGuard(absolute, processIsAlive, () => {
+    try {
+      const held = JSON.parse(readFileSync(absolute, 'utf8'));
+      if (held.owner !== owner || held.pid !== process.pid) {
+        ownedLocks.delete(absolute);
+        return false;
+      }
+      unlinkSync(absolute);
+      ownedLocks.delete(absolute);
+      return true;
+    } catch (error) {
+      if (error.code === 'ENOENT') { ownedLocks.delete(absolute); return false; }
+      if (error instanceof SyntaxError) return false;
+      throw error;
+    }
+  });
 }
 
 function resolveToken() {
@@ -517,14 +613,24 @@ async function runSync(options) {
   if (!token) console.log('No token: GitHub permits 60 unauthenticated core requests/hour; response headers control this run.');
   let activity = emptyStarActivity();
   try { activity = JSON.parse(readFileSync(activityPath, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const reconciled = reconcileRepositoryState(snapshot.projects, { history, starActivity: activity });
+  snapshot = { ...snapshot, projects: reconciled.projects };
+  history = reconciled.history;
+  activity = reconciled.starActivity;
   const activityBefore = activity;
   activity = await refreshStarActivity(snapshot.projects, activity, { token,
     limit: Math.min(options.limit, options.historyOnly ? options.budget : Math.floor(options.budget / 3)), maxRuntimeMs: 5 * 60_000 });
   const activityRequests = activity.status.attemptedAt === activityBefore.status?.attemptedAt ? 0 : activity.status.requests || 0;
   if (!options.dry) atomicWriteJson(activityPath, activity);
   console.log(`Official star history: ${activityRequests} requests; ${activity.status.message || 'cache ready'}`);
-  if (options.historyOnly) { process.exitCode = activity.status.failures && !activity.status.updated ? 1 : 0; return; }
+  if (options.historyOnly) {
+    if (!options.dry) { atomicWriteJson(historyPath, history); atomicWriteJson(snapshotPath, snapshot); }
+    process.exitCode = activity.status.failures && !activity.status.updated ? 1 : 0;
+    return;
+  }
   const outcome = await syncData({ ...options, budget: Math.max(0, options.budget - activityRequests), snapshot, history, token, activity });
+  activity = outcome.starActivity;
+  if (!options.dry) atomicWriteJson(activityPath, activity);
   // Probe official history for newly discovered candidates (fresh cohorts and
   // the surge channel) with whatever request budget remains, so a promising
   // repository can enter the boards in this run instead of the next one.

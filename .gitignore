@@ -4,6 +4,7 @@
 
 # transient collector mutex
 src/data/.sync.lock
+src/data/.sync.lock.guard
 
 # live collected data: local-only, shared via Actions artifacts instead of git
 # commits (keeps the repo small and JSON merges out of pull/push)

@@ -1,6 +1,8 @@
 import { DAY_MS, utcDate, validStarCount, calculateGrowth, buildTrendSeries } from './history.js';
 import { emptyStarActivity, summarizeStarActivity, buildAddedTrend } from './star-activity.js';
+import { reconcileRepositoryState } from './repository-state.js';
 export { refreshStarActivity, mergeStarActivity, emptyStarActivity, buildAddedTrend } from './star-activity.js';
+export { mergeRepositoryStates } from './repository-state.js';
 export { buildTrendSeries } from './history.js';
 
 /** Dashboard categories are weighted local rules, not GitHub's classifications. */
@@ -191,6 +193,7 @@ function normalizeProject(project) {
   return {
     ...project,
     id: fullName,
+    githubId: Number.isSafeInteger(project.githubId) && project.githubId > 0 ? project.githubId : null,
     fullName,
     name: typeof project.name === 'string' ? project.name : fullName.split('/')[1],
     description: typeof project.description === 'string' ? project.description : '',
@@ -327,10 +330,14 @@ function sumKnown(projects, field) {
 export function assembleSnapshot(projects, {
   now = Date.now(), history = {}, starActivity = emptyStarActivity(), source = 'cached', fetchedAt = null, coverage = {}, warning = null,
 } = {}) {
+  // 身份与历史先归一，再执行统一收录范围；浏览器增量并集也不能保留超龄工程。
+  const reconciled = reconcileRepositoryState(projects, { history, starActivity, now });
+  history = reconciled.history;
+  starActivity = reconciled.starActivity;
   const unique = new Map();
-  for (const row of projects) {
+  for (const row of reconciled.projects) {
     const project = normalizeProject(row);
-    if (!project) continue;
+    if (!project || !withinScope(project.createdAt, now)) continue;
     const sampled = project.fetchedAt ? Date.parse(project.fetchedAt) : NaN;
     // A stale sample is not a current week/month endpoint. Never re-anchor it
     // to page-load time, and never retain deltas supplied by a legacy seed.
@@ -447,7 +454,7 @@ export function projectFromGitHub(item, fetchedAt) {
   if (!FULL_NAME.test(fullName)) throw new Error('GitHub 返回了无效仓库名称');
   const classification = classifyRepositoryDetails({ ...item, fullName, description: item.description || '', topics: item.topics });
   return normalizeProject({
-    id: fullName, fullName, name: item.name, description: item.description || '',
+    id: fullName, githubId: item.id, fullName, name: item.name, description: item.description || '',
     descriptionSource: 'github-api', category: classification.category, categoryTags: classification.tags,
     categoryVersion: classification.version, language: item.language,
     stars: item.stargazers_count, forks: item.forks_count, openIssues: item.open_issues_count,

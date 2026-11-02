@@ -202,6 +202,41 @@ test('API mapping retains original text, truthful dates, nulls and zero counts',
   assert.equal(project.htmlUrl, 'https://github.com/a/example');
 });
 
+test('API mapping retains the stable GitHub repository id', () => {
+  const project = projectFromGitHub({ id: 12345, full_name: 'owner/renamed', private: false }, '2026-09-28T11:00:00Z');
+  assert.equal(project.githubId, 12345);
+});
+
+test('assembly enforces the rolling scope before statistics and every ranking', () => {
+  const rows = [fixture('a/expired', { createdAt: '2023-09-28T11:59:59Z', stars: 1000000 }),
+    fixture('a/boundary', { createdAt: '2023-09-28T12:00:00Z' }), fixture('a/current'),
+    fixture('a/unknown', { createdAt: null })];
+  const snapshot = assembleSnapshot(rows, { now: NOW });
+  assert.deepEqual(snapshot.projects.map(p => p.fullName), ['a/boundary', 'a/current', 'a/unknown']);
+  assert.equal(snapshot.stats.projects, 3);
+  assert.ok(!selectProjects(snapshot, { limit: Infinity }).some(p => p.fullName === 'a/expired'));
+});
+
+test('assembly deduplicates renamed GitHub identities and migrates both history sources', () => {
+  const old = fixture('a/original', { githubId: 42, createdAt: '2025-01-01T00:00:00Z', fetchedAt: '2026-09-28T10:00:00Z' });
+  const renamed = fixture('b/renamed', { githubId: 42, createdAt: '2025-01-01T00:00:00Z', fetchedAt: '2026-09-28T11:00:00Z' });
+  const history = { 'a/original': { '2026-09-27': 100 } };
+  const anchor = Date.parse('2026-09-27T00:00:00Z');
+  const record = { source: 'github-star-history', fetchedAt: new Date(NOW).toISOString(),
+    weeks: Array.from({ length: 6 }, (_, i) => ({ week: (anchor - i * 7 * 86400000) / 1000, days: Array(7).fill(1), total: 7 })) };
+  const starActivity = { schemaVersion: 1, repositories: { 'a/original': record }, status: {} };
+  const snapshot = assembleSnapshot([old, renamed], { now: NOW, history, starActivity });
+  assert.equal(snapshot.projects.length, 1);
+  assert.equal(snapshot.projects[0].fullName, 'b/renamed');
+  assert.equal(snapshot.projects[0].todayStars, 20);
+  assert.equal(snapshot.projects[0].weekAdded, 7);
+  assert.deepEqual(snapshot.history['b/renamed'], { '2026-09-27': 100 });
+  assert.equal(snapshot.history['a/original'], undefined);
+  assert.ok(snapshot.starActivity.repositories['b/renamed']);
+  assert.ok(history['a/original']);
+  assert.ok(starActivity.repositories['a/original']);
+});
+
 test('Search fetch paginates a bounded sample, deduplicates, and declares truncation', async (t) => {
   const urls = [];
   t.mock.method(globalThis, 'fetch', async (url) => {

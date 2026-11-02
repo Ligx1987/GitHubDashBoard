@@ -60,25 +60,26 @@ function officialHistory(projects) {
   }])), status: {} };
 }
 
-async function startApp({ projects, history = {}, starActivity = officialHistory(projects), liveFetch = async () => { throw new Error('offline test'); } }) {
+async function startApp({ projects, history = {}, starActivity = officialHistory(projects), liveFetch = async () => { throw new Error('offline test'); }, historyFetch = async (_projects, cache) => cache }) {
   const elements = new Map();
   const get = (selector) => { if (!elements.has(selector)) elements.set(selector, element()); return elements.get(selector); };
   const document = { body: element(), hidden: false, querySelector: get, querySelectorAll: () => [], addEventListener() {} };
   const storage = { getItem: () => null, setItem() {}, removeItem() {} };
   let fetchLive = liveFetch;
+  let fetchHistory = historyFetch;
   let loadSaved = async () => data.assembleSnapshot(structuredClone(projects), { history: structuredClone(history), starActivity, source: 'cached' });
   const window = {};
   const context = vm.createContext({
     ...data, document, window, sessionStorage: storage, localStorage: storage,
     loadDashboardData: (...args) => loadSaved(...args), fetchGitHubProjects: (...args) => fetchLive(...args),
-    refreshStarActivity: async (_projects, cache) => cache,
+    refreshStarActivity: (...args) => fetchHistory(...args),
     AbortController, setTimeout: (fn, ms) => setTimeout(fn, ms)?.unref?.() ?? 1, clearTimeout: (id) => clearTimeout(id), setInterval: () => 1,
   });
   await vm.runInContext(`(async () => { ${source}\n })()`, context, { filename: 'app.js' });
   await nextTurn(); // Let the application's initial automatic refresh settle.
   // The original regressions below explicitly exercise the retained net mode.
   assert.equal(get('#refreshButton').disabled, false);
-  return { get, app: window.githubPulse, setFetch: (fetcher) => { fetchLive = fetcher; }, setLoad: (loader) => { loadSaved = loader; } };
+  return { get, app: window.githubPulse, setFetch: (fetcher) => { fetchLive = fetcher; }, setLoad: (loader) => { loadSaved = loader; }, setHistoryFetch: (fetcher) => { fetchHistory = fetcher; } };
 }
 const rowCount = (html) => (html.match(/class="repo-row"/g) || []).length;
 
@@ -139,11 +140,11 @@ test('UI renders four annual Top30 sections and excludes old fast-growing projec
   const annual = fixtures(35, { prefix: 'annual', baseStars: 90000 });
   annual.projects.forEach(p => { p.createdAt = `${year - 1}-06-01T00:00:00Z`; });
   const old = fixtures(1, { prefix: 'old', baseStars: 1000000 });
-  old.projects[0].createdAt = `${year - 6}-01-01T00:00:00Z`;
+  old.projects[0].createdAt = `${year - 1}-01-01T00:00:00Z`;
   const projects = [...fresh.projects, ...annual.projects, ...old.projects];
   const ui = await startApp({ projects });
   assert.ok(!ui.get('#newBoardTable').innerHTML.includes('test/old-0'));
-  // The surge board has no creation window: an old project with fresh growth belongs there.
+  // 已收录的成熟工程仍可进入飙升榜；三年范围外的工程由统一入口剔除。
   assert.ok(ui.get('#surgeBoardTable').innerHTML.includes('test/old-0'));
   const html = ui.get('#yearlyBoard').innerHTML;
   assert.equal((html.match(/<details class="yearly-group"/g) || []).length, 4);
@@ -327,4 +328,85 @@ test('removed trend view has no chart, navigation or mode controls', async () =>
   const ui = await startApp(fixtures());
   assert.match(ui.get('#growthMetricLabel').textContent, /一周新增 Stars.*截至/);
   assert.notEqual(ui.get('#weeklyStars').textContent, '待获取');
+});
+
+test('directory sorts comparable growth first and labels older cached windows', async () => {
+  const { projects } = fixtures(3);
+  projects.forEach(project => { project.createdAt = new Date(Date.now() - 60 * 86400000).toISOString(); });
+  const [fresh, stale, unknown] = projects;
+  const starActivity = officialHistory(projects);
+  delete starActivity.repositories[unknown.fullName];
+  unknown.stars = 100000;
+  const old = starActivity.repositories[stale.fullName];
+  old.fetchedAt = new Date(Date.now() - 86400000).toISOString();
+  old.weeks = old.weeks.map(week => ({ week: week.week - 7 * 86400, days: Array(7).fill(100), total: 700 }));
+  const ui = await startApp({ projects, starActivity });
+  const html = ui.get('#repositoryTable').innerHTML;
+  const names = [...html.matchAll(/class="repo-link"[^>]*>([^<]+)</g)].map(match => match[1]);
+  assert.deepEqual(names, [fresh.fullName, unknown.fullName, stale.fullName]);
+  const cutoff = data.assembleSnapshot(projects, { starActivity }).projects.find(p => p.fullName === stale.fullName).activityWindowEnd;
+  const label = new Date(cutoff).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+  assert.ok(html.includes(`缓存 7 日新增 · 截至 ${label}`));
+});
+
+test('live metadata refresh preserves unchanged translations and manual classification', async () => {
+  const fixture = fixtures();
+  Object.assign(fixture.projects[0], { githubId: 123, descriptionZh: '已持久化中文', descriptionZhProvider: 'google', categoryOverride: 'security' });
+  const live = data.projectFromGitHub({ id: 123, full_name: fixture.projects[0].fullName,
+    description: fixture.projects[0].description, stargazers_count: 2000,
+    created_at: fixture.projects[0].createdAt, private: false }, new Date().toISOString());
+  const ui = await startApp({ ...fixture, liveFetch: async () => [live] });
+  const project = ui.app.getSnapshot().projects[0];
+  assert.equal(project.descriptionZh, '已持久化中文');
+  assert.equal(project.categoryOverride, 'security');
+  assert.equal(project.category, 'security');
+  assert.equal(project.stars, 2000);
+  assert.ok(ui.get('#repositoryTable').innerHTML.includes('已持久化中文'));
+});
+
+test('browser refresh cannot retain out-of-scope rows after the saved snapshot prunes them', async () => {
+  const fixture = fixtures(2);
+  fixture.projects[0].createdAt = '2020-01-01T00:00:00Z';
+  const ui = await startApp(fixture);
+  ui.setLoad(async () => data.assembleSnapshot([fixture.projects[1]]));
+  await ui.app.refresh({ silent: true });
+  assert.equal(ui.app.getSnapshot().projects.length, 1);
+  assert.equal(ui.get('#trackedCount').textContent, '1');
+  assert.ok(!ui.get('#repositoryTable').innerHTML.includes(fixture.projects[0].fullName));
+});
+
+test('live repository renames retain one identity and the official history', async () => {
+  const fixture = fixtures();
+  fixture.projects[0].githubId = 456;
+  const renamed = { ...fixture.projects[0], fullName: 'new-owner/renamed', fetchedAt: new Date().toISOString() };
+  const ui = await startApp({ ...fixture, liveFetch: async () => [renamed] });
+  assert.equal(ui.app.getSnapshot().projects.length, 1);
+  assert.equal(ui.app.getSnapshot().projects[0].fullName, 'new-owner/renamed');
+  assert.ok(ui.app.getSnapshot().projects[0].weekAdded > 0);
+  assert.equal(ui.get('#trackedCount').textContent, '1');
+});
+
+test('a reused repository name cannot inherit the old identity history during rendering or another saved refresh', async () => {
+  const fixture = fixtures();
+  Object.assign(fixture.projects[0], { githubId: 10, createdAt: new Date(Date.now() - 60 * 86400000).toISOString() });
+  const replacement = { ...fixture.projects[0], githubId: 20, createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), fetchedAt: new Date().toISOString() };
+  const ui = await startApp({ ...fixture, liveFetch: async () => [replacement] });
+  assert.equal(ui.app.getSnapshot().projects[0].githubId, 20);
+  assert.equal(ui.app.getSnapshot().projects[0].weekAdded, null);
+  await ui.app.refresh({ silent: true });
+  assert.equal(ui.app.getSnapshot().projects[0].githubId, 20);
+  assert.equal(ui.app.getSnapshot().projects[0].weekAdded, null);
+});
+
+test('new identity history survives a later refresh from an older saved identity', async () => {
+  const fixture = fixtures();
+  Object.assign(fixture.projects[0], { githubId: 10, createdAt: new Date(Date.now() - 60 * 86400000).toISOString() });
+  const replacement = { ...fixture.projects[0], githubId: 20, createdAt: new Date(Date.now() - 2 * 86400000).toISOString(), fetchedAt: new Date().toISOString() };
+  const ui = await startApp({ ...fixture, liveFetch: async () => [replacement], historyFetch: async projects => officialHistory(projects) });
+  const expected = ui.app.getSnapshot().projects[0].weekAdded;
+  assert.ok(expected > 0);
+  ui.setHistoryFetch(async (_projects, cache) => cache);
+  await ui.app.refresh({ silent: true });
+  assert.equal(ui.app.getSnapshot().projects[0].githubId, 20);
+  assert.equal(ui.app.getSnapshot().projects[0].weekAdded, expected);
 });

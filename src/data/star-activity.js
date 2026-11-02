@@ -3,9 +3,11 @@
 const DAY = 86400000;
 const NAME = /^[\w.-]+\/[\w.-]+$/;
 const count = value => Number.isSafeInteger(value) && value >= 0;
+const validId = value => Number.isSafeInteger(value) && value > 0;
 // 低星工程轮转更新；缓存保留实际完整日截止时间，不推进未采到的日期。
 const LOW_STAR_STARS = 1000;
 const LOW_STAR_RECORD_MAX_AGE_MS = 36 * 3600000;
+const HISTORY_RETRY_MS = 3600000;
 export const emptyStarActivity = () => ({ schemaVersion: 1, repositories: {}, status: {} });
 
 export function validateStarWeeks(payload) {
@@ -64,13 +66,67 @@ export function buildAddedTrend(projects) {
     coverage: Array(7).fill(comparable.length) };
 }
 
-export function mergeStarActivity(before = emptyStarActivity(), next = emptyStarActivity()) {
+// 保留原始观测，不混合不同采样时刻的周记录。尚有效的完整窗口不能被
+// 较新的缺周响应抹掉；旧缓存过期后，允许真实的新部分历史恢复已有覆盖。
+export function chooseStarActivityRecord(previous, candidate, { now = Date.now(), createdAt = null, githubId = null } = {}) {
+  const conflicts = record => validId(githubId) && validId(record?.githubId) && record.githubId !== githubId;
+  if (conflicts(previous)) previous = undefined;
+  if (conflicts(candidate)) candidate = undefined;
+  const valid = record => {
+    const fetched = Date.parse(record?.fetchedAt);
+    if (record?.source !== 'github-star-history' || !Number.isFinite(fetched) || fetched > now) return false;
+    try { return validateStarWeeks(record.weeks)[0].week * 1000 <= fetched; } catch { return false; }
+  };
+  if (!valid(candidate)) return previous;
+  if (!valid(previous)) return candidate;
+  // 同名可被另一个仓库复用；旧身份的完整历史不能压过当前身份的部分历史。
+  if (validId(previous.githubId) && validId(candidate.githubId) && previous.githubId !== candidate.githubId) return candidate;
+  const oldSummary = summarizeStarActivity(previous, { now, createdAt });
+  const newSummary = summarizeStarActivity(candidate, { now, createdAt });
+  const fields = ['threeDayAdded', 'weekAdded', 'prevWeekAdded', 'monthAdded'];
+  if (fields.some(field => count(oldSummary[field]) && !count(newSummary[field]))) return previous;
+  if (fields.some(field => count(newSummary[field]) && !count(oldSummary[field]))) return candidate;
+  const oldEnd = Date.parse(oldSummary.activityWindowEnd) || 0;
+  const newEnd = Date.parse(newSummary.activityWindowEnd) || 0;
+  if (oldEnd !== newEnd) return newEnd > oldEnd ? candidate : previous;
+  return Date.parse(candidate.fetchedAt) >= Date.parse(previous.fetchedAt) ? candidate : previous;
+}
+
+export function mergeStarActivity(before = emptyStarActivity(), next = emptyStarActivity(), options = {}) {
   const repositories = { ...before.repositories };
+  let retainedComplete = 0;
   for (const [name, record] of Object.entries(next.repositories || {})) {
-    if (!repositories[name] || Date.parse(record.fetchedAt) >= Date.parse(repositories[name].fetchedAt)) repositories[name] = record;
+    const previous = repositories[name];
+    const chosen = chooseStarActivityRecord(previous, record, options);
+    if (chosen === previous && record !== previous && Date.parse(record.fetchedAt) > Date.parse(previous?.fetchedAt)) retainedComplete++;
+    if (chosen) repositories[name] = chosen;
+    else delete repositories[name];
   }
-  const status = Date.parse(next.status?.attemptedAt) >= Date.parse(before.status?.attemptedAt || 0) ? next.status : before.status;
-  return { schemaVersion: 1, repositories, status: status || {} };
+  const latestStatus = Date.parse(next.status?.attemptedAt) >= Date.parse(before.status?.attemptedAt || 0) ? next.status : before.status;
+  const status = { ...latestStatus };
+  const historyAttempts = { ...before.status?.historyAttempts };
+  for (const [name, attempt] of Object.entries(next.status?.historyAttempts || {})) {
+    if (!historyAttempts[name] || Date.parse(attempt.at) >= Date.parse(historyAttempts[name].at)) historyAttempts[name] = attempt;
+  }
+  const historyUnavailable = { ...before.status?.historyUnavailable };
+  for (const [name, until] of Object.entries(next.status?.historyUnavailable || {})) {
+    if (!historyUnavailable[name] || Date.parse(until) > Date.parse(historyUnavailable[name])) historyUnavailable[name] = until;
+  }
+  for (const [name, until] of Object.entries(historyUnavailable)) {
+    // 后续成功观测已经证明恢复可用，旧缓存不能重新加回七天冷却。
+    if (Date.parse(repositories[name]?.fetchedAt) > Date.parse(until) - 7 * DAY) delete historyUnavailable[name];
+  }
+  status.historyAttempts = historyAttempts;
+  status.historyUnavailable = historyUnavailable;
+  status.queueTurns = { ...latestStatus?.queueTurns };
+  for (const lane of ['recent', 'established']) {
+    status.queueTurns[lane] = Math.max(before.status?.queueTurns?.[lane] || 0, next.status?.queueTurns?.[lane] || 0);
+  }
+  if (retainedComplete) {
+    status.message = `较新历史缓存覆盖不足；合并时保留 ${retainedComplete} 个仍有效的完整历史缓存`;
+    status.retainedComplete = retainedComplete;
+  }
+  return { schemaVersion: 1, repositories, status };
 }
 
 export async function refreshStarActivity(projects, cache = emptyStarActivity(), {
@@ -79,14 +135,35 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
 } = {}) {
   const start = now();
   const result = { schemaVersion: 1, repositories: { ...cache.repositories }, status: { ...cache.status } };
-  // A newly supplied token may recover from an unauthenticated quota block.
-  if (!force && Date.parse(cache.status?.retryAfter) > start && (!token || cache.status?.authenticated)) return result;
   // Repositories whose history endpoint answered 404 cool down for seven days;
   // otherwise a handful of dead names would head the queue and abort every
   // batch via the consecutive-failure cap, starving all live repositories.
   const historyUnavailable = { ...(cache.status?.historyUnavailable || {}) };
+  const historyAttempts = { ...(cache.status?.historyAttempts || {}) };
+  const queueTurns = { recent: 0, established: 0, nextLane: 'recent', ...cache.status?.queueTurns };
+  for (const lane of ['recent', 'established']) {
+    if (!Number.isSafeInteger(queueTurns[lane]) || queueTurns[lane] < 0) queueTurns[lane] = 0;
+  }
+  const recoveringWithToken = !!token && !cache.status?.authenticated;
+  result.status = { ...result.status, historyUnavailable, historyAttempts, queueTurns };
+  for (const project of projects) {
+    if (!validId(project.githubId)) continue;
+    const recordId = result.repositories[project.fullName]?.githubId;
+    const attemptId = historyAttempts[project.fullName]?.githubId;
+    const changedRecord = validId(recordId) && recordId !== project.githubId;
+    const changedAttempt = validId(attemptId) && attemptId !== project.githubId;
+    if (changedRecord) delete result.repositories[project.fullName];
+    if (changedRecord || changedAttempt) {
+      delete historyUnavailable[project.fullName];
+      delete historyAttempts[project.fullName];
+    }
+  }
+  // 身份隔离先于限额检查，避免无法请求时继续展示另一仓库的缓存。
+  // A newly supplied token may recover from an unauthenticated quota block.
+  if (!force && Date.parse(cache.status?.retryAfter) > start && (!token || cache.status?.authenticated)) return result;
   const pool = projects.filter(p => NAME.test(p.fullName || '') && p.availability === 'available')
     .filter(p => !(Date.parse(historyUnavailable[p.fullName]) > start))
+    .filter(p => force || recoveringWithToken || !(Date.parse(historyAttempts[p.fullName]?.retryAfter) > start))
     .filter(p => { const previous = result.repositories[p.fullName]; return !previous || start - Date.parse(previous.fetchedAt) >= ttlMs || summarizeStarActivity(previous, { now: start, createdAt: p.createdAt }).monthAdded === null; });
   const recent = p => Number(Date.parse(p.createdAt) >= start - 31 * DAY && Date.parse(p.createdAt) <= start);
   // Repositories that were already hot keep priority so surge rankings and
@@ -102,7 +179,9 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
     const fetched = Date.parse(result.repositories[p.fullName]?.fetchedAt);
     return Number.isFinite(fetched) && start - fetched < LOW_STAR_RECORD_MAX_AGE_MS;
   };
-  const byPriority = (a, b) => hot(b) - hot(a) || Number(demoted(a)) - Number(demoted(b)) || (Date.parse(result.repositories[a.fullName]?.fetchedAt) || 0) - (Date.parse(result.repositories[b.fullName]?.fetchedAt) || 0) || (b.stars || 0) - (a.stars || 0);
+  const lastServed = p => Math.max(Date.parse(result.repositories[p.fullName]?.fetchedAt) || 0, Date.parse(historyAttempts[p.fullName]?.at) || 0);
+  const byOldest = (a, b) => lastServed(a) - lastServed(b) || (b.stars || 0) - (a.stars || 0) || a.fullName.localeCompare(b.fullName);
+  const byPriority = (a, b) => hot(b) - hot(a) || Number(demoted(a)) - Number(demoted(b)) || byOldest(a, b);
   // New repositories and established ones refresh in separate lanes, merged
   // 1:1: new-project boards need fresh cohorts, but the surge board also needs
   // established breakouts — a new-first queue spent the whole daily allowance
@@ -111,18 +190,56 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
   const threeDayCandidate = p => Number(Date.parse(p.createdAt) >= start - 3 * DAY && Date.parse(p.createdAt) < Math.floor(start / DAY) * DAY);
   const recentLane = pool.filter(recent).sort((a, b) => threeDayCandidate(b) - threeDayCandidate(a) || byPriority(a, b));
   const establishedLane = pool.filter(p => !recent(p)).sort(byPriority);
-  const queue = [];
-  for (let i = 0; i < Math.max(recentLane.length, establishedLane.length); i++) {
-    if (i < recentLane.length) queue.push(recentLane[i]);
-    if (i < establishedLane.length) queue.push(establishedLane[i]);
+  const lanes = { recent: recentLane, established: establishedLane };
+  const schedule = [];
+  const remaining = { recent: recentLane.length, established: establishedLane.length };
+  const batchLimit = Math.min(pool.length, Math.max(0, Math.floor(limit)));
+  let nextLane = queueTurns.nextLane === 'established' ? 'established' : 'recent';
+  while (schedule.length < batchLimit) {
+    const lane = remaining[nextLane] ? nextLane : nextLane === 'recent' ? 'established' : 'recent';
+    schedule.push(lane); remaining[lane]--;
+    nextLane = lane === 'recent' ? 'established' : 'recent';
   }
+  const selected = {};
+  for (const lane of ['recent', 'established']) {
+    const capacity = schedule.filter(value => value === lane).length;
+    const priority = lanes[lane];
+    const missing = priority.filter(p => !result.repositories[p.fullName]).sort(byOldest);
+    const oldest = priority.filter(p => result.repositories[p.fullName]).sort(byOldest);
+    const chosen = new Set();
+    const indices = new Map();
+    const take = list => {
+      let index = indices.get(list) || 0;
+      while (chosen.has(list[index]?.fullName)) index++;
+      indices.set(list, index + 1);
+      return list[index];
+    };
+    const turn = Number.isSafeInteger(queueTurns[lane]) ? queueTurns[lane] : 0;
+    selected[lane] = [];
+    for (let i = 0; i < capacity; i++) {
+      // 每通道约三分之一请求用于最久未服务的工程。两次请求至少保底一次；
+      // 单请求批次延续游标，三批内也有一次保底，不会一直只刷新热门工程。
+      const fair = (turn + i) % 3 === 2 || (capacity === 2 && turn % 3 === 0 && i === 1);
+      // 保底在缺失与最旧已有历史之间轮转，持续发现新工程也不会压住过期历史。
+      const fillMissing = (Math.floor((turn + i) / 3) + Number(lane === 'established')) % 2 === 0;
+      const project = fair ? take(fillMissing ? missing : oldest) || take(fillMissing ? oldest : missing) : take(priority);
+      chosen.add(project.fullName); selected[lane].push(project);
+    }
+  }
+  const queue = [];
+  const laneIndices = { recent: 0, established: 0 };
+  for (const lane of schedule) queue.push({ lane, project: selected[lane][laneIndices[lane]++] });
   if (!queue.length) return result;
   let updated = 0, requests = 0, failures = 0, message = '', retryAfter = null;
   const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2026-03-10' };
   if (token) headers.Authorization = `Bearer ${token}`;
-  for (const project of queue.slice(0, Math.max(0, limit))) {
+  for (const { lane, project } of queue) {
     if (signal?.aborted || now() - start >= maxRuntimeMs) { message ||= '历史请求超时或已取消；保留最近成功缓存'; break; }
     requests++;
+    queueTurns[lane]++;
+    queueTurns.nextLane = lane === 'recent' ? 'established' : 'recent';
+    const identity = validId(project.githubId) ? { githubId: project.githubId } : {};
+    historyAttempts[project.fullName] = { ...identity, at: new Date(now()).toISOString(), retryAfter: null };
     try {
       const response = await fetchImpl(`https://api.github.com/repos/${project.fullName}/stargazers/history?per_page=6&page=1`,
         { headers, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000) });
@@ -136,6 +253,7 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
         }
         message = `GitHub 历史接口 HTTP ${response.status}${[403, 429].includes(response.status) ? '：访问或请求额度受限，可配置 Token 后刷新' : ''}；保留最近成功缓存`;
         failures++;
+        historyAttempts[project.fullName].retryAfter = new Date(now() + HISTORY_RETRY_MS).toISOString();
         if ([401, 403, 429].includes(response.status)) {
           const seconds = Number(response.headers.get('retry-after'));
           const reset = Number(response.headers.get('x-ratelimit-reset')) * 1000;
@@ -147,9 +265,12 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
       }
       const weeks = validateStarWeeks(await response.json());
       const fetchedAt = new Date(now()).toISOString();
-      const record = { source: 'github-star-history', fetchedAt, weeks };
+      const record = { source: 'github-star-history', ...identity, fetchedAt, weeks };
       // Empty/lagging current-week responses must not erase a working cache.
       if (summarizeStarActivity(record, { now: now(), createdAt: project.createdAt }).threeDayAdded === null) throw new Error('历史响应未覆盖最近完整统计日');
+      if (chooseStarActivityRecord(result.repositories[project.fullName], record, { now: now(), createdAt: project.createdAt, githubId: project.githubId }) !== record) {
+        throw new Error('历史响应覆盖退步；保留仍有效的完整历史缓存');
+      }
       result.repositories[project.fullName] = record;
       delete historyUnavailable[project.fullName];
       updated++;
@@ -163,12 +284,13 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
       }
     } catch (error) {
       failures++;
+      historyAttempts[project.fullName].retryAfter = new Date(now() + HISTORY_RETRY_MS).toISOString();
       message = `${error.name === 'AbortError' || error.name === 'TimeoutError' ? '历史请求超时' : error.message}；保留最近成功缓存`;
       if (signal?.aborted || failures >= 3) break;
     }
   }
   result.status = { ...result.status, attemptedAt: new Date(now()).toISOString(), updated, requests, failures, authenticated: !!token, retryAfter,
-    historyUnavailable,
-    message: message || (queue.length > updated ? `本批更新 ${updated} 个工程；其余工程将在后续批次继续加载` : '') };
+    historyUnavailable, historyAttempts, queueTurns,
+    message: message || (pool.length > updated ? `本批更新 ${updated} 个工程；其余工程将在后续批次继续加载` : '') };
   return result;
 }

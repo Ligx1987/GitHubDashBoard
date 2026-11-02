@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateStarWeeks, summarizeStarActivity, refreshStarActivity, mergeStarActivity, buildAddedTrend } from '../src/data/star-activity.js';
+import { validateStarWeeks, summarizeStarActivity, refreshStarActivity, mergeStarActivity, chooseStarActivityRecord, buildAddedTrend } from '../src/data/star-activity.js';
 import { assembleSnapshot } from '../src/data/github-data.js';
 
 const DAY = 86400000;
@@ -8,7 +8,7 @@ const NOW = Date.parse('2026-09-28T12:00:00Z');
 const ANCHOR = Date.parse('2026-09-27T00:00:00Z');
 const weeks = (value = 3, anchor = ANCHOR) => Array.from({ length: 6 }, (_, i) => ({ week: (anchor - i * 7 * DAY) / 1000, total: 7 * value, days: Array(7).fill(value) }));
 const record = (value = 3, extra = {}) => ({ source: 'github-star-history', fetchedAt: new Date(NOW).toISOString(), weeks: weeks(value), ...extra });
-const project = (fullName = 'a/repo', extra = {}) => ({ fullName, availability: 'available', stars: 999, fetchedAt: new Date(NOW).toISOString(), createdAt: '2020-01-01T00:00:00Z', ...extra });
+const project = (fullName = 'a/repo', extra = {}) => ({ fullName, availability: 'available', stars: 999, fetchedAt: new Date(NOW).toISOString(), createdAt: '2024-01-01T00:00:00Z', ...extra });
 const ok = body => new Response(JSON.stringify(body), { status: 200 });
 
 test('Sunday rollover accepts a completed previous week without requiring an empty new-week row', async () => {
@@ -185,4 +185,203 @@ test('cache merging chooses newer observations; chart includes only comparable c
   assert.deepEqual(mergeStarActivity(current, old).repositories, current.repositories);
   const rows = [summarizeStarActivity(record(), { now: NOW }), summarizeStarActivity(record(2), { now: NOW })];
   assert.deepEqual(buildAddedTrend(rows).values, Array(7).fill(5));
+});
+
+test('partial new history preserves complete cached windows without advancing their sampling time', async () => {
+  const now = Date.parse('2026-09-30T12:00:00Z');
+  const saved = record(3, { fetchedAt: '2026-09-29T12:00:00Z' });
+  const result = await refreshStarActivity([project()], { repositories: { 'a/repo': saved } }, {
+    now: () => now, fetchImpl: async () => ok(weeks().slice(0, 1)),
+  });
+  assert.deepEqual(result.repositories['a/repo'], saved);
+  assert.equal(result.status.updated, 0);
+  assert.equal(result.status.failures, 1);
+  assert.match(result.status.message, /覆盖.*退|完整.*缓存/);
+  const summary = summarizeStarActivity(result.repositories['a/repo'], { now });
+  assert.equal(summary.activityWindowEnd, '2026-09-29T00:00:00.000Z');
+  assert.equal(summary.weekAdded, 21);
+  assert.equal(summary.monthAdded, 90);
+});
+
+test('cache merge preserves still-valid complete observations in either input order', () => {
+  const now = Date.parse('2026-09-30T12:00:00Z');
+  const saved = record(3, { fetchedAt: '2026-09-29T12:00:00Z' });
+  const partial = record(9, { fetchedAt: new Date(now).toISOString(), weeks: weeks(9).slice(0, 1) });
+  const fullCache = { repositories: { 'a/repo': saved } };
+  const partialCache = { repositories: { 'a/repo': partial } };
+  const preserved = mergeStarActivity(fullCache, partialCache, { now });
+  assert.deepEqual(preserved.repositories['a/repo'], saved);
+  assert.match(preserved.status.message, /覆盖不足.*保留/);
+  assert.deepEqual(mergeStarActivity(partialCache, fullCache, { now }).repositories['a/repo'], saved);
+
+  // Once the complete cache expires, a genuinely newer three-day observation
+  // may restore three-day coverage; no old partial day is relabelled complete.
+  const later = Date.parse('2026-10-08T12:00:00Z');
+  const freshPartial = record(2, { fetchedAt: new Date(later).toISOString(), weeks: weeks(2, Date.parse('2026-10-04T00:00:00Z')).slice(0, 1) });
+  const merged = mergeStarActivity(fullCache, { repositories: { 'a/repo': freshPartial } }, { now: later });
+  assert.deepEqual(merged.repositories['a/repo'], freshPartial);
+  assert.equal(summarizeStarActivity(merged.repositories['a/repo'], { now: later }).monthAdded, null);
+});
+
+test('each lane reserves history requests for missing and aged-out records across hot refresh batches', async () => {
+  let now = NOW;
+  const rows = [];
+  let cache = { repositories: {} };
+  for (const lane of ['recent', 'established']) {
+    const extra = lane === 'recent' ? { createdAt: '2026-09-10T00:00:00Z' } : {};
+    for (let i = 0; i < 6; i++) {
+      const name = `a/${lane}-hot-${i}`;
+      rows.push(project(name, extra));
+      cache.repositories[name] = record(20, { fetchedAt: new Date(NOW - 3 * 3600000).toISOString() });
+    }
+    rows.push(project(`a/${lane}-missing`, extra), project(`a/${lane}-expired`, extra));
+    cache.repositories[`a/${lane}-expired`] = record(1, {
+      fetchedAt: new Date(NOW - 10 * DAY).toISOString(), weeks: weeks(1, ANCHOR - 14 * DAY),
+    });
+  }
+  const called = [];
+  for (let batch = 0; batch < 3; batch++) {
+    const start = called.length;
+    cache = await refreshStarActivity(rows, cache, { now: () => now, limit: 6, fetchImpl: async url => {
+      const name = url.split('/repos/')[1].split('/stargazers/')[0]; called.push(name);
+      return ok(weeks(name.includes('-hot-') ? 20 : 1));
+    } });
+    assert.equal(called.slice(start).filter(name => name.includes('recent')).length, 3);
+    assert.equal(called.slice(start).filter(name => name.includes('established')).length, 3);
+    if (batch === 0) {
+      assert.ok(called.some(name => name.endsWith('-missing')));
+      assert.ok(called.some(name => name.endsWith('-expired')));
+    }
+    now += 3 * 3600000;
+  }
+  for (const lane of ['recent', 'established']) {
+    assert.ok(called.includes(`a/${lane}-missing`));
+    assert.ok(called.includes(`a/${lane}-expired`));
+    assert.notEqual(summarizeStarActivity(cache.repositories[`a/${lane}-expired`], { now }).monthAdded, null);
+  }
+});
+
+test('one- and two-request budgets retain fairness across consecutive batches', async () => {
+  for (const limit of [1, 2]) {
+    let now = NOW;
+    const rows = [project('a/established-hot'), project('a/established-expired')];
+    let cache = { repositories: { 'a/established-hot': record(20), 'a/established-expired': record(1, {
+      fetchedAt: new Date(NOW - 10 * DAY).toISOString(), weeks: weeks(1, ANCHOR - 14 * DAY),
+    }) } };
+    if (limit === 2) {
+      rows.push(project('a/recent-hot', { createdAt: '2026-09-10T00:00:00Z' }), project('a/recent-expired', { createdAt: '2026-09-10T00:00:00Z' }));
+      cache.repositories['a/recent-hot'] = record(20);
+      cache.repositories['a/recent-expired'] = cache.repositories['a/established-expired'];
+    }
+    const called = [];
+    for (let batch = 0; batch < 3; batch++) {
+      cache = await refreshStarActivity(rows, cache, { now: () => now, ttlMs: 0, limit, fetchImpl: async url => {
+        const name = url.split('/repos/')[1].split('/stargazers/')[0]; called.push(name);
+        return ok(weeks(name.includes('-hot') ? 20 : 1));
+      } });
+      now += 3 * 3600000;
+    }
+    assert.ok(called.includes('a/established-expired'), `budget ${limit} must rotate the established lane`);
+    if (limit === 2) assert.ok(called.includes('a/recent-expired'));
+  }
+});
+
+test('failed missing records yield to untouched records and cooldown survives cache merging', async () => {
+  const rows = [project('a/broken', { stars: 9999 }), project('a/untouched')];
+  const first = await refreshStarActivity(rows, undefined, { now: () => NOW, limit: 1,
+    fetchImpl: async () => new Response('{}', { status: 503 }) });
+  const merged = mergeStarActivity(first, { repositories: {}, status: { attemptedAt: new Date(NOW + 1).toISOString() } }, { now: NOW + 1 });
+  const called = [];
+  await refreshStarActivity(rows, merged, { now: () => NOW + 1, limit: 1, fetchImpl: async url => { called.push(url); return ok(weeks()); } });
+  assert.match(called[0], /a\/untouched/);
+});
+
+test('a single-request batch alternates both lanes and rotates failed candidates after cooldown', async () => {
+  let now = NOW;
+  let cache;
+  const rows = [project('a/recent-broken', { stars: 9999, createdAt: '2026-09-10T00:00:00Z' }),
+    project('a/recent-waiting', { createdAt: '2026-09-10T00:00:00Z' }),
+    project('a/established-broken', { stars: 9999 }), project('a/established-waiting')];
+  const called = [];
+  for (let batch = 0; batch < 4; batch++) {
+    cache = await refreshStarActivity(rows, cache, { now: () => now, limit: 1, fetchImpl: async url => {
+      const name = url.split('/repos/')[1].split('/stargazers/')[0]; called.push(name);
+      return name.includes('broken') ? new Response('{}', { status: 503 }) : ok(weeks());
+    } });
+    now += 2 * 3600000;
+  }
+  assert.deepEqual(called, ['a/recent-broken', 'a/established-broken', 'a/recent-waiting', 'a/established-waiting']);
+});
+
+test('newer successful attempts clear stale per-repository retry state when caches merge', () => {
+  const at = new Date(NOW).toISOString();
+  const failure = { repositories: {}, status: { attemptedAt: at,
+    historyAttempts: { 'a/repo': { at, retryAfter: new Date(NOW + 3600000).toISOString() } },
+    queueTurns: { recent: 2, established: 3, nextLane: 'recent' } } };
+  const successAt = new Date(NOW + 1).toISOString();
+  const success = { repositories: { 'a/repo': record(3, { fetchedAt: successAt }) }, status: { attemptedAt: successAt,
+    historyAttempts: { 'a/repo': { at: successAt, retryAfter: null } },
+    queueTurns: { recent: 3, established: 3, nextLane: 'established' } } };
+  const merged = mergeStarActivity(success, failure, { now: NOW + 1 });
+  assert.equal(merged.status.historyAttempts['a/repo'].retryAfter, null);
+  assert.equal(merged.status.queueTurns.recent, 3);
+  assert.equal(merged.status.queueTurns.nextLane, 'established');
+});
+
+test('complete history from another repository ID cannot displace the target identity', () => {
+  const now = Date.parse('2026-09-30T12:00:00Z');
+  const oldIdentity = record(50, { githubId: 101, fetchedAt: new Date(now - 1).toISOString() });
+  const newIdentity = record(1, { githubId: 202, fetchedAt: new Date(now).toISOString(), weeks: weeks(1).slice(0, 1) });
+  assert.equal(chooseStarActivityRecord(oldIdentity, newIdentity, { now }), newIdentity);
+  assert.equal(chooseStarActivityRecord(oldIdentity, newIdentity, { now, githubId: 202 }), newIdentity);
+  assert.equal(chooseStarActivityRecord(newIdentity, oldIdentity, { now, githubId: 202 }), newIdentity);
+  assert.equal(chooseStarActivityRecord(undefined, oldIdentity, { now, githubId: 202 }), undefined);
+  assert.equal(chooseStarActivityRecord(oldIdentity, undefined, { now, githubId: 202 }), undefined);
+
+  // 没有 ID 的旧缓存没有冲突证据，仍按现有覆盖保护规则兼容。
+  const legacy = { ...oldIdentity }; delete legacy.githubId;
+  assert.equal(chooseStarActivityRecord(legacy, newIdentity, { now, githubId: 202 }), legacy);
+});
+
+test('persisted history identity changes bypass old TTL and repository cooldowns', async () => {
+  const now = Date.parse('2026-09-30T12:00:00Z');
+  const first = await refreshStarActivity([project('a/repo', { githubId: 101 })], undefined, {
+    now: () => now, fetchImpl: async () => ok(weeks(20)),
+  });
+  assert.equal(first.repositories['a/repo'].githubId, 101);
+  const reloaded = JSON.parse(JSON.stringify(first));
+  reloaded.status.historyUnavailable['a/repo'] = new Date(now + 7 * DAY).toISOString();
+  reloaded.status.historyAttempts['a/repo'] = { githubId: 101, at: new Date(now).toISOString(), retryAfter: new Date(now + 3600000).toISOString() };
+  let calls = 0;
+  const next = await refreshStarActivity([project('a/repo', { githubId: 202 })], reloaded, {
+    now: () => now + 1, fetchImpl: async () => { calls++; return ok(weeks(1).slice(0, 1)); },
+  });
+  assert.equal(calls, 1);
+  assert.equal(next.status.updated, 1);
+  assert.equal(next.repositories['a/repo'].githubId, 202);
+  assert.equal(next.status.historyAttempts['a/repo'].githubId, 202);
+  assert.equal(next.status.historyUnavailable['a/repo'], undefined);
+  assert.equal(summarizeStarActivity(next.repositories['a/repo'], { now: now + 1 }).monthAdded, null);
+});
+
+test('an identity change discards stale history even when the replacement request fails', async () => {
+  const cached = { repositories: { 'a/repo': record(20, { githubId: 101 }) } };
+  const failed = await refreshStarActivity([project('a/repo', { githubId: 202 })], cached, {
+    now: () => NOW + 1, fetchImpl: async () => new Response('{}', { status: 503 }),
+  });
+  assert.equal(failed.status.requests, 1);
+  assert.equal(failed.repositories['a/repo'], undefined);
+  assert.equal(failed.status.historyAttempts['a/repo'].githubId, 202);
+});
+
+test('a tagged old-identity 404 cannot block a reused name after its history was removed', async () => {
+  const cache = { repositories: {}, status: {
+    historyUnavailable: { 'a/repo': new Date(NOW + 7 * DAY).toISOString() },
+    historyAttempts: { 'a/repo': { githubId: 101, at: new Date(NOW).toISOString(), retryAfter: null } },
+  } };
+  const next = await refreshStarActivity([project('a/repo', { githubId: 202 })], cache, {
+    now: () => NOW + 1, fetchImpl: async () => ok(weeks()),
+  });
+  assert.equal(next.status.requests, 1);
+  assert.equal(next.repositories['a/repo'].githubId, 202);
 });
