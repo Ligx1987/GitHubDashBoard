@@ -26,6 +26,9 @@ export async function validateDataArtifact(directory) {
       throw new Error('仓库快照含无效或非公开记录');
     }
   }
+  if (snapshot.discoveryQueue !== undefined && (!Array.isArray(snapshot.discoveryQueue)
+    || snapshot.discoveryQueue.some(p => !object(p) || !name(p.fullName)
+      || (p.createdAt != null && !timestamp(p.createdAt))))) throw new Error('待入池候选队列无效');
   if (!object(history)) throw new Error('本地净增历史结构无效');
   for (const [fullName, samples] of Object.entries(history)) {
     if (!name(fullName) || !object(samples) || Object.entries(samples).some(([date, value]) =>

@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fillStarHistory } from '../scripts/fill-star-history.mjs';
-import { runScheduledSync } from '../scripts/sync-scheduled.mjs';
+import { runScheduledSync as runScheduled } from '../scripts/sync-scheduled.mjs';
 
 const NOW = Date.parse('2026-11-02T00:13:00Z');
 const DAY = 86400000;
+const runScheduledSync = options => runScheduled({ inspect: async () => ({available: 1, pending: 0, staleWindow: false, cutoff: '2026-11-02T00:00:00.000Z'}), ...options });
 const anchor = Date.parse('2026-11-01T00:00:00Z');
 const weeks = () => Array.from({ length: 6 }, (_, i) => ({ week: (anchor - i * 7 * DAY) / 1000, total: 7, days: Array(7).fill(1) }));
 const projects = count => Array.from({ length: count }, (_, i) => ({ fullName: `test/repo-${i}`, githubId: i + 1,

@@ -34,14 +34,14 @@ function maybeGzip(buffer, path, mtimeMs, acceptEncoding) {
 let collecting = false;
 const collectionInterval = 2 * 60 * 60 * 1000;
 async function collectIfDue() {
-  if (collecting || process.env.GITHUB_PULSE_AUTOSYNC === '0') return;
+  if (collecting || process.env.GITHUB_PULSE_AUTOSYNC !== '1') return;
   try {
     const saved = JSON.parse(await readFile(resolve(root, 'src/data/github-snapshot.json'), 'utf8'));
     const last = Date.parse(saved.sync?.startedAt || saved.fetchedAt || '');
     if (Number.isFinite(last) && Date.now() - last < collectionInterval) return;
   } catch { /* The collector will report a malformed or unavailable snapshot. */ }
   collecting = true;
-  const child = spawn(process.execPath, [resolve(root, 'scripts/sync-github-data.mjs'), '--limit', '750', '--budget', '800', '--discovery-pages', '1'], { cwd: root, windowsHide: true, stdio: ['ignore', 'inherit', 'inherit'] });
+  const child = spawn(process.execPath, [resolve(root, 'scripts/sync-scheduled.mjs'), '--profile', 'hot', '--budget', '800', '--translate-limit', '0'], { cwd: root, windowsHide: true, stdio: ['ignore', 'inherit', 'inherit'] });
   child.once('error', (error) => { collecting = false; console.error(`Background collection could not start: ${error.message}`); });
   child.once('exit', (code) => { collecting = false; if (code) console.warn('Background collection did not complete; saved observations are retained.'); });
 }

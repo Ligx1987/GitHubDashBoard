@@ -114,6 +114,31 @@ test('hot history and 24h-boundary pushes boost queue priority over plain stalen
     ['owner/stale', 'owner/boundary', 'owner/fresh', 'owner/hot']);
 });
 
+test('历史404优先复核仓库可用性，成功复核后不反复占用队首', () => {
+  const until = new Date(Date.parse(NOW) + 7 * 86400000).toISOString();
+  const activity = { repositories: {}, status: { historyUnavailable: { 'owner/check': until, 'owner/verified': until, 'owner/cooling': until } } };
+  const rows = [project('owner/never'), project('owner/check', OLD),
+    project('owner/verified', '2026-09-28T08:00:01Z'),
+    { ...project('owner/cooling', OLD), nextRetryAt: until }];
+  const queue = buildUpdateQueue(rows, NOW, { activity });
+  assert.equal(queue[0].fullName, 'owner/check');
+  assert.equal(queue[1].fullName, 'owner/never');
+  assert.equal(queue.some(p => p.fullName === 'owner/cooling'), false);
+});
+
+test('历史404不会直接排除工程，仓库接口404后才标记不可用', async () => {
+  const until = new Date(Date.parse(NOW) + 7 * 86400000).toISOString();
+  const activity = { schemaVersion: 1, repositories: {}, status: { historyUnavailable: { 'owner/check': until } } };
+  for (const status of [200, 404]) {
+    const calls = [];
+    const result = await syncData(options(registry([project('owner/never'), project('owner/check', OLD)]), {
+      activity, limit: 1, fetchImpl: async url => { calls.push(new URL(url).pathname); return response(repository('owner/check'), status); },
+    }));
+    assert.deepEqual(calls, ['/repos/owner/check']);
+    assert.equal(result.snapshot.projects.find(p => p.fullName === 'owner/check').availability, status === 404 ? 'unavailable' : 'available');
+  }
+});
+
 test('recently sampled low-star repositories yield queue capacity to higher stars', () => {
   const rows = [
     { ...project('owner/low-fresh', '2026-09-28T04:00:00.000Z'), stars: 100 }, // 4h stale, demoted
@@ -260,6 +285,49 @@ test('CLI parses --harvest and --harvest-min', () => {
   assert.equal(parseArguments(['--harvest']).harvestMinStars, 1000);
   assert.equal(parseArguments(['--harvest', '--harvest-min', '500']).harvestMinStars, 500);
   assert.equal(parseArguments([]).harvest, false);
+});
+
+test('分层打捞受新增上限约束，超出项保留候选队列，下一轮复核后继续入池', async () => {
+  const first = await syncData(options(registry([project('known/repo', OLD)]), {
+    harvest: true, harvestDelayMs: 0, limit: 0, budget: 10, maxNewRepositories: 2,
+    fetchImpl: async url => new URL(url).searchParams.get('per_page') === '1'
+      ? response({ total_count: 100, items: [] })
+      : response({ total_count: 100, items: Array.from({ length: 100 }, (_, i) => repository(`deferred/r${i}`)) }),
+  }));
+  assert.equal(first.snapshot.projects.length, 3);
+  assert.equal(first.snapshot.discoveryQueue.length, 98);
+  assert.equal(first.snapshot.coverage.discoveryAdmission.admitted, 2);
+  assert.equal(first.snapshot.coverage.harvest.admissionPaused, true);
+  assert.equal(first.snapshot.coverage.harvest.completedAt, null);
+  const calls = [];
+  const second = await syncData(options(first.snapshot, { history: first.history, discover: true, maxNewRepositories: 2, limit: 0, budget: 10,
+    fetchImpl: async url => { const path = new URL(url).pathname; calls.push(path); return response(repository(path.slice(7))); },
+  }));
+  assert.equal(second.snapshot.projects.length, 5);
+  assert.equal(second.snapshot.discoveryQueue.length, 96);
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every(p => p.startsWith('/repos/')));
+});
+
+test('暂停发现时保留待入池候选，不偷偷扩大正式样本', async () => {
+  const result = await syncData(options({ ...registry([project('known/repo', OLD)]), discoveryQueue: [{ fullName: 'waiting/repo', createdAt: '2026-01-01T00:00:00Z' }] }, {
+    discover: true, harvest: true, maxNewRepositories: 0, limit: 1, budget: 10,
+    fetchImpl: async url => { assert.ok(!url.includes('/search/')); return response(repository('known/repo')); },
+  }));
+  assert.equal(result.snapshot.projects.length, 1);
+  assert.equal(result.snapshot.discoveryQueue.length, 1);
+  assert.equal(result.snapshot.coverage.queuedCandidates, 1);
+});
+
+test('同名不同身份的新仓库也服从接纳上限，不当作已有身份更新', async () => {
+  const old = { ...project('reused/repo', OLD), githubId: 90001 };
+  const result = await syncData(options(registry([old]), {
+    maxNewRepositories: 0, limit: 1, budget: 1,
+    fetchImpl: async () => response({ ...repository('reused/repo'), id: 90002 }),
+  }));
+  assert.equal(result.snapshot.projects[0].githubId, 90001);
+  assert.equal(result.snapshot.discoveryQueue[0].githubId, 90002);
+  assert.equal(result.snapshot.coverage.discoveryAdmission.admitted, 0);
 });
 
 test('discovery pages all bounded periods, deduplicates repositories, and discloses truncation', async () => {

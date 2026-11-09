@@ -1,28 +1,41 @@
 ﻿param(
     [datetime]$ScheduledTime = (Get-Date),
     [switch]$PlanOnly,
-    [switch]$VerifyConnection
+    [switch]$VerifyConnection,
+    [string]$ScheduleRevision = ''
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
+$config = Import-PowerShellDataFile (Join-Path $PSScriptRoot 'sync-task-config.psd1')
+if (-not $PlanOnly -and -not $VerifyConnection -and $ScheduleRevision -ne $config.Revision) {
+    $directory = Join-Path $projectRoot '.scratch/scheduled-sync'
+    New-Item -ItemType Directory -Path $directory -Force | Out-Null
+    $entry = [PSCustomObject]@{at=(Get-Date).ToUniversalTime().ToString('o');stage='skipped';reason='retired-task-definition';requests=0} | ConvertTo-Json -Compress
+    Add-Content -LiteralPath (Join-Path $directory 'retired-entry.jsonl') -Value $entry -Encoding UTF8
+    Write-Output $entry
+    exit 0
+}
 # 计划任务进程可能继承旧环境，显式读取用户当前凭据；不写入参数或日志。
 if (-not $env:GITHUB_TOKEN) {
     $env:GITHUB_TOKEN = [Environment]::GetEnvironmentVariable('GITHUB_TOKEN', 'User')
 }
 $nodePath = (Get-Command node -ErrorAction Stop).Source
-$fullBatch = $ScheduledTime.Hour -ge 5 -and $ScheduledTime.Hour -le 8
+$fullBatch = $ScheduledTime.Hour -lt 6
 $collectorArgs = @((Join-Path $PSScriptRoot 'sync-scheduled.mjs'))
 if ($fullBatch) {
     $collectorArgs += @('--profile', 'full')
-    if ($ScheduledTime.DayOfWeek -eq [DayOfWeek]::Monday -and $ScheduledTime.Hour -eq 6) {
+    if ($ScheduledTime.DayOfWeek -eq [DayOfWeek]::Monday -and $ScheduledTime.Hour -eq 2) {
         $collectorArgs += @('--harvest')
     }
 } else {
     $collectorArgs += @('--profile', 'hot')
 }
 $collectorArgs += @('--budget', '4600', '--translate-limit', '250')
+$historyTimes = @($config.Times | Where-Object { [int]$_.Split(':')[0] -ge 8 })
+if ($historyTimes.Count) { $collectorArgs += @('--history-times', ($historyTimes -join ',')) }
+if ($null -ne $config.MaxNewPerRound) { $collectorArgs += @('--max-new-per-round', [string]$config.MaxNewPerRound) }
 if ($PlanOnly) {
     [PSCustomObject]@{Time=$ScheduledTime.ToString('HH:mm'); FullBatch=$fullBatch; HistoryBackfill=$true; Node=$nodePath; Arguments=$collectorArgs; TokenAvailable=[bool]$env:GITHUB_TOKEN} | ConvertTo-Json -Compress
     exit 0

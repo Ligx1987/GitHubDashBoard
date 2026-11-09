@@ -138,6 +138,12 @@ const LOW_STAR_STARS = 1000;
 const LOW_STAR_INTERVAL_HOURS = 36;
 export function buildUpdateQueue(projects, now, { activity = null } = {}) {
   const nowMs = Date.parse(now);
+  // 历史404只触发一次元数据复核；只有仓库接口确认不可用才排除样本。
+  const needsAvailabilityCheck = repo => {
+    const until = Date.parse(activity?.status?.historyUnavailable?.[repo.fullName]);
+    return Number(repo.availability === 'available' && until > nowMs
+      && (Date.parse(repo.fetchedAt) || 0) <= until - 7 * DAY_MS);
+  };
   const staleness = (repo) => (nowMs - (Date.parse(repo.fetchedAt) || 0)) / 3_600_000;
   const boost = (repo) => {
     let hours = 0;
@@ -157,7 +163,8 @@ export function buildUpdateQueue(projects, now, { activity = null } = {}) {
   };
   return projects.filter((repo) => VALID_NAME.test(repo.fullName || '') &&
     (!repo.nextRetryAt || Date.parse(repo.nextRetryAt) <= Date.parse(now)))
-    .sort((a, b) => (staleness(b) + boost(b)) - (staleness(a) + boost(a)) ||
+    .sort((a, b) => needsAvailabilityCheck(b) - needsAvailabilityCheck(a) ||
+      (staleness(b) + boost(b)) - (staleness(a) + boost(a)) ||
       Number(Boolean(a.createdAt)) - Number(Boolean(b.createdAt)) ||
       a.fullName.localeCompare(b.fullName));
 }
@@ -170,7 +177,9 @@ export function discoveryQueries(now) {
 export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   now = () => new Date().toISOString(), token = '', limit = 750, budget = 900,
   discover = true, discoveryPages = 2, reserve = 5, maxRuntimeMs = 20 * 60_000, activity = null,
-  harvest = false, harvestMinStars = 1000, harvestMaxStars = null, harvestDelayMs = 2200 } = {}) {
+  harvest = false, harvestMinStars = 1000, harvestMaxStars = null, harvestDelayMs = 2200,
+  maxNewRepositories = Infinity } = {}) {
+  if (maxNewRepositories !== Infinity && (!Number.isSafeInteger(maxNewRepositories) || maxNewRepositories < 0)) throw new Error('Invalid new repository limit');
   if (!snapshot || !Array.isArray(snapshot.projects)) {
     throw new Error('Missing repository registry: src/data/github-snapshot.json');
   }
@@ -184,6 +193,10 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   const initialState = reconcileRepositoryState(snapshot.projects, { history, starActivity: activity || emptyStarActivity(), now: Date.parse(startedAt) });
   const repos = new Map(initialState.projects.map(repo => [repo.fullName.toLowerCase(), repo]));
   const ids = new Map(initialState.projects.filter(repo => integer(repo.githubId)).map(repo => [repo.githubId, repo]));
+  const deferred = new Map((snapshot.discoveryQueue || []).filter(p => VALID_NAME.test(p.fullName || '')
+    && (!p.createdAt || withinScope(p.createdAt, Date.parse(startedAt))))
+    .map(p => [p.fullName.toLowerCase(), p]));
+  let newlyAdmitted = 0, rejectedCandidates = 0;
   let nextHistory = initialState.history;
   const nextActivity = initialState.starActivity;
   // Product scope is a rolling three-year creation window: every run prunes
@@ -249,6 +262,13 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     const previous = ids.get(incomingId) || (compatible(requested) ? requested : null) || (compatible(existing) ? existing : null) || {};
     const project = toSnapshotProject(data, fetchedAt, previous);
     const canonicalKey = project.fullName.toLowerCase();
+    const isNew = !ids.has(incomingId) && !compatible(requested) && !compatible(existing);
+    if (isNew && newlyAdmitted >= maxNewRepositories) {
+      const old = deferred.get(canonicalKey);
+      deferred.set(canonicalKey, { fullName: project.fullName, githubId: project.githubId, createdAt: project.createdAt,
+        discoveredAt: old?.discoveredAt || fetchedAt, lastSeenAt: fetchedAt });
+      return false;
+    }
     // Search 也可能先观察到改名；用稳定 ID 合并，而非等旧名称单仓库请求重定向。
     const related = [...new Set([previous.fullName ? previous : null, requested, existing].filter(Boolean))];
     const namedRows = related.map(repo => repo === previous && !integer(repo.githubId) && incomingId
@@ -287,11 +307,39 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     refreshed.add(canonicalKey);
     consecutiveFailures = 0;
     latestSuccess = fetchedAt;
+    if (isNew) newlyAdmitted++;
+    deferred.delete(requestedKey);
+    deferred.delete(canonicalKey);
+    return true;
+  }
+  // 先消费已发现但尚未正式收录的候选；重新核实当前公开状态，不伪造采样时间。
+  if ((discover || harvest) && maxNewRepositories > 0) {
+    for (const [key, candidate] of [...deferred.entries()]) {
+      if (newlyAdmitted >= maxNewRepositories || !canRequest('core')) break;
+      if (Date.parse(candidate.nextRetryAt) > Date.parse(now())) continue;
+      if (ids.has(candidate.githubId) || (repos.has(key) && compatibleCandidate(repos.get(key), candidate))) { deferred.delete(key); continue; }
+      try {
+        const response = await request(`/repos/${candidate.fullName.split('/').map(encodeURIComponent).join('/')}`, 'core');
+        if (response?.status === 404) { deferred.delete(key); rejectedCandidates++; continue; }
+        if (!response?.ok) throw new Error(response ? `HTTP ${response.status}` : 'request budget exhausted');
+        const data = await response.json();
+        if (isNonPublic(data) || !withinScope(data.created_at, Date.parse(now()))) { deferred.delete(key); rejectedCandidates++; continue; }
+        accept(data, candidate.fullName, iso(now()));
+      } catch (error) {
+        failures++;
+        deferred.set(key, { ...candidate, nextRetryAt: retryAfter || new Date(Date.parse(now()) + 3600000).toISOString() });
+        warn(`Deferred candidate ${candidate.fullName}: ${error.message}`);
+        if (++consecutiveFailures >= 5) { halted = true; break; }
+      }
+    }
+  }
+  function compatibleCandidate(repo, candidate) {
+    return !integer(repo.githubId) || !integer(candidate.githubId) || repo.githubId === candidate.githubId;
   }
   // Harvest mode replaces bounded discovery: star-band slicing enumerates the
   // whole high-star tail of the rolling scope, not just each window's top 200.
   const harvestCoverage = { minStars: harvestMinStars, maxStars: harvestMaxStars, scopeStart: day(scopeCutoffMs(scopeNow)), bands: [], fetched: 0, completedAt: null };
-  if (harvest) {
+  if (harvest && newlyAdmitted < maxNewRepositories) {
     const pace = () => harvestDelayMs > 0 ? new Promise((resolvePace) => setTimeout(resolvePace, harvestDelayMs)) : null;
     const scopeQ = `created:>=${day(scopeCutoffMs(scopeNow))} is:public`;
     const searchPage = async (starsQ, page, perPage) => {
@@ -319,12 +367,13 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     try {
       const bands = await split(harvestMinStars, harvestMaxStars ?? null);
       for (const band of bands) {
+        if (newlyAdmitted >= maxNewRepositories) break;
         const cov = { query: `${scopeQ} ${band.stars}`, stars: band.stars, totalCount: band.total,
           fetched: 0, pages: 0, truncated: band.truncated };
         harvestCoverage.bands.push(cov);
         if (band.truncated) warn(`Harvest band ${band.stars} exceeds the 1000-result cap; only the top 1000 by stars are collected.`);
         for (let page = 1; page <= 10 && cov.fetched < Math.min(band.total ?? 0, 1000); page += 1) {
-          if (!canRequest('search')) break;
+          if (!canRequest('search') || newlyAdmitted >= maxNewRepositories) break;
           try {
             const result = await searchPage(band.stars, page, 100);
             if (!Array.isArray(result.items)) throw new Error('Invalid repository search result');
@@ -349,23 +398,25 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
         harvestCoverage.fetched += cov.fetched;
         if (halted) break;
       }
-      harvestCoverage.completedAt = iso(now());
+      harvestCoverage.admissionPaused = newlyAdmitted >= maxNewRepositories;
+      harvestCoverage.completedAt = harvestCoverage.admissionPaused ? null : iso(now());
     } catch (error) {
       failures += 1;
       warn(`Harvest planning: ${error.message}`);
     }
   }
-  if (discover && !harvest) {
+  if (discover && !harvest && newlyAdmitted < maxNewRepositories) {
     const previousDiscovery = new Map((snapshot.coverage?.discovery || []).map(item => [item.id, item]));
     const plan = discoveryQueries(startedAt).sort((a, b) =>
       (Date.parse(previousDiscovery.get(a.id)?.completedAt) || 0) - (Date.parse(previousDiscovery.get(b.id)?.completedAt) || 0));
     for (const item of plan) {
+      if (newlyAdmitted >= maxNewRepositories) break;
       const { query } = item;
       const coverage = { ...item, totalCount: null, fetched: 0, pages: 0, incomplete: false, truncated: true,
         completedAt: previousDiscovery.get(item.id)?.completedAt || null };
       discovery.push(coverage);
       for (let page = 1; page <= discoveryPages; page += 1) {
-        if (!canRequest('search')) break;
+        if (!canRequest('search') || newlyAdmitted >= maxNewRepositories) break;
         try {
           const params = new URLSearchParams({ q: query, sort: 'stars', order: 'desc', per_page: '100', page: String(page) });
           const response = await request(`/search/repositories?${params}`, 'search');
@@ -387,7 +438,9 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
           coverage.fetched += result.items.length;
           coverage.truncated = coverage.incomplete || coverage.totalCount === null || coverage.fetched < coverage.totalCount;
           coverage.attemptedAt = fetchedAt;
-          if (page === discoveryPages || result.items.length < 100 || coverage.fetched >= Math.min(coverage.totalCount ?? 1000, 1000)) coverage.completedAt = fetchedAt;
+          coverage.admissionPaused = newlyAdmitted >= maxNewRepositories;
+          if (coverage.admissionPaused) coverage.truncated = true;
+          if (!coverage.admissionPaused && (page === discoveryPages || result.items.length < 100 || coverage.fetched >= Math.min(coverage.totalCount ?? 1000, 1000))) coverage.completedAt = fetchedAt;
           if (result.items.length < 100 || coverage.fetched >= Math.min(coverage.totalCount ?? 1000, 1000)) break;
         } catch (error) {
           failures += 1;
@@ -451,13 +504,18 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     exitCode: refreshed.size ? 0 : 1,
     snapshot: {
       ...snapshot, schemaVersion: 1, source: 'cached', fetchedAt: latestSuccess || snapshot.fetchedAt || null,
-      projects, rateLimits: rates, warning: warnings.join(' '), warnings,
+      projects, discoveryQueue: [...deferred.values()].sort((a, b) => String(a.discoveredAt).localeCompare(String(b.discoveredAt))),
+      rateLimits: rates, warning: warnings.join(' '), warnings,
       coverage: { ...snapshot.coverage, scope: 'tracked-repositories', exhaustive: false,
         registered: projects.length, available: projects.filter((repo) => repo.availability === 'available').length,
         sampledCount: projects.filter((repo) => integer(repo.stars) !== null && repo.availability === 'available').length,
         metadataVerified: projects.filter((repo) => repo.createdAt && repo.availability === 'available').length,
         unavailable: projects.filter((repo) => repo.availability === 'unavailable').length,
         pending, fetchedThisRun: refreshed.size,
+        queuedCandidates: deferred.size,
+        discoveryAdmission: { limit: Number.isFinite(maxNewRepositories) ? maxNewRepositories : null,
+          admitted: newlyAdmitted, queued: deferred.size, rejected: rejectedCandidates,
+          paused: newlyAdmitted >= maxNewRepositories },
         discovery: discover && !harvest ? discovery : snapshot.coverage?.discovery || [],
         discoveryAt: discover && !harvest ? startedAt : snapshot.coverage?.discoveryAt || null,
         harvest: harvest ? harvestCoverage : snapshot.coverage?.harvest || null,
@@ -568,6 +626,7 @@ export function parseArguments(args) {
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     if (arg === '--dry') result.dry = true;
+    else if (arg === '--manual') result.manual = true;
     else if (arg === '--discover') result.discover = true;
     else if (arg === '--no-discover') result.discover = false;
     else if (arg === '--no-translate') result.translate = false;
@@ -586,6 +645,13 @@ export function parseArguments(args) {
 
 async function main() {
   const options = parseArguments(process.argv.slice(2));
+  let registration = null;
+  try { registration = JSON.parse(readFileSync(join(ROOT, '.scratch/scheduled-sync/task-registration.json'), 'utf8').replace(/^\uFEFF/, '')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (registration?.Revision === 'v2' && !options.manual) {
+    console.log(JSON.stringify({ stage: 'skipped', reason: 'managed-scheduler', requests: 0 }));
+    return;
+  }
   const lockPath = join(ROOT, 'src/data/.sync.lock');
   if (!options.dry && !acquireSyncLock(lockPath)) {
     console.log('Another collector holds the sync lock; this run exits without touching data files.');

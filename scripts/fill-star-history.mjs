@@ -14,11 +14,32 @@ export function historyCoverage(projects, activity, now = Date.now()) {
   const staleWindow = !cutoff || now - Date.parse(cutoff) >= DAY;
   const available = snapshot.projects.filter(p => p.availability === 'available');
   const pending = available.filter(p => staleWindow || p.activityWindowEnd !== cutoff || p.weekAdded === null || p.monthAdded === null);
+  const cooldownPending = pending.filter(p => Date.parse(starCooldown(snapshot.starActivity, p.fullName)) > now).length;
   return { projects: available, activity: snapshot.starActivity, pending, report: {
     cutoff, staleWindow, available: available.length, pending: pending.length,
+    cooldownPending, retryablePending: pending.length - cooldownPending,
     weekEligible: snapshot.surgeBoards[0].coverage.eligible,
     monthEligible: snapshot.surgeBoards[1].coverage.eligible,
+    boards: [...snapshot.surgeBoards, ...snapshot.newGrowthBoards].map(b => ({ id: b.id, ...b.coverage, windowEnd: b.windowEnd })),
   } };
+}
+
+function starCooldown(activity, name) {
+  const until = [activity.status?.historyUnavailable?.[name], activity.status?.historyAttempts?.[name]?.retryAfter]
+    .filter(x => Number.isFinite(Date.parse(x))).sort().at(-1);
+  return until || null;
+}
+
+export async function inspectHistoryFiles() {
+  const [saved, activity] = await Promise.all(['github-snapshot.json', 'star-activity.json'].map(async name => {
+    try { return JSON.parse(await readFile(join(ROOT, 'src/data', name), 'utf8')); }
+    catch (error) { if (error.code !== 'ENOENT') throw error; return name === 'github-snapshot.json' ? { projects: [] } : emptyStarActivity(); }
+  }));
+  const state = historyCoverage(saved.projects, activity).report;
+  const rates = [activity.status?.rateLimit, saved.rateLimits?.core]
+    .filter(q => q && Number.isSafeInteger(q.remaining) && Date.parse(q.resetAt) > Date.now())
+    .sort((a, b) => a.remaining - b.remaining);
+  return { ...state, quota: rates[0] || null, queuedCandidates: saved.discoveryQueue?.length || 0 };
 }
 
 // 每轮只尝试同一工程一次；新日界后即使缓存未过 TTL，也必须补当期窗口。

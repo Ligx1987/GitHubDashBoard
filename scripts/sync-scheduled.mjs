@@ -1,17 +1,22 @@
-import { appendFile, mkdir } from 'node:fs/promises';
+import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fillHistoryFiles } from './fill-star-history.mjs';
-import { acquireSyncLock, releaseSyncLock, runSync, parseArguments } from './sync-github-data.mjs';
+import { fillHistoryFiles, inspectHistoryFiles } from './fill-star-history.mjs';
+import { planCapacity, coverageCompletion } from './scheduled-policy.mjs';
+import { acquireSyncLock, releaseSyncLock, runSync, parseArguments, atomicWriteJson } from './sync-github-data.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runScheduledSync({ profile = 'hot', budget = 4600, translateLimit = 250, harvest = false,
   maxRuntimeMs = 50 * 60000, now = () => Date.now(), fill = fillHistoryFiles, collect = runSync, report = console.log,
+  inspect = inspectHistoryFiles, historyTimes, maxNewPerRound = 250,
 } = {}) {
   if (!['full', 'hot'].includes(profile) || !Number.isSafeInteger(budget) || budget <= 0) throw new Error('自动同步配置无效');
   const deadlineAt = now() + maxRuntimeMs;
-  let remaining = budget, exitCode = 0;
+  const initialState = await inspect();
+  const capacity = planCapacity(initialState, { budget, now: now(), historyTimes, maxNewPerRound });
+  report(JSON.stringify({ stage: 'capacity-preflight', ...capacity }));
+  let remaining = capacity.effectiveBudget, exitCode = 0;
   const phases = [];
   const backfill = async stage => {
     if (remaining <= 0 || now() >= deadlineAt) return;
@@ -28,11 +33,15 @@ export async function runScheduledSync({ profile = 'hot', budget = 4600, transla
   const initial = await backfill('history-before');
   // 接口要求冷却或持续失败时结束本轮，后续触发继续；不突破实际额度。
   if (!['rate-limit', 'upstream-error'].includes(initial?.reason) && remaining > 0 && now() < deadlineAt) {
+    const admission = planCapacity(await inspect(), { budget, now: now(), historyTimes, maxNewPerRound });
+    const canDiscover = profile === 'full' && admission.discoveryLimit > 0;
     const options = { ...parseArguments([]), limit: profile === 'full' ? 3000 : 300,
-      discover: profile === 'full', discoveryPages: 2,
-      budget: Math.min(remaining, profile === 'full' ? remaining : 450), translateLimit, harvest: profile === 'full' && harvest,
+      discover: canDiscover, discoveryPages: 2, maxNewRepositories: canDiscover ? admission.discoveryLimit : 0,
+      budget: Math.min(remaining, profile === 'full' ? remaining : 450),
+      translateLimit: profile === 'full' ? translateLimit : 0, harvest: canDiscover && harvest,
       deadlineAt,
     };
+    report(JSON.stringify({ stage: 'discovery-policy', enabled: canDiscover, maxNewRepositories: options.maxNewRepositories, reason: admission.discoveryReason }));
     const result = await collect(options);
     if (result.requests > options.budget) throw new Error('元数据采集超出共享预算');
     remaining -= result.requests;
@@ -40,7 +49,17 @@ export async function runScheduledSync({ profile = 'hot', budget = 4600, transla
     phases.push({ stage: 'metadata', ...result });
     await backfill('history-after');
   }
-  const summary = { profile, budget, requests: budget - remaining, remaining, exitCode, phases };
+  const finalState = await inspect();
+  const completion = coverageCompletion(finalState);
+  const capacityAfter = planCapacity(finalState, { budget, now: now(), historyTimes, maxNewPerRound });
+  const finalRound = capacity.finalHistoryRound;
+  const status = exitCode ? 'failed' : capacity.effectiveBudget === 0 || initial?.reason === 'rate-limit' ? 'blocked'
+    : completion.complete && !completion.queuedCandidates && capacityAfter.capacityStatus === 'sufficient' ? 'complete' : 'partial';
+  if (finalRound && !completion.complete && !exitCode) exitCode = 2;
+  const summary = { profile, budget, effectiveBudget: capacity.effectiveBudget,
+    requests: capacity.effectiveBudget - remaining,
+    remaining: budget - (capacity.effectiveBudget - remaining), usableRemaining: remaining,
+    exitCode, status, coverageComplete: completion.complete, finalHistoryRound: finalRound, capacity, capacityAfter, completion, phases };
   report(JSON.stringify({ stage: 'complete', ...summary }));
   return summary;
 }
@@ -54,6 +73,13 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       if (args[i] === '--profile') options.profile = args[++i];
       else if (args[i] === '--budget') options.budget = Number(args[++i]);
       else if (args[i] === '--translate-limit') options.translateLimit = Number(args[++i]);
+      else if (args[i] === '--history-times') options.historyTimes = args[++i].split(',');
+      else if (args[i] === '--max-new-per-round') options.maxNewPerRound = Number(args[++i]);
+      else if (args[i] === '--max-runtime-minutes') {
+        const minutes = Number(args[++i]);
+        if (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > 50) throw new Error('运行时长必须为1至50分钟');
+        options.maxRuntimeMs = minutes * 60000;
+      }
       else if (args[i] === '--harvest') options.harvest = true;
       else throw new Error('无法识别自动同步参数：' + args[i]);
     }
@@ -61,9 +87,34 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     if (!acquireSyncLock(lock)) console.log('已有采集器运行，本次自动同步跳过。');
     else {
       try {
-        await mkdir(join(ROOT, '.scratch/scheduled-sync'), { recursive: true });
-        const result = await runScheduledSync(options);
-        await appendFile(join(ROOT, '.scratch/scheduled-sync/coverage.jsonl'), JSON.stringify({ at: new Date().toISOString(), ...result }) + '\n');
+        const directory = join(ROOT, '.scratch/scheduled-sync');
+        await mkdir(directory, { recursive: true });
+        const startPath = join(directory, 'last-start.json');
+        let last = null;
+        try { last = JSON.parse(await readFile(startPath, 'utf8')); }
+        catch (error) { if (error.code !== 'ENOENT') throw error; }
+        const startedAt = new Date().toISOString();
+        const previous = last ? Date.parse(last.startedAt) : null;
+        if (last && !Number.isFinite(previous)) throw new Error('上轮启动记录无效，无法确认小时请求间隔');
+        // 计划间隔65分钟，实际保护60分钟；余下5分钟容纳进程启动抖动。
+        const nextAllowed = last ? previous + 60 * 60000 : 0;
+        let result;
+        if (nextAllowed > Date.parse(startedAt)) {
+          const budget = options.budget ?? 4600;
+          result = { profile: options.profile ?? 'hot', budget, requests: 0, remaining: budget, exitCode: 0,
+            phases: [], status: 'skipped', coverageComplete: null, skipped: 'minimum-interval', nextAllowedAt: new Date(nextAllowed).toISOString() };
+          console.log(JSON.stringify({ stage: 'complete', ...result }));
+        } else {
+          // 在整轮采集锁内记录实际启动，避免补触发或手动启动挤进同一小时。
+          atomicWriteJson(startPath, { startedAt, profile: options.profile ?? 'hot' });
+          result = await runScheduledSync({ ...options, report: line => {
+            console.log(line);
+            const event = JSON.parse(line);
+            if (event.stage === 'capacity-preflight') atomicWriteJson(join(directory, 'capacity-preflight.json'), { at: new Date().toISOString(), ...event });
+          } });
+        }
+        await appendFile(join(directory, 'coverage.jsonl'), JSON.stringify({ at: new Date().toISOString(), ...result }) + '\n');
+        if (result.completion) atomicWriteJson(join(directory, 'latest-status.json'), { at: new Date().toISOString(), ...result });
         process.exitCode = result.exitCode;
       } finally { releaseSyncLock(lock); }
     }

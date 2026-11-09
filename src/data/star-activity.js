@@ -231,6 +231,7 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
   for (const lane of schedule) queue.push({ lane, project: selected[lane][laneIndices[lane]++] });
   if (!queue.length) return result;
   let updated = 0, requests = 0, failures = 0, message = '', retryAfter = null;
+  let rateLimit = cache.status?.authenticated === !!token ? cache.status?.rateLimit || null : null;
   const headers = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2026-03-10' };
   if (token) headers.Authorization = `Bearer ${token}`;
   for (const { lane, project } of queue) {
@@ -243,6 +244,12 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
     try {
       const response = await fetchImpl(`https://api.github.com/repos/${project.fullName}/stargazers/history?per_page=6&page=1`,
         { headers, signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000) });
+      const rateRemaining = response.headers.get('x-ratelimit-remaining');
+      const rateReset = Number(response.headers.get('x-ratelimit-reset')) * 1000;
+      if (rateRemaining !== null && Number.isSafeInteger(Number(rateRemaining))) {
+        rateLimit = { remaining: Number(rateRemaining), resetAt: rateReset > 0 ? new Date(rateReset).toISOString() : null,
+          resource: response.headers.get('x-ratelimit-resource') || 'core', observedAt: new Date(now()).toISOString() };
+      }
       if (!response.ok) {
         if (response.status === 404) {
           // Permanent state, not a transient failure: cool the name down for
@@ -289,7 +296,7 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
       if (signal?.aborted || failures >= 3) break;
     }
   }
-  result.status = { ...result.status, attemptedAt: new Date(now()).toISOString(), updated, requests, failures, authenticated: !!token, retryAfter,
+  result.status = { ...result.status, attemptedAt: new Date(now()).toISOString(), updated, requests, failures, authenticated: !!token, retryAfter, rateLimit,
     historyUnavailable, historyAttempts, queueTurns,
     message: message || (pool.length > updated ? `本批更新 ${updated} 个工程；其余工程将在后续批次继续加载` : '') };
   return result;
