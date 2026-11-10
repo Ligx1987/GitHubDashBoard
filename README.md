@@ -84,7 +84,11 @@ npm run sync -- --dry --limit 5 --budget 10
 
 每轮先做容量预检：三个日界后窗口共 13800 次请求，按可用工程数加 10% 重试余量估算需求；若仍在有效重置窗口内，进一步按响应头剩余额度减 100 次安全余量缩减当轮预算。日志同时披露剩余窗口容量、所需窗口数和历史缺口是否可容纳。历史未齐或预计维护容量不足时暂停扩样；允许发现时每轮最多接纳 250 个新工程。超出上限的已发现候选写入快照 `discoveryQueue`，下次允许扩样时先重新核验元数据再接纳，候选队列单独披露，不计作已覆盖工程。
 
-进程退出与覆盖完成分别判断。`coverageComplete` 仅在当前完整统计日历史无缺口时为真；整体 `status=complete` 还要求候选队列为空、维护容量足够。中间轮次预算用尽可为 `partial`，末轮仍有历史缺口则退出码为 2；接口限额标记 `blocked`，执行错误标记 `failed`。真实运行将预检和最终状态分别写入 `.scratch/scheduled-sync/capacity-preflight.json`、`latest-status.json`，零请求间隔跳过不会覆盖最终状态。`scripts/check-sync-task.ps1 -RequireCoverage` 同时要求当天完整覆盖。
+进程退出与覆盖完成分别判断。`coverageComplete` 仅表示当前完整统计日历史无缺口；整体 `status=complete` 还要求每日元数据核验完成、候选队列为空、维护容量足够。每日元数据核验要求当前有效样本具有核验创建时间，且成功采样不早于该统计日对应的北京时间零点；失败或尝试时间不能代替成功采样时间。中间轮次预算用尽可为 `partial`，末轮每日验收未完成则退出码为 2；接口限额标记 `blocked`，执行错误标记 `failed`。预检和实际轮次状态分别写入 `.scratch/scheduled-sync/capacity-preflight.json`、`latest-status.json`，零请求间隔跳过不会覆盖实际轮次状态。
+
+独立任务「\GitHubPulse\GitHub Pulse 覆盖守护 v2」每天每 15 分钟检查当前历史和每日元数据队列，使用 S4U，可在注销后运行。完整时不发 API 请求，也不更新实际采集启动时间。末轮之后仍未齐，则按仓库冷却、接口 Retry-After、额度重置和实际启动至少 65 分钟间隔自动补偿，并避让主任务前 65 分钟的窗口。补偿关闭发现和翻译，只复核缺口工程与未完成的元数据，再补官方历史；单个延迟工程不阻塞其他元数据。无进度时等待 65 / 130 / 260 分钟退避，有进度则回到 65 分钟。每轮仍共享最多 4600 次请求、50 分钟预算及同一互斥锁；元数据每 250 次请求保存一次可续跑检查点。协调器统一负责历史，避免元数据入口按 TTL 重刷已完整历史。
+
+每日验收状态保存在 `.scratch/scheduled-sync/daily-state.json`，逐日存档在 `daily-state/YYYY-MM-DD.json`，包含历史和元数据是否完整、缺口原因、补偿次数及下次可执行时间。北京时间 12:00 尚未齐标记 `overdue` 并继续补偿；跨统计日仍未齐保留 `missed` 记录，不用新一天的成功抹掉漏采。原始接口长期不可用时不能保证某时刻全齐，也不会把未知值补零或隐藏有效样本。`scripts/check-sync-task.ps1 -RequireCoverage` 要求当前统计日的每日验收通过，同时检查主任务和覆盖守护配置。
 
 恢复或更新本机八轮任务可运行 `powershell -ExecutionPolicy Bypass -File .\scripts\install-sync-task.ps1`。默认 S4U 登录方式，无需保存 Windows 密码，注销后可运行。八个触发器均为每日重复、无结束日期、不配置过期自动删除；安装后校验并备份定义至 `.scratch/scheduled-sync/task-definition.xml`，登记结果见 `task-registration.json`。运行 `scripts/check-sync-task.ps1` 可复核每日配置、间隔和下次触发时间。任务忽略重叠实例、单轮最长 55 分钟，允许开机后补触发；协调器还在锁内检查实际启动间隔，不满 60 分钟则零请求跳过并记录 `minimum-interval`，实际启动记录保存在 `.scratch/scheduled-sync/last-start.json`，不应随日常日志清理删除。补触发按实际启动时段选择批次。日志位于 `.scratch/scheduled-sync/`；`-PlanOnly` 检查参数，`-VerifyConnection` 验证网络与凭据，`-InteractiveOnly` 适用于只在登录期间运行的环境。
 

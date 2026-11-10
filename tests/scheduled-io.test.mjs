@@ -77,7 +77,7 @@ test('同一小时内的实际入口重复启动不请求网络，满一小时�
   mkdirSync(join(root, 'scripts'));
   mkdirSync(join(root, 'src/data'), { recursive: true });
   writeFileSync(join(root, 'package.json'), '{"type":"module"}');
-  for (const name of ['sync-github-data.mjs', 'fill-star-history.mjs', 'sync-scheduled.mjs', 'scheduled-policy.mjs']) {
+  for (const name of ['sync-github-data.mjs', 'fill-star-history.mjs', 'sync-scheduled.mjs', 'scheduled-policy.mjs', 'recovery-policy.mjs']) {
     copyFileSync(new URL('../scripts/' + name, import.meta.url), join(root, 'scripts', name));
   }
   for (const name of ['github-data.js', 'star-activity.js', 'history.js', 'repository-state.js']) {

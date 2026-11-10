@@ -74,6 +74,16 @@ test('接口只返回部分历史时，本轮只尝试一次并保留真实缺�
   assert.equal(result.after.weekEligible, 0);
 });
 
+test('接口响应尚未覆盖最新完整统计日时分类为延迟并保留可重试缺口', async () => {
+  const now = Date.parse('2026-11-10T05:00:00Z');
+  const result = await fillStarHistory(projects(1), cache({}), { now: () => now, fetchImpl: async () => response(200, {}, weeks()) });
+  assert.equal(result.reason, 'upstream-delay');
+  assert.equal(result.after.pending, 1);
+  assert.equal(result.updated, 0);
+  assert.equal(result.activity.status.historyAttempts['test/repo-0'].errorKind, 'upstream-delay');
+  assert.ok(Date.parse(result.activity.status.historyAttempts['test/repo-0'].retryAfter) > now);
+});
+
 test('HTTP 限额响应按等待处理并保存冷却状态，不当作持续接口故障', async () => {
   const result = await fillStarHistory(projects(2), cache({}), { token: 'test-token', now: () => NOW,
     fetchImpl: async () => response(403, { 'retry-after': '3600' }) });

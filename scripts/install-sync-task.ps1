@@ -16,10 +16,16 @@ $service.Connect()
 try { $null = $service.GetFolder($config.Path.TrimEnd('\')) }
 catch { $null = $service.GetFolder('\').CreateFolder($config.Path.Trim('\')) }
 $task = Register-ScheduledTask -TaskName $config.Name -TaskPath $config.Path -Action $action -Trigger $triggers -Principal $principal -Settings $settings -Description '每日八轮，间隔至少65分钟；08:05、09:10、10:15补当期历史，末轮判断覆盖是否完成；预检容量并限制新增候选；S4U注销后运行。' -Force
+$watchAction = New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -Argument "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$runner`" -ScheduleRevision $($config.Revision) -RecoveryWatch" -WorkingDirectory $projectRoot
+$watchTrigger = New-ScheduledTaskTrigger -Daily -At '00:00'
+$repetition = New-ScheduledTaskTrigger -Once -At '00:00' -RepetitionInterval (New-TimeSpan -Minutes $config.RecoveryIntervalMinutes) -RepetitionDuration (New-TimeSpan -Days 1)
+$watchTrigger.Repetition = $repetition.Repetition
+$watchTask = Register-ScheduledTask -TaskName $config.RecoveryName -TaskPath $config.Path -Action $watchAction -Trigger $watchTrigger -Principal $principal -Settings $settings -Description '每15分钟只读检查当期覆盖；未齐时按冷却、额度和65分钟间隔自动补偿，避让八轮主任务；完整后零请求，逾期记录告警；S4U注销运行。' -Force
 $logDirectory = Join-Path $projectRoot '.scratch/scheduled-sync'
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
 $definition = Export-ScheduledTask -InputObject $task
 $definition | Set-Content -LiteralPath (Join-Path $logDirectory 'task-definition.xml') -Encoding UTF8
+Export-ScheduledTask -InputObject $watchTask | Set-Content -LiteralPath (Join-Path $logDirectory 'watchdog-definition.xml') -Encoding UTF8
 $health = & (Join-Path $PSScriptRoot 'check-sync-task.ps1') -AllowInteractive:$InteractiveOnly
 $health | Set-Content -LiteralPath (Join-Path $logDirectory 'task-registration.json') -Encoding UTF8
 $legacy = Get-ScheduledTask -TaskName $config.LegacyName -TaskPath '\' -ErrorAction SilentlyContinue

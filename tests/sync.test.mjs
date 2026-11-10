@@ -30,6 +30,30 @@ test('same-day samples update their closing value but retain prior UTC day basel
   assert.equal(old['owner/repo']['2026-09-28'], undefined);
 });
 
+test('补偿元数据只请求指定缺口，不消耗预算轮刷其他工程', async () => {
+  const seen = [];
+  const result = await syncData(options(registry([project('owner/a', OLD), project('owner/b', OLD)]), {
+    metadataNames: ['owner/b'], fetchImpl: async url => { seen.push(new URL(url).pathname); return response(repository('owner/b')); },
+  }));
+  assert.deepEqual(seen, ['/repos/owner/b']);
+  assert.equal(result.snapshot.projects.find(p => p.fullName === 'owner/a').fetchedAt, OLD);
+  assert.equal(result.snapshot.projects.find(p => p.fullName === 'owner/b').fetchedAt, NOW);
+});
+
+test('长批元数据在中途保存可续跑检查点，已核验值和历史一致', async () => {
+  const checkpoints = [];
+  await syncData(options(registry([project('owner/a', OLD), project('owner/b', OLD)]), {
+    checkpointEvery: 1, onCheckpoint: async state => checkpoints.push(structuredClone(state)),
+    fetchImpl: async url => response(repository(new URL(url).pathname.slice(7))),
+  }));
+  assert.equal(checkpoints.length, 2);
+  assert.equal(checkpoints[0].requests, 1);
+  assert.equal(checkpoints[0].projects.filter(p => p.fetchedAt === NOW).length, 1);
+  const changed = checkpoints[0].projects.find(p => p.fetchedAt === NOW);
+  assert.equal(checkpoints[0].history[changed.fullName]['2026-09-28'], changed.stars);
+  assert.equal(checkpoints[1].projects.filter(p => p.fetchedAt === NOW).length, 2);
+});
+
 test('UTC rollover uses yesterday, preserves negative growth, and never invents a 7/30-day baseline', () => {
   const history = recordDailySample({ 'owner/repo': { '2026-09-27': 100, '2026-09-21': 110, '2026-08-29': 120 } }, 'owner/repo', 95, NOW);
   assert.deepEqual(calculateGrowth(history['owner/repo'], 95, NOW), { todayStars: -5, weekStars: -15, monthStars: -25 });

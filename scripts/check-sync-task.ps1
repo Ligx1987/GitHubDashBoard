@@ -25,6 +25,19 @@ if ($definition.Task.Actions.Exec.Arguments -notmatch ('-ScheduleRevision\s+' + 
 if ($definition.Task.Settings.Enabled -eq 'false') { throw '任务已禁用' }
 if ($definition.Task.Settings.DeleteExpiredTaskAfter) { throw '任务不能设置过期自动删除' }
 $info = Get-ScheduledTaskInfo -InputObject $task
+$watch = Get-ScheduledTask -TaskName $config.RecoveryName -TaskPath $config.Path -ErrorAction Stop
+[xml]$watchDefinition = Export-ScheduledTask -InputObject $watch
+$watchTriggers = @($watchDefinition.Task.Triggers.ChildNodes)
+if ($watchTriggers.Count -ne 1 -or $watchTriggers[0].LocalName -ne 'CalendarTrigger' -or
+    $watchTriggers[0].ScheduleByDay.DaysInterval -ne '1' -or
+    $watchTriggers[0].Repetition.Interval -ne "PT$($config.RecoveryIntervalMinutes)M" -or
+    $watchTriggers[0].Repetition.Duration -ne 'P1D' -or $watchTriggers[0].EndBoundary -or
+    $watchTriggers[0].Enabled -eq 'false' -or [string]$watch.State -eq 'Disabled' -or
+    $watchDefinition.Task.Settings.DeleteExpiredTaskAfter -or
+    $watchDefinition.Task.Actions.Exec.Arguments -notmatch '-RecoveryWatch' -or
+    $watchDefinition.Task.Actions.Exec.Arguments -notmatch '-ScheduleRevision\s+v2(\s|$)') { throw '覆盖守护任务配置无效' }
+if (-not $AllowInteractive -and [string]$watch.Principal.LogonType -ne 'S4U') { throw '覆盖守护必须使用S4U' }
+$watchInfo = Get-ScheduledTaskInfo -InputObject $watch
 $statusPath = Join-Path (Split-Path -Parent $PSScriptRoot) '.scratch/scheduled-sync/latest-status.json'
 $coverage = $null
 if (Test-Path -LiteralPath $statusPath) {
@@ -34,8 +47,13 @@ if (Test-Path -LiteralPath $statusPath) {
         QueuedCandidates=$latest.completion.queuedCandidates;Capacity=$latest.capacityAfter.capacityStatus;
         RequiredWindows=$latest.capacityAfter.requiredWindows;FinalRound=$latest.finalHistoryRound}
 }
-if ($RequireCoverage -and (-not $coverage -or -not $coverage.Complete -or
+$dailyPath = Join-Path (Split-Path -Parent $PSScriptRoot) '.scratch/scheduled-sync/daily-state.json'
+$daily = $null
+if (Test-Path -LiteralPath $dailyPath) { $daily = Get-Content -LiteralPath $dailyPath -Raw -Encoding UTF8 | ConvertFrom-Json }
+if ($RequireCoverage -and -not $daily -and (-not $coverage -or -not $coverage.Complete -or
     ([datetimeoffset]::Parse($coverage.At).UtcDateTime.Date -ne (Get-Date).ToUniversalTime().Date))) { throw '当期历史未确认补齐，请检查latest-status.json和coverage.jsonl' }
+if ($RequireCoverage -and $daily -and (-not $daily.complete -or
+    ([datetimeoffset]::Parse($daily.target).UtcDateTime.Date -ne (Get-Date).ToUniversalTime().Date))) { throw '每日验收未通过，请检查daily-state.json' }
 [PSCustomObject]@{
     CheckedAt = (Get-Date).ToString('o')
     Name = $task.TaskName
@@ -53,4 +71,10 @@ if ($RequireCoverage -and (-not $coverage -or -not $coverage.Complete -or
     LastResult = $info.LastTaskResult
     NextRun = $info.NextRunTime.ToString('o')
     Coverage = $coverage
+    DailyState = if ($daily) { [PSCustomObject]@{Target=$daily.target;Status=$daily.status;Complete=$daily.complete;
+        HistoryComplete=$daily.historyComplete;MetadataComplete=$daily.metadataComplete;Metadata=$daily.metadata;
+        Pending=$daily.pending;AttemptCount=$daily.attemptCount;NextRun=$daily.nextRunAt;Overdue=$daily.overdue} } else { $null }
+    Watchdog = [PSCustomObject]@{Name=$watch.TaskName;State=[string]$watch.State;LogonType=[string]$watch.Principal.LogonType;
+        IntervalMinutes=$config.RecoveryIntervalMinutes;LastRun=$watchInfo.LastRunTime.ToString('o');
+        LastResult=$watchInfo.LastTaskResult;NextRun=$watchInfo.NextRunTime.ToString('o')}
 } | ConvertTo-Json -Compress

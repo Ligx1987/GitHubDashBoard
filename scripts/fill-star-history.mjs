@@ -35,11 +35,25 @@ export async function inspectHistoryFiles() {
     try { return JSON.parse(await readFile(join(ROOT, 'src/data', name), 'utf8')); }
     catch (error) { if (error.code !== 'ENOENT') throw error; return name === 'github-snapshot.json' ? { projects: [] } : emptyStarActivity(); }
   }));
-  const state = historyCoverage(saved.projects, activity).report;
+  const coverage = historyCoverage(saved.projects, activity);
+  const state = coverage.report;
+  const metadataCutoff = Math.floor(Date.now() / DAY) * DAY - 8 * 3600000;
+  const metadataPending = coverage.projects.filter(p => Date.parse(p.fetchedAt) < metadataCutoff || !p.fetchedAt || !p.createdAt);
   const rates = [activity.status?.rateLimit, saved.rateLimits?.core]
     .filter(q => q && Number.isSafeInteger(q.remaining) && Date.parse(q.resetAt) > Date.now())
     .sort((a, b) => a.remaining - b.remaining);
-  return { ...state, quota: rates[0] || null, queuedCandidates: saved.discoveryQueue?.length || 0 };
+  const retryAfter = [activity.status?.retryAfter, saved.sync?.retryAfter].filter(x => Number.isFinite(Date.parse(x))).sort().at(-1) || null;
+  return { ...state, quota: rates[0] || null, retryAfter,
+    queuedCandidates: saved.discoveryQueue?.length || 0,
+    metadata: { cutoff: new Date(metadataCutoff).toISOString(), available: coverage.projects.length,
+      eligible: coverage.projects.length - metadataPending.length, pending: metadataPending.length },
+    metadataPendingRepositories: metadataPending.map(p => ({ fullName: p.fullName, retryAt: p.nextRetryAt || null })),
+    pendingRepositories: coverage.pending.map(p => ({ fullName: p.fullName, githubId: p.githubId,
+      retryAt: starCooldown(coverage.activity, p.fullName),
+      reason: coverage.activity.status?.historyAttempts?.[p.fullName]?.errorKind || 'missing-window',
+      error: coverage.activity.status?.historyAttempts?.[p.fullName]?.error || null,
+      verifyMetadata: Date.parse(coverage.activity.status?.historyUnavailable?.[p.fullName]) > Date.now(),
+    })) };
 }
 
 // 每轮只尝试同一工程一次；新日界后即使缓存未过 TTL，也必须补当期窗口。
@@ -64,6 +78,7 @@ export async function fillStarHistory(projects, activity = emptyStarActivity(), 
     const previous = activity;
     const next = await refreshStarActivity(candidates, activity, {
       token, now, fetchImpl, ttlMs: 0,
+      requiredWindowEnd: new Date(Math.floor(now() / DAY) * DAY).toISOString(),
       limit: Math.min(batchSize, maxRequests - requests),
       maxRuntimeMs: Math.min(5 * 60000, maxRuntimeMs - (now() - started)),
     });
@@ -85,7 +100,10 @@ export async function fillStarHistory(projects, activity = emptyStarActivity(), 
     await onProgress({ requests, updated, failures, ...state.report });
     if (Date.parse(next.status?.retryAfter) > now()) { reason = 'rate-limit'; break; }
     if (!count) { reason = 'cooldown-or-upstream-delay'; break; }
-    if (changed && next.status.failures && !next.status.updated) { reason = 'upstream-error'; break; }
+    if (changed && next.status.failures && !next.status.updated) {
+      reason = touched.every(p => next.status.historyAttempts?.[p.fullName]?.errorKind === 'upstream-delay') ? 'upstream-delay' : 'upstream-error';
+      break;
+    }
   }
   await save(activity);
   return { activity, requests, updated, failures, reason, before, after: state.report };

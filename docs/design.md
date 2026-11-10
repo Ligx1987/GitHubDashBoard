@@ -330,4 +330,8 @@ Token 仅附加到 GitHub 请求头，浏览器保存在 `sessionStorage`，不�
 
 容量策略集中在 `scheduled-policy.mjs`：日界后三个窗口总预算 13800，以可用工程数乘 1.1 估算维护需求，披露所需窗口及剩余容量；有效响应头额度还需保留 100 次安全余量。有历史缺口或容量不足则禁用发现和打捞；允许扩样时每轮最多接纳 250 个新身份，已有身份更新不占上限。当前搜索页超额候选进入快照 `discoveryQueue`，下一轮先读取仓库接口重新核验，404 / 私有 / 超龄项剔除，临时失败保留等待重试；达到接纳上限即停止继续搜索分页。候选队列数量与正式样本历史覆盖分别报告，不能把未接纳候选称为已覆盖。
 
-最终 `coverageComplete` 要求当前统计日无历史缺口；整体 `status=complete` 还要求队列为空、维护容量充足。中间轮次未齐为 `partial`，最终历史轮仍有缺口退出 2，接口额度阻断为 `blocked`，执行错误为 `failed`。预检及最终状态分别落盘 `capacity-preflight.json` 和 `latest-status.json`，`minimum-interval` 跳过不覆盖最终状态。`check-sync-task.ps1 -RequireCoverage` 可在复核每日配置的同时要求当天完整覆盖。
+最终 `coverageComplete` 仅指当前统计日无历史缺口；整体 `status=complete` 还要求每日元数据验收、队列为空及维护容量充足。中间轮次未齐为 `partial`，最终历史轮每日验收未齐退出 2，接口额度阻断为 `blocked`，执行错误为 `failed`。预检及最终状态分别落盘 `capacity-preflight.json` 和 `latest-status.json`，`minimum-interval` 跳过不覆盖最终状态。
+
+`recovery-policy.mjs` 为持久化补偿状态机。目标是当前 UTC 完整统计日终点，元数据成功时间须不早于该目标日期的北京时间零点，且具有核验创建时间。`daily-state.json` 分别记录 `historyComplete`、`metadataComplete`、`pending`、`metadata.pending`、`attemptCount`、`stalledAttempts` 和 `nextRunAt`。北京时间12:00未通过验收标记 `overdue`，仍继续重试；切换目标日后将未完成旧日存档为 `missed`，不篡改为成功。`check-sync-task.ps1 -RequireCoverage` 同时核对当前目标日的验收和两项任务配置。
+
+独立 S4U 每日重复任务每15分钟唤醒覆盖守护，完整时仅检查、不请求、不推进实际启动记录。未齐时等待仓库冷却、全局 Retry-After、真实剩余额度及65分钟实际间隔；补偿不得占用八轮主任务前65分钟。守护轮次与主任务共用锁和4600次预算，关闭发现、打捞和翻译，先复核缺口及每日未核验元数据，再补齐历史。已有完整历史不重复按TTL刷新。无进度等待65/130/260分钟，有进度恢复65分钟；冷却与重置时间可进一步推迟。重启后保留已排好的时刻，轮询不会无限向后滑动重试时间。元数据每250次请求按历史、官方历史、快照顺序保存检查点，中断后从剩余集合恢复。上游延迟保留真实缺口与错误分类，不因提高覆盖率而排除接口仍可用的工程。

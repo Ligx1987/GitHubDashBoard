@@ -131,7 +131,7 @@ export function mergeStarActivity(before = emptyStarActivity(), next = emptyStar
 
 export async function refreshStarActivity(projects, cache = emptyStarActivity(), {
   token = '', signal, fetchImpl = fetch, now = () => Date.now(), limit = 40, ttlMs = 2 * 3600000,
-  force = false, onProgress, maxRuntimeMs = 90000,
+  force = false, onProgress, maxRuntimeMs = 90000, requiredWindowEnd = null,
 } = {}) {
   const start = now();
   const result = { schemaVersion: 1, repositories: { ...cache.repositories }, status: { ...cache.status } };
@@ -251,6 +251,9 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
           resource: response.headers.get('x-ratelimit-resource') || 'core', observedAt: new Date(now()).toISOString() };
       }
       if (!response.ok) {
+        historyAttempts[project.fullName].error = `HTTP ${response.status}`;
+        historyAttempts[project.fullName].errorKind = response.status === 404 ? 'unavailable'
+          : [401, 403, 429].includes(response.status) ? 'rate-limit' : 'http-error';
         if (response.status === 404) {
           // Permanent state, not a transient failure: cool the name down for
           // seven days and keep serving the rest of the queue.
@@ -274,7 +277,8 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
       const fetchedAt = new Date(now()).toISOString();
       const record = { source: 'github-star-history', ...identity, fetchedAt, weeks };
       // Empty/lagging current-week responses must not erase a working cache.
-      if (summarizeStarActivity(record, { now: now(), createdAt: project.createdAt }).threeDayAdded === null) throw new Error('历史响应未覆盖最近完整统计日');
+      const summary = summarizeStarActivity(record, { now: now(), createdAt: project.createdAt });
+      if (summary.threeDayAdded === null || (requiredWindowEnd && summary.activityWindowEnd !== requiredWindowEnd)) throw new Error('历史响应未覆盖最近完整统计日');
       if (chooseStarActivityRecord(result.repositories[project.fullName], record, { now: now(), createdAt: project.createdAt, githubId: project.githubId }) !== record) {
         throw new Error('历史响应覆盖退步；保留仍有效的完整历史缓存');
       }
@@ -292,6 +296,8 @@ export async function refreshStarActivity(projects, cache = emptyStarActivity(),
     } catch (error) {
       failures++;
       historyAttempts[project.fullName].retryAfter = new Date(now() + HISTORY_RETRY_MS).toISOString();
+      historyAttempts[project.fullName].error = String(error.message).slice(0, 180);
+      historyAttempts[project.fullName].errorKind = /历史响应未覆盖|历史响应覆盖退步/.test(error.message) ? 'upstream-delay' : 'request-error';
       message = `${error.name === 'AbortError' || error.name === 'TimeoutError' ? '历史请求超时' : error.message}；保留最近成功缓存`;
       if (signal?.aborted || failures >= 3) break;
     }

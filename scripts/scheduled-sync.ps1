@@ -2,7 +2,8 @@
     [datetime]$ScheduledTime = (Get-Date),
     [switch]$PlanOnly,
     [switch]$VerifyConnection,
-    [string]$ScheduleRevision = ''
+    [string]$ScheduleRevision = '',
+    [switch]$RecoveryWatch
 )
 
 $ErrorActionPreference = 'Stop'
@@ -24,7 +25,10 @@ if (-not $env:GITHUB_TOKEN) {
 $nodePath = (Get-Command node -ErrorAction Stop).Source
 $fullBatch = $ScheduledTime.Hour -lt 6
 $collectorArgs = @((Join-Path $PSScriptRoot 'sync-scheduled.mjs'))
-if ($fullBatch) {
+if ($RecoveryWatch) {
+    $fullBatch = $false
+    $collectorArgs += @('--watch')
+} elseif ($fullBatch) {
     $collectorArgs += @('--profile', 'full')
     if ($ScheduledTime.DayOfWeek -eq [DayOfWeek]::Monday -and $ScheduledTime.Hour -eq 2) {
         $collectorArgs += @('--harvest')
@@ -32,7 +36,9 @@ if ($fullBatch) {
 } else {
     $collectorArgs += @('--profile', 'hot')
 }
-$collectorArgs += @('--budget', '4600', '--translate-limit', '250')
+$translationLimit = if ($RecoveryWatch) { '0' } else { '250' }
+$collectorArgs += @('--budget', '4600', '--translate-limit', $translationLimit)
+$collectorArgs += @('--regular-times', ($config.Times -join ','))
 $historyTimes = @($config.Times | Where-Object { [int]$_.Split(':')[0] -ge 8 })
 if ($historyTimes.Count) { $collectorArgs += @('--history-times', ($historyTimes -join ',')) }
 if ($null -ne $config.MaxNewPerRound) { $collectorArgs += @('--max-new-per-round', [string]$config.MaxNewPerRound) }
@@ -48,8 +54,9 @@ if ($VerifyConnection) {
 $logDirectory = Join-Path $projectRoot '.scratch/scheduled-sync'
 New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
 $stamp = Get-Date -Format 'yyyy-MM-dd-HHmmss'
-$outputLog = Join-Path $logDirectory "$stamp.log"
-$errorLog = Join-Path $logDirectory "$stamp-error.log"
+$prefix = if ($RecoveryWatch) { "$stamp-watch" } else { $stamp }
+$outputLog = Join-Path $logDirectory "$prefix.log"
+$errorLog = Join-Path $logDirectory "$prefix-error.log"
 $quotedArgs = @('"' + $collectorArgs[0] + '"') + $collectorArgs[1..($collectorArgs.Length - 1)]
 $child = Start-Process -FilePath $nodePath -ArgumentList $quotedArgs -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput $outputLog -RedirectStandardError $errorLog -PassThru
 try {

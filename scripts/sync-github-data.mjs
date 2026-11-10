@@ -178,7 +178,8 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   now = () => new Date().toISOString(), token = '', limit = 750, budget = 900,
   discover = true, discoveryPages = 2, reserve = 5, maxRuntimeMs = 20 * 60_000, activity = null,
   harvest = false, harvestMinStars = 1000, harvestMaxStars = null, harvestDelayMs = 2200,
-  maxNewRepositories = Infinity } = {}) {
+  maxNewRepositories = Infinity, metadataNames = null, onCheckpoint = null, checkpointEvery = 250 } = {}) {
+  if (!Number.isSafeInteger(checkpointEvery) || checkpointEvery < 1) throw new Error('Invalid checkpoint interval');
   if (maxNewRepositories !== Infinity && (!Number.isSafeInteger(maxNewRepositories) || maxNewRepositories < 0)) throw new Error('Invalid new repository limit');
   if (!snapshot || !Array.isArray(snapshot.projects)) {
     throw new Error('Missing repository registry: src/data/github-snapshot.json');
@@ -453,6 +454,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     }
   }
   const eligible = buildUpdateQueue([...repos.values()], startedAt, { activity: nextActivity })
+    .filter(repo => !metadataNames || metadataNames.includes(repo.fullName))
     .filter((repo) => !refreshed.has(repo.fullName.toLowerCase()));
   const queue = eligible.slice(0, limit);
   for (const repo of queue) {
@@ -492,6 +494,11 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
       repos.set(repo.fullName.toLowerCase(), { ...repo, lastAttemptAt: attemptedAt,
         lastError: error.message, nextRetryAt: retryAfter || new Date(Date.parse(attemptedAt) + 3_600_000).toISOString() });
       warn(`${repo.fullName}: ${error.message}`);
+    } finally {
+      if (onCheckpoint && requests > 0 && requests % checkpointEvery === 0) await onCheckpoint({
+        projects: [...repos.values()], history: nextHistory, starActivity: nextActivity,
+        rateLimits: rates, fetchedAt: latestSuccess, requests, refreshed: refreshed.size,
+      });
     }
   }
   const projects = [...repos.values()].sort((a, b) => a.fullName.localeCompare(b.fullName));
@@ -686,7 +693,7 @@ export async function runSync(options) {
   history = reconciled.history;
   activity = reconciled.starActivity;
   const activityBefore = activity;
-  activity = await refreshStarActivity(snapshot.projects, activity, { token,
+  if (!options.managedHistory) activity = await refreshStarActivity(snapshot.projects, activity, { token,
     limit: Math.min(options.limit, options.historyOnly ? options.budget : Math.floor(options.budget / 3)), maxRuntimeMs: remaining(5 * 60_000) });
   const activityRequests = activity.status.attemptedAt === activityBefore.status?.attemptedAt ? 0 : activity.status.requests || 0;
   if (!options.dry) atomicWriteJson(activityPath, activity);
@@ -695,7 +702,15 @@ export async function runSync(options) {
     if (!options.dry) { atomicWriteJson(historyPath, history); atomicWriteJson(snapshotPath, snapshot); }
     return { requests: activityRequests, exitCode: activity.status.failures && !activity.status.updated ? 1 : 0 };
   }
-  const outcome = await syncData({ ...options, maxRuntimeMs: remaining(options.maxRuntimeMs ?? 20 * 60_000), budget: Math.max(0, options.budget - activityRequests), snapshot, history, token, activity });
+  const outcome = await syncData({ ...options, maxRuntimeMs: remaining(options.maxRuntimeMs ?? 20 * 60_000), budget: Math.max(0, options.budget - activityRequests), snapshot, history, token, activity,
+    onCheckpoint: options.checkpoint && !options.dry ? async state => {
+      atomicWriteJson(historyPath, state.history);
+      atomicWriteJson(activityPath, state.starActivity);
+      atomicWriteJson(snapshotPath, { ...snapshot, projects: state.projects, rateLimits: state.rateLimits,
+        fetchedAt: state.fetchedAt || snapshot.fetchedAt,
+        sync: { ...snapshot.sync, result: 'partial', requests: state.requests, refreshed: state.refreshed, checkpointAt: new Date().toISOString() } });
+      console.log(JSON.stringify({ stage: 'metadata-checkpoint', requests: state.requests, refreshed: state.refreshed }));
+    } : null });
   activity = outcome.starActivity;
   if (!options.dry) atomicWriteJson(activityPath, activity);
   // Probe official history for newly discovered candidates (fresh cohorts and
@@ -703,7 +718,7 @@ export async function runSync(options) {
   // repository can enter the boards in this run instead of the next one.
   const probeBudget = Math.min(Math.max(0, options.budget - activityRequests - outcome.snapshot.sync.requests), 120);
   let probeRequests = 0;
-  if (probeBudget > 0 && remaining(2 * 60_000) > 0) {
+  if (!options.managedHistory && probeBudget > 0 && remaining(2 * 60_000) > 0) {
     const probed = await refreshStarActivity(outcome.snapshot.projects, activity, { token, limit: probeBudget, maxRuntimeMs: remaining(2 * 60_000) });
     if (probed.status.attemptedAt !== activity.status?.attemptedAt) {
       activity = probed;
@@ -734,7 +749,8 @@ export async function runSync(options) {
   }
   console.log(`${options.dry ? 'DRY RUN (no files written): ' : ''}${outcome.snapshot.sync.result}; ${outcome.snapshot.sync.refreshed} repositories collected, ${outcome.snapshot.sync.requests} requests; ${translation.translated} descriptions translated (${translation.pending} pending).`);
   for (const warning of outcome.snapshot.warnings) console.warn(`! ${warning}`);
-  return { requests: activityRequests + outcome.snapshot.sync.requests + probeRequests, exitCode: outcome.exitCode, result: outcome.snapshot.sync.result };
+  return { requests: activityRequests + outcome.snapshot.sync.requests + probeRequests, exitCode: outcome.exitCode, result: outcome.snapshot.sync.result,
+    unavailable: outcome.snapshot.sync.unavailable, failures: outcome.snapshot.sync.failures };
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
