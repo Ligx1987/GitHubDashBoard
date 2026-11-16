@@ -16,8 +16,8 @@ test('一万多个工程需要三个额度窗口，并为重试保留容量', ()
   assert.equal(p.finalHistoryRound, true);
 });
 
-test('已有历史缺口或样本超过可维护容量时不再扩大样本', () => {
-  assert.equal(planCapacity(state({ pending: 1 }), { now: NOW }).discoveryLimit, 0);
+test('历史积压超过1%或样本超过可维护容量时不再扩大样本', () => {
+  assert.equal(planCapacity(state({ pending: 200 }), { now: NOW }).discoveryLimit, 0);
   const p = planCapacity(state({ available: 13000 }), { now: NOW });
   assert.equal(p.requiredWindows, 4);
   assert.equal(p.capacityStatus, 'insufficient');
@@ -53,8 +53,8 @@ test('预算用尽但未补齐时进程成功与覆盖完成分别记录，末�
   }
 });
 
-test('发现限速传至真实采集选项，存在缺口时仍可复核元数据但关闭发现和打捞', async () => {
-  for (const pending of [0, 1]) {
+test('发现限速传至真实采集选项，大量缺口时仍可复核元数据但关闭发现和打捞', async () => {
+  for (const pending of [0, 200]) {
     const current = state({ pending });
     await runScheduledSync({ profile: 'full', harvest: true, now: () => NOW, inspect: async () => current, report: () => {},
       fill: async () => ({ requests: 0, reason: pending ? 'cooldown-or-upstream-delay' : 'complete', after: current }),

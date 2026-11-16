@@ -103,11 +103,11 @@ test('运行时间预算到期后不再发新请求', async () => {
 test('自动八轮先补历史再采元数据，最后补新候选，共享请求预算', async () => {
   const seen = [];
   let round = 0;
-  const result = await runScheduledSync({ profile: 'full', budget: 4600, now: () => NOW, report: () => {},
+  const result = await runScheduledSync({ profile: 'full', budget: 4600, maxNewPerRound: 50, now: () => NOW, report: () => {},
     fill: async options => { seen.push(['fill', options.maxRequests]); return { requests: ++round === 1 ? 4000 : 100, updated: 1, reason: 'complete' }; },
     collect: async options => { seen.push(['metadata', options.budget]); assert.equal(options.limit, 3000); assert.equal(options.discover, true); return { requests: 400, exitCode: 0 }; },
   });
-  assert.deepEqual(seen, [['fill', 4600], ['metadata', 600], ['fill', 200]]);
+  assert.deepEqual(seen, [['fill', 4600], ['metadata', 550], ['fill', 200]]);
   assert.equal(result.requests, 4500);
   assert.equal(result.remaining, 100);
 });

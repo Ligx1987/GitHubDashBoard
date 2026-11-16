@@ -343,14 +343,15 @@ test('暂停发现时保留待入池候选，不偷偷扩大正式样本', async
   assert.equal(result.snapshot.coverage.queuedCandidates, 1);
 });
 
-test('同名不同身份的新仓库也服从接纳上限，不当作已有身份更新', async () => {
+test('同名不同身份以替换方式修复收录，零新增预算不应留下旧身份', async () => {
   const old = { ...project('reused/repo', OLD), githubId: 90001 };
   const result = await syncData(options(registry([old]), {
     maxNewRepositories: 0, limit: 1, budget: 1,
     fetchImpl: async () => response({ ...repository('reused/repo'), id: 90002 }),
   }));
-  assert.equal(result.snapshot.projects[0].githubId, 90001);
-  assert.equal(result.snapshot.discoveryQueue[0].githubId, 90002);
+  assert.equal(result.snapshot.projects[0].githubId, 90002);
+  assert.equal(result.snapshot.discoveryQueue.length, 0);
+  assert.equal(result.snapshot.coverage.discoveryAdmission.identityReplacements, 1);
   assert.equal(result.snapshot.coverage.discoveryAdmission.admitted, 0);
 });
 

@@ -19,6 +19,7 @@ export async function runScheduledSync({ profile = 'hot', budget = 4600, transla
   report(JSON.stringify({ stage: 'capacity-preflight', ...capacity }));
   let remaining = capacity.effectiveBudget, exitCode = 0;
   const phases = [];
+  const metadataDeadline = count => deadlineAt - Math.min(Math.max(0, (deadlineAt - now()) / 3), Math.max(120000, count * 1000));
   const backfill = async stage => {
     if (remaining <= 0 || now() >= deadlineAt) return;
     const result = await fill({ maxRequests: remaining, batchSize: 500, maxRuntimeMs: deadlineAt - now(),
@@ -39,10 +40,11 @@ export async function runScheduledSync({ profile = 'hot', budget = 4600, transla
     const metadataBudget = Math.min(remaining, Math.max(Math.min(300, historyNames.length),
       remaining - Math.min(remaining, Math.ceil(initialState.pending * 1.1))));
     if (names.length && remaining > 0 && now() < deadlineAt) {
+      const collectDeadline = initialState.pending > 0 ? metadataDeadline(initialState.pending) : deadlineAt;
       const result = await collect({ ...parseArguments([]), discover: false, harvest: false,
         managedHistory: true, checkpoint: true, metadataNames: names, maxNewRepositories: 0,
-        maxRuntimeMs: Math.max(0, deadlineAt - now()),
-        limit: Math.min(metadataBudget, names.length), budget: metadataBudget, translate: false, translateLimit: 0, deadlineAt });
+        maxRuntimeMs: Math.max(0, collectDeadline - now()),
+        limit: Math.min(metadataBudget, names.length), budget: metadataBudget, translate: false, translateLimit: 0, deadlineAt: collectDeadline });
       if (result.requests > metadataBudget) throw new Error('补偿元数据超出共享预算');
       remaining -= result.requests;
       const resolved = result.unavailable > 0 && !result.failures;
@@ -52,15 +54,18 @@ export async function runScheduledSync({ profile = 'hot', budget = 4600, transla
     }
     initial = await backfill('history-after');
   } else initial = await backfill('history-before');
-  // 接口要求冷却或持续失败时结束本轮，后续触发继续；不突破实际额度。
-  if (profile !== 'recovery' && !['rate-limit', 'upstream-error', 'upstream-delay'].includes(initial?.reason) && remaining > 0 && now() < deadlineAt) {
+  // 仅全局限额阻断后续阶段；个别历史失败保留缺口，但不能阻塞元数据与候选发现。
+  if (profile !== 'recovery' && initial?.reason !== 'rate-limit' && remaining > 0 && now() < deadlineAt) {
     const admission = planCapacity(await inspect(), { budget, now: now(), historyTimes, maxNewPerRound });
     const canDiscover = profile === 'full' && admission.discoveryLimit > 0;
+    const reservedRequests = Math.min(Math.max(0, remaining - 1), (admission.pending || 0) + (canDiscover ? admission.discoveryLimit : 0));
+    const collectDeadline = canDiscover || initialState.pending > 0 ? metadataDeadline(canDiscover ? admission.discoveryLimit : initialState.pending) : deadlineAt;
     const options = { ...parseArguments([]), limit: profile === 'full' ? 3000 : 300,
       discover: canDiscover, discoveryPages: 2, maxNewRepositories: canDiscover ? admission.discoveryLimit : 0,
-      budget: Math.min(remaining, profile === 'full' ? remaining : 450),
+      discoveryPriority: admission.recentDiscoveryNeeded ? 'recent' : null,
+      budget: Math.min(remaining - reservedRequests, profile === 'full' ? remaining : 450),
       translateLimit: profile === 'full' ? translateLimit : 0, harvest: canDiscover && harvest,
-      deadlineAt, managedHistory: true,
+      deadlineAt: collectDeadline, managedHistory: true,
     };
     report(JSON.stringify({ stage: 'discovery-policy', enabled: canDiscover, maxNewRepositories: options.maxNewRepositories, reason: admission.discoveryReason }));
     const result = await collect(options);

@@ -14,7 +14,7 @@ const pending = { available: 10, pending: 1, staleWindow: false, cutoff: '2026-1
 test('末轮历史接口延迟后自动产生可执行的补偿计划，不能停止在失败状态', async () => {
   const result = await runScheduledSync({ now: () => NOW, inspect: async () => pending, report: () => {},
     fill: async () => ({ requests: 1, updated: 0, reason: 'upstream-error', before: pending, after: pending }),
-    collect: async () => assert.fail('上游失败后普通轮次不应再消耗元数据预算'),
+    collect: async () => ({ requests: 1, exitCode: 0 }),
   });
   assert.equal(result.coverageComplete, false);
   assert.equal(result.recovery.status, 'retry-pending');

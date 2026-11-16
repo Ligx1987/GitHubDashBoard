@@ -178,7 +178,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   now = () => new Date().toISOString(), token = '', limit = 750, budget = 900,
   discover = true, discoveryPages = 2, reserve = 5, maxRuntimeMs = 20 * 60_000, activity = null,
   harvest = false, harvestMinStars = 1000, harvestMaxStars = null, harvestDelayMs = 2200,
-  maxNewRepositories = Infinity, metadataNames = null, onCheckpoint = null, checkpointEvery = 250 } = {}) {
+  maxNewRepositories = Infinity, metadataNames = null, onCheckpoint = null, checkpointEvery = 250, discoveryPriority = null } = {}) {
   if (!Number.isSafeInteger(checkpointEvery) || checkpointEvery < 1) throw new Error('Invalid checkpoint interval');
   if (maxNewRepositories !== Infinity && (!Number.isSafeInteger(maxNewRepositories) || maxNewRepositories < 0)) throw new Error('Invalid new repository limit');
   if (!snapshot || !Array.isArray(snapshot.projects)) {
@@ -197,7 +197,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   const deferred = new Map((snapshot.discoveryQueue || []).filter(p => VALID_NAME.test(p.fullName || '')
     && (!p.createdAt || withinScope(p.createdAt, Date.parse(startedAt))))
     .map(p => [p.fullName.toLowerCase(), p]));
-  let newlyAdmitted = 0, rejectedCandidates = 0;
+  let newlyAdmitted = 0, rejectedCandidates = 0, identityReplacements = 0;
   let nextHistory = initialState.history;
   const nextActivity = initialState.starActivity;
   // Product scope is a rolling three-year creation window: every run prunes
@@ -264,7 +264,8 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     const project = toSnapshotProject(data, fetchedAt, previous);
     const canonicalKey = project.fullName.toLowerCase();
     const isNew = !ids.has(incomingId) && !compatible(requested) && !compatible(existing);
-    if (isNew && newlyAdmitted >= maxNewRepositories) {
+    const replacesKnownName = isNew && incomingId && [requested, existing].some(p => p && integer(p.githubId) && p.githubId !== incomingId);
+    if (isNew && !replacesKnownName && newlyAdmitted >= maxNewRepositories) {
       const old = deferred.get(canonicalKey);
       deferred.set(canonicalKey, { fullName: project.fullName, githubId: project.githubId, createdAt: project.createdAt,
         discoveredAt: old?.discoveredAt || fetchedAt, lastSeenAt: fetchedAt });
@@ -308,7 +309,8 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
     refreshed.add(canonicalKey);
     consecutiveFailures = 0;
     latestSuccess = fetchedAt;
-    if (isNew) newlyAdmitted++;
+    if (isNew && !replacesKnownName) newlyAdmitted++;
+    if (replacesKnownName) identityReplacements++;
     deferred.delete(requestedKey);
     deferred.delete(canonicalKey);
     return true;
@@ -408,12 +410,15 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
   }
   if (discover && !harvest && newlyAdmitted < maxNewRepositories) {
     const previousDiscovery = new Map((snapshot.coverage?.discovery || []).map(item => [item.id, item]));
-    const plan = discoveryQueries(startedAt).sort((a, b) =>
+    const recentPriority = item => discoveryPriority === 'recent' && item.id.startsWith('recent-') ? Number(item.days) : 100;
+    const plan = discoveryQueries(startedAt).sort((a, b) => recentPriority(a) - recentPriority(b) ||
       (Date.parse(previousDiscovery.get(a.id)?.completedAt) || 0) - (Date.parse(previousDiscovery.get(b.id)?.completedAt) || 0));
     for (const item of plan) {
       if (newlyAdmitted >= maxNewRepositories) break;
-      const { query } = item;
-      const coverage = { ...item, totalCount: null, fetched: 0, pages: 0, incomplete: false, truncated: true,
+      const end = Math.floor(scopeNow / DAY_MS) * DAY_MS;
+      const query = discoveryPriority === 'recent' && item.kind === 'recent'
+        ? `created:${day(end - item.days * DAY_MS)}..${day(end - DAY_MS)} is:public` : item.query;
+      const coverage = { ...item, query, totalCount: null, fetched: 0, pages: 0, incomplete: false, truncated: true,
         completedAt: previousDiscovery.get(item.id)?.completedAt || null };
       discovery.push(coverage);
       for (let page = 1; page <= discoveryPages; page += 1) {
@@ -521,7 +526,7 @@ export async function syncData({ snapshot, history = {}, fetchImpl = fetch,
         pending, fetchedThisRun: refreshed.size,
         queuedCandidates: deferred.size,
         discoveryAdmission: { limit: Number.isFinite(maxNewRepositories) ? maxNewRepositories : null,
-          admitted: newlyAdmitted, queued: deferred.size, rejected: rejectedCandidates,
+          admitted: newlyAdmitted, queued: deferred.size, rejected: rejectedCandidates, identityReplacements,
           paused: newlyAdmitted >= maxNewRepositories },
         discovery: discover && !harvest ? discovery : snapshot.coverage?.discovery || [],
         discoveryAt: discover && !harvest ? startedAt : snapshot.coverage?.discoveryAt || null,
@@ -536,7 +541,14 @@ export function atomicWriteJson(path, value) {
   const temporary = `${path}.${process.pid}.tmp`;
   try {
     writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
-    renameSync(temporary, path);
+    for (let attempt = 0; ; attempt++) {
+      try { renameSync(temporary, path); break; }
+      catch (error) {
+        if (!['EPERM', 'EACCES', 'EBUSY'].includes(error.code) || attempt >= 6) throw error;
+        // Windows读文件或安全软件短暂占用目标时等待释放，绝不先删除有效目标。
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50 * 2 ** attempt);
+      }
+    }
   } finally {
     try { unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
